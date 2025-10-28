@@ -1,0 +1,26 @@
+# Podcastfy 核心依賴
+podcastfy>=0.4.0
+
+# LLM 提供商
+openai>=1.0.0
+anthropic>=0.18.0
+google-generativeai>=0.3.0
+
+# TTS 提供商  
+edge-tts>=6.1.9
+elevenlabs>=0.2.0
+
+# 音頻處理
+pydub>=0.25.1
+ffmpeg-python>=0.2.0
+
+# 文檔處理
+langchain>=0.1.0
+pypdf>=3.17.0
+beautifulsoup4>=4.12.0
+youtube-transcript-api>=0.6.0
+
+# 工具類
+python-dotenv>=1.0.0
+rich>=13.0.0
+typer>=0.9.0

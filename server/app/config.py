@@ -1,0 +1,63 @@
+"""
+Configuration helpers for the FastAPI backend.
+"""
+
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import List, Optional
+
+from dotenv import load_dotenv
+
+
+def _resolve_path(raw: str) -> Path:
+    """Resolves a potentially relative path against the project root."""
+    candidate = Path(raw).expanduser()
+    if candidate.is_absolute():
+        return candidate
+    project_root = Path(__file__).resolve().parents[2]
+    return (project_root / candidate).resolve()
+
+
+@dataclass
+class ServerSettings:
+    """Settings object populated from environment variables."""
+
+    project_root: Path = field(default_factory=lambda: _resolve_path("."))
+    data_root: Path = field(default_factory=lambda: _resolve_path("output"))
+    task_store_root: Path = field(default_factory=lambda: _resolve_path("output/task_runs"))
+    task_log_root: Path = field(default_factory=lambda: _resolve_path("output/task_runs/logs"))
+    celery_broker_url: str = "redis://localhost:6379/0"
+    celery_result_backend: str = "redis://localhost:6379/0"
+    api_token: Optional[str] = None
+    cors_origins: List[str] = field(default_factory=list)
+    gzip_min_size: int = 512
+
+    @classmethod
+    def load(cls) -> "ServerSettings":
+        load_dotenv()
+
+        project_root = _resolve_path(".")
+        data_root = _resolve_path(os.getenv("DATA_ROOT", "output"))
+        task_store_root = _resolve_path(os.getenv("TASK_STORE_ROOT", "output/task_runs"))
+        task_log_root = _resolve_path(os.getenv("TASK_LOG_ROOT", "output/task_runs/logs"))
+        celery_broker_url = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+        celery_result_backend = os.getenv("CELERY_RESULT_BACKEND", celery_broker_url)
+        api_token = os.getenv("API_TOKEN")
+        cors_raw = os.getenv("CORS_ORIGINS", "")
+        cors_origins = [origin.strip() for origin in cors_raw.split(",") if origin.strip()]
+        gzip_min_size = int(os.getenv("GZIP_MIN_SIZE", "512"))
+
+        return cls(
+            project_root=project_root,
+            data_root=data_root,
+            task_store_root=task_store_root,
+            task_log_root=task_log_root,
+            celery_broker_url=celery_broker_url,
+            celery_result_backend=celery_result_backend,
+            api_token=api_token,
+            cors_origins=cors_origins,
+            gzip_min_size=gzip_min_size,
+        )

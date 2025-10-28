@@ -1,0 +1,12 @@
+{
+  "timestamp": "20250820_143057",
+  "input_source": "https://tw.news.yahoo.com/\u9ea5\u514b\u98a8\u6c92\u95dc-\u5ddd\u666e\u66dd\u84b2\u4ead-\u70ba\u4e86\u6211-\u9054\u6210\u5354\u8b70-021649771.html",
+  "input_type": "url",
+  "english_level": "A2",
+  "target_minutes": 1,
+  "target_words": 300,
+  "actual_words": 773,
+  "accuracy": "257.7%",
+  "script_file": "scripts/script_20250820_143057/podcast_script.txt",
+  "original_file": "data/transcripts/transcript_f59a4f3b0f3a441dbbb507e9a60e3d60.txt"
+}

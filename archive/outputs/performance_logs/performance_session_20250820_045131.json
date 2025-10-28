@@ -1,0 +1,39 @@
+{
+  "session_id": "session_20250820_045131",
+  "start_time": 1755636691.360866,
+  "start_datetime": "2025-08-20T04:51:31.360866",
+  "end_time": 1755636709.517678,
+  "end_datetime": "2025-08-20T04:51:49.517678",
+  "total_duration": 18.156811952590942,
+  "success": false,
+  "config": {
+    "input_source": "https://www.4gamers.com.tw/news/detail/71082/chainsaw-man-the-movie-reze-arc-release-in-2025-september-taiwan",
+    "input_type": "auto",
+    "english_level": "B2",
+    "target_minutes": 3,
+    "host_voice": "Kore",
+    "expert_voice": "Puck",
+    "use_podcastfy_tts": false
+  },
+  "output_files": null,
+  "stages": [
+    {
+      "name": "Podcastfy 腳本生成",
+      "start_time": 1755636691.3610082,
+      "end_time": 1755636691.361046,
+      "duration": 3.790855407714844e-05,
+      "success": true,
+      "error_message": null,
+      "metadata": null
+    },
+    {
+      "name": "輸入類型檢測",
+      "start_time": 1755636691.361047,
+      "end_time": 1755636709.517646,
+      "duration": 18.156599044799805,
+      "success": true,
+      "error_message": null,
+      "metadata": null
+    }
+  ]
+}

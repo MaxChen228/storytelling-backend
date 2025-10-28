@@ -1,0 +1,204 @@
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                    自然對話播客配置 - Natural Conversation Config            ║
+# ║                 讓AI用自然討論方式探索主題，英語學習為副產品                    ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │                            基本設定 (Basic Settings)                      │
+# └─────────────────────────────────────────────────────────────────────────┘
+basic:
+  # 英語等級設定（影響知識密度，不是教學導向）
+  # - A1/A2: 低知識密度，更多背景解釋，緩慢節奏
+  # - B1/B2: 中等知識密度，適度解釋
+  # - C1/C2: 高知識密度，快速切入核心，專業詞彙
+  english_level: "B2"
+  
+  # 播客長度模式
+  podcast_length: "medium"
+  
+  # 對話自然度優先（移除教學感）
+  style_instructions: "natural, curious, exploratory, conversational"
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │                            輸入來源 (Input Source)                        │
+# └─────────────────────────────────────────────────────────────────────────┘
+input:
+  sources:
+    - "https://tw.news.yahoo.com/麥克風沒關-川普曝蒲亭-為了我-達成協議-021649771.html"
+  type: "multi"
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │                         語音設定 (Voice Configuration)                     │
+# └─────────────────────────────────────────────────────────────────────────┘
+voices:
+  # 選擇有對比的聲線組合，營造自然對話感
+  host_voice: "Kore"      # 溫和女聲 - 好奇探索者
+  expert_voice: "Charon"  # 沈穩男聲 - 知識分享者
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │                          進階設定 (Advanced Settings)                      │
+# └─────────────────────────────────────────────────────────────────────────┘
+advanced:
+  use_podcastfy_tts: false
+  output_dir: "./output"
+  llm_model: "gemini-2.5-flash"
+  tts_model: "gemini-2.5-flash-preview-tts"
+  
+  # 移除重複，統一在 podcastfy 區塊定義
+  dialogue_structure: "two_speakers"
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │                    自然對話核心配置 (Natural Conversation Core)             │
+# └─────────────────────────────────────────────────────────────────────────┘
+podcastfy:
+  # 🎙️ 播客定位：自然討論，不是課程
+  podcast_name: "Curious Minds"
+  podcast_tagline: "Where curiosity leads to understanding"
+  
+  # 🌍 語言設定
+  output_language: "English"
+  
+  # 🎭 對話風格：完全移除教學元素
+  conversation_style: 
+    - "natural"           # 自然流動
+    - "curious"           # 好奇探索
+    - "thoughtful"        # 深思熟慮
+    - "conversational"    # 對話式
+    - "genuine"           # 真誠討論
+  
+  # 👥 角色重新定義：同儕討論而非師生關係
+  roles_person1: "Curious Explorer"        # 好奇的探索者
+  roles_person2: "Thoughtful Discussant"   # 深思的討論者
+  
+  # 📋 自然對話結構（模擬真實討論流程）
+  dialogue_structure:
+    - "Natural Opening & Topic Introduction"     # 自然開場和話題引入
+    - "Initial Reactions & First Impressions"   # 初始反應和第一印象
+    - "Diving Deeper & Key Insights"            # 深入探討和關鍵洞察
+    - "Different Perspectives & Nuances"        # 不同觀點和細節
+    - "Connections & Broader Implications"      # 關聯性和更廣泛的意義
+    - "Personal Takeaways & Reflection"         # 個人收穫和反思
+  
+  # 🎯 自然對話技巧（非教學技巧）
+  engagement_techniques:
+    - "genuine questions"         # 真誠的問題（不是修辭問句）
+    - "shared discoveries"        # 共同發現
+    - "natural transitions"       # 自然轉換
+    - "spontaneous insights"      # 自發性洞察
+    - "authentic reactions"       # 真實反應
+    - "building on ideas"         # 在想法基礎上延伸
+    - "collaborative exploration" # 協作探索
+    
+  # 🎨 創造力：適中，保持真實性
+  creativity: 0.4
+  
+  # ✍️ 自然對話指令（根據英語等級調整知識密度）
+  user_instructions: |
+    Create a natural conversation between two genuinely curious people discussing this topic.
+    
+    CRITICAL: This is NOT an English lesson - it's a natural discussion where learning happens organically.
+    
+    ENGLISH LEVEL ADAPTATION:
+    - A1/A2: Lower knowledge density. Take time to provide context and background. Use simpler vocabulary naturally. Allow more exploration of basic concepts.
+    - B1/B2: Moderate knowledge density. Balance between accessibility and depth. Mix simple and complex ideas.
+    - C1/C2: Higher knowledge density. Dive quickly into nuanced concepts. Use professional vocabulary naturally. Assume foundational knowledge.
+    
+    CONVERSATION PRINCIPLES:
+    1. Start with genuine curiosity about the topic
+    2. Let insights emerge naturally through discussion
+    3. Build understanding collaboratively, not through teaching
+    4. Use authentic reactions: "Oh, that's interesting because..." 
+    5. Connect ideas organically: "That reminds me of..." or "Building on that..."
+    6. Show genuine learning moments: "I hadn't thought of it that way"
+    7. Avoid instructional language: no "let me explain" or "it's important to understand"
+    
+    KNOWLEDGE DENSITY CONTROL:
+    - For beginners: Spend more time on context, use analogies naturally, repeat key ideas organically
+    - For advanced: Trust the audience, use precise language, cover more ground quickly
+    
+    The goal is authentic intellectual curiosity, not structured education.
+
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                      等級特化參數 (Level-Specific Parameters)                ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+
+# 根據英語等級的知識密度調整
+level_adjustments:
+  A1:
+    pace: "slow"                    # 緩慢節奏
+    interaction_level: "high"       # 高互動（更多澄清）
+    creativity_level: 0.3           # 低創意（保持簡單）
+    min_chunk_size: 400             # 較小區塊（更多解釋時間）
+    engagement_factors:
+      - "simple analogies"
+      - "concrete examples"
+      - "repetition for clarity"
+      - "basic connections"
+  
+  A2:
+    pace: "slow"
+    interaction_level: "high"
+    creativity_level: 0.4
+    min_chunk_size: 500
+    engagement_factors:
+      - "relatable examples"
+      - "step-by-step thinking"
+      - "familiar analogies"
+      - "clarifying questions"
+  
+  B1:
+    pace: "moderate"
+    interaction_level: "medium"
+    creativity_level: 0.5
+    min_chunk_size: 600
+    engagement_factors:
+      - "mixed complexity examples"
+      - "comparative thinking"
+      - "moderate abstractions"
+      - "exploratory questions"
+  
+  B2:
+    pace: "moderate"
+    interaction_level: "medium"
+    creativity_level: 0.6
+    min_chunk_size: 700
+    engagement_factors:
+      - "nuanced examples"
+      - "analytical thinking"
+      - "abstract concepts"
+      - "probing questions"
+  
+  C1:
+    pace: "fast"
+    interaction_level: "low"
+    creativity_level: 0.7
+    min_chunk_size: 800
+    engagement_factors:
+      - "sophisticated analysis"
+      - "implicit connections"
+      - "professional terminology"
+      - "advanced abstractions"
+  
+  C2:
+    pace: "fast"
+    interaction_level: "low"
+    creativity_level: 0.8
+    min_chunk_size: 900
+    engagement_factors:
+      - "expert-level discourse"
+      - "subtle implications"
+      - "technical precision"
+      - "complex interdependencies"
+
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                        使用說明 (Usage Instructions)                        ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+
+# 使用方式：
+# 1. 修改 basic.english_level 為目標等級（A1, A2, B1, B2, C1, C2）
+# 2. 系統會自動應用對應的 level_adjustments 參數
+# 3. 對話將自動調整知識密度而非教學方式
+
+# 效果對比：
+# A1 對話: "So, what exactly is this about?" "Well, think of it like..." (更多背景)
+# C2 對話: "The implications here seem significant." "Absolutely, especially considering..." (直接核心)

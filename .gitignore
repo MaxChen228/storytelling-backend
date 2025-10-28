@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+venv/
+.venvs/
+ENV/
+env/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Output Directories
+output/
+data/*_processed_scripts/
+data/*_summaries/
+archived_outputs/
+
+# Audio/Video Files
+*.wav
+*.mp3
+*.m4a
+*.srt
+*.vtt
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.pytest_cache/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+logs/
+
+# Testing
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# FastAPI/Uvicorn
+*.pid
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis
+dump.rdb

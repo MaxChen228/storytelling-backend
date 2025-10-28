@@ -1,0 +1,7 @@
+# 共享依賴請參考 monorepo 根目錄
+-r ../requirements/base.txt
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pytest>=7.4.0
+celery[redis]>=5.4.0
+redis>=5.0.0

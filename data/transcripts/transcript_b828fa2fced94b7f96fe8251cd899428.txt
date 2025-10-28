@@ -1,0 +1,35 @@
+<Person1>Welcome to Storytelling Series - Beginner Story Guide (A2)! I’m so glad you’re here with me today. Last time, we left Gaal with some shocking news. Hari Seldon’s trial and exile to the planet Terminus… it was all part of his plan. A fifty-year plan. Well, today, fifty years have passed. Let’s see what life is like on Terminus now.
+</Person1><Person2>Fifty years is a long time! I can't wait to see what has happened. Is the Encyclopedia project going well?
+</Person2><Person1>It is! Picture a quiet room. There is only one light, shining on a desk. A man named Lewis Pirenne is sitting there. He is the head of the Encyclopedia Foundation. He is very, very busy. For fifty years, he and many others have worked. They gathered information. They organized it. They prepared everything. Mmm… it was a huge job.
+</Person1><Person2>So the work is almost done?
+</Person2><Person1>Almost. In just five more years, the first volume of the Encyclopedia will be published. It will be the most monumental work in the entire Galaxy. Think about that word… monumental (巨大的). It means very big and very important. Like a huge stone monument that everyone can see. This Encyclopedia is that important.
+</Person1><Person2>Wow. So Pirenne must feel very proud. And very busy.
+</Person2><Person1>Exactly. He is so focused. Suddenly, a soft buzzer sounds on his desk. Pirenne is annoyed. He almost forgot he had an appointment. He presses a button, and the door opens. A broad man named Salvor Hardin walks in. Hardin is the Mayor of Terminus City.
+</Person1><Person2>Oh, the mayor! Is he there to discuss the Encyclopedia?
+</Person2><Person1>Not quite. Hardin smiles a little. He knows Pirenne doesn't like to be disturbed. So, he just sits down in a chair and waits. Pirenne keeps writing. The only sound is the soft scrape of his pen on the paper. It’s a very quiet, very serious room.
+</Person1><Person2>That sounds… a little awkward. Hardin is just waiting?
+</Person2><Person1>He is. But Hardin is a clever man. He takes a coin from his pocket. It’s a shiny, steel coin. He starts flipping it in the air. Flip, catch. Flip, catch. The light flashes on the metal. This small sound, this small movement, finally breaks Pirenne’s concentration.
+</Person1><Person2>Ah, a smart trick! Did it work?
+</Person2><Person1>"Stop that!" Pirenne says. His voice is querulous. That’s our second word for today: querulous (抱怨的). It means complaining in an annoyed, whining way. Pirenne is clearly not happy. He just wants to work.
+</Person1><Person2>I can imagine. But Hardin has something important to say, right?
+</Person2><Person1>He does. He tells Pirenne he needs to get back to a City Council meeting. But first, he has news. Very bad news. The Royal Governor of a nearby place called Anacreon has made himself a king. 
+</Person1><Person2>A king? What does that mean for Terminus?
+</Person2><Person1>It means they are cut off. Anacreon is between Terminus and the rest of the Empire. For six months, they have not received any metal shipments. Terminus has no metal of its own. No iron, no steel, no aluminum. Without metal, their city, their machines… everything will stop working. Even the Encyclopedia project.
+</Person1><Person2>That’s a huge problem! What does Pirenne say?
+</Person2><Person1>Pirenne… doesn’t seem to care. He says, "Get them through him, then." He thinks it's just local politics. He tells Hardin that the Foundation is a scientific institution. They are supported by the Emperor himself. He believes the Empire will protect them. He says, "We are part of the Emperor's personal domain, and no one touches us."
+</Person1><Person2>But Hardin doesn’t believe that, does he?
+</Person2><Person1>Not at all. Hardin points out that the Empire is weak. Twenty other areas in the Periphery—the edge of the galaxy—are also breaking away. He feels, uh, very uncertain about the Empire's ability to protect them. But Pirenne just calls it "hokum." He says it's none of their business. Their only concern is the Encyclopedia.
+</Person1><Person2>It’s like they live in two different worlds. Pirenne sees only his books, and Hardin sees the danger outside the door.
+</Person2><Person1>That’s a perfect way to put it. The conversation gets even more tense. Pirenne is angry about the local newspaper. The newspaper wants to have a big celebration for the Foundation’s fiftieth anniversary. He wants Hardin to stop it. But Hardin reminds him about freedom of the press. Pirenne says the Board of Trustees does not guarantee that freedom. He reminds Hardin that he is the Emperor's representative.
+</Person1><Person2>So Pirenne is using his power. What happens next?
+</Person2><Person1>Hardin takes a deep breath. He has one last piece of news. He tells Pirenne that Anacreon is sending an envoy. A special visitor. This envoy will arrive in two weeks.
+</Person1><Person2>An envoy? Why?
+</Person2><Person1>That’s what Pirenne asks. And Hardin just stands up, looks at him, and says, "I give you one guess." Then he leaves. Just like that. Leaving Pirenne alone with this terrible news.
+</Person1><Person2>Wow. That's a powerful ending to their meeting.
+</Person2><Person1>It is. And two weeks later, the envoy arrives. His name is Anselm haut Rodric. He is a nobleman. Hardin meets him at the spaceport with a big ceremony. They exchange their blaster guns as a sign of peace. But Hardin notices the man still has another weapon hidden under his shoulder. (soft laugh) Not so peaceful, maybe.
+</Person1><Person2>Definitely not. What is this envoy like?
+</Person2><Person1>He seems unimpressed by Terminus. He asks if the small city is their whole world. He asks about their land, their peasants. Hardin realizes the envoy is trying to gather information. The envoy asks, "You have no peasantry?" and Hardin replies cleverly, "No… nor nobility."
+</Person1><Person2>A very smart answer! He’s showing that Terminus is different.
+</Person2><Person1>Exactly. So, let’s recap. Fifty years have passed. The Encyclopedia is almost ready. But a new political threat appears. Anacreon has become a kingdom and has cut off Terminus from the Empire. The leader of the Foundation, Pirenne, trusts the Empire to protect them. The mayor, Hardin, sees the real danger. Now, an envoy from this new kingdom has arrived. Why is he really here?
+</Person1><Person2>That’s the big question. It feels like a storm is coming.
+</Person2><Person1>It really does. And this envoy, Anselm haut Rodric, is not here for a friendly visit. He is going to reveal Anacreon's true plan for Terminus. It’s a plan that involves military bases and taxes. A plan that could destroy everything the Foundation has built. We’ll find out what that is next time. Thanks for listening today!</Person1>

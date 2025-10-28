@@ -1,0 +1,48 @@
+{
+  "session_id": "session_20250820_054335",
+  "start_time": 1755639815.0335228,
+  "start_datetime": "2025-08-20T05:43:35.033523",
+  "end_time": 1755639843.221366,
+  "end_datetime": "2025-08-20T05:44:03.221366",
+  "total_duration": 28.187843084335327,
+  "success": false,
+  "config": {
+    "input_source": "https://tw.news.yahoo.com/麥克風沒關-川普曝蒲亭-為了我-達成協議-021649771.html",
+    "input_type": "auto",
+    "english_level": "A2",
+    "target_minutes": 3,
+    "host_voice": "Kore",
+    "expert_voice": "Aoede",
+    "use_podcastfy_tts": false
+  },
+  "output_files": null,
+  "stages": [
+    {
+      "name": "Podcastfy 腳本生成",
+      "start_time": 1755639815.033792,
+      "end_time": 1755639815.0338292,
+      "duration": 3.719329833984375e-05,
+      "success": true,
+      "error_message": null,
+      "metadata": null
+    },
+    {
+      "name": "輸入類型檢測",
+      "start_time": 1755639815.03383,
+      "end_time": 1755639843.221157,
+      "duration": 28.18732714653015,
+      "success": true,
+      "error_message": null,
+      "metadata": null
+    },
+    {
+      "name": "Gemini TTS 音頻生成",
+      "start_time": 1755639843.221298,
+      "end_time": 1755639843.2213519,
+      "duration": 5.3882598876953125e-05,
+      "success": false,
+      "error_message": "module 'google.genai.types' has no attribute 'MultiSpeakerVoiceConfig'",
+      "metadata": null
+    }
+  ]
+}

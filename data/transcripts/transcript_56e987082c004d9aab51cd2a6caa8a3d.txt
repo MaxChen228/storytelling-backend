@@ -1,0 +1,41 @@
+<Person1>Welcome to Storytelling Series - Beginner Story Guide (A2)! Last time, the envoy from Anacreon demanded land and power. Now, just when the situation seems impossible, Salvor Hardin changes the conversation completely.
+</Person1><Person2>He really does. Pirenne, the head of the Foundation, is so angry. But then Hardin asks this… really strange question.
+</Person2><Person1>Exactly. Out of nowhere, he calmly asks, "Could Anacreon supply us with… plutonium for our nuclear-power plant?"
+</Person1><Person2>And the room goes silent! You can just imagine Pirenne’s shock. Why would Hardin reveal that they have nuclear power? Isn't that dangerous?
+</Person2><Person1>It seems dangerous, doesn't it? Pirenne certainly thinks so. But watch the envoy, Rodric. His voice changes. He sounds… uncomfortable. He asks, "You have nuclear power?"
+</Person1><Person2>He sounds surprised. Almost… scared?
+</Person2><Person1>I think so! Hardin acts like it's completely normal. He says, of course we have it, it's fifty thousand years old! But he also says it's hard to get plutonium. And with that, Rodric quickly ends the meeting. He says they will talk more tomorrow and just… leaves.
+</Person1><Person2>Wow. So Hardin’s strange question worked. It made the powerful envoy nervous and ended the conversation. But Pirenne is still furious, right?
+</Person2><Person1>Oh, absolutely furious. He calls Rodric an "insufferable, dull-witted donkey!" He thinks Hardin is crazy for talking about nuclear power and military bases.
+</Person1><Person2>He doesn't understand Hardin's plan at all.
+</Person2><Person1>Not one bit. Hardin explains that he was just giving Rodric enough rope to, well, hang himself. He let him talk, and they discovered Anacreon’s real plan: to cut up Terminus and give the land to their nobles.
+</Person1><Person2>And Hardin says he won't let that happen. But Pirenne is still focused on the nuclear power comment. He thinks it makes them a target.
+</Person2><Person1>It does! But Hardin grins and says it makes them a target to stay away from. And then he reveals his real discovery.
+</Person1><Person2>What is it?
+</Person2><Person1>He suspected that Anacreon doesn't have nuclear power anymore. If they did, Rodric would know that modern power plants don't use plutonium. It's an old technology.
+</Person1><Person2>Oh, I see! It was a test! And Rodric failed. That means the other kingdoms probably don't have nuclear power either. They're going back to old energy, like oil and coal.
+</Person2><Person1>Precisely. It's a huge piece of information. But Pirenne just says, "Bah!" and walks away. He's too angry to see how clever Hardin has been.
+</Person1><Person2>So Hardin is not just a politician, he's a brilliant strategist. But he's alone. The scientists don't support him.
+</Person2><Person1>He is very alone. And this is where he starts to really fight back. He uses his influence—he is the first mayor of the city, after all—to get a seat at the meetings of the Board of Trustees. The scientists who run the Foundation.
+</Person1><Person2>And they are not happy to have him there, I imagine.
+</Person2><Person1>Not at all. Hardin finds them to be poor leaders. He thinks they're too used to facts that don't change, and not used to people, who are much more complicated.
+</Person1><Person2>That's a really interesting idea. That being a good scientist doesn't make you a good leader.
+</Person2><Person1>At the meeting, Pirenne makes a big announcement. He says Lord Dorwin, the Chancellor of the Empire, is coming to Terminus. He is sure this important man will solve all their problems with Anacreon.
+</Person1><Person2>He's smiling at Hardin when he says it, isn't he? Like he's saying, "See? I have a plan too."
+</Person2><Person1>Exactly! But Hardin isn't impressed. He asks a simple question: "What do you expect Lord Dorwin to do?"
+</Person1><Person2>And the other scientists get annoyed. They say Hardin is a cynic. That’s a good word. It means someone who always expects the worst.
+</Person2><Person1>It is. They believe the Emperor will protect them. But Hardin gets frustrated. He says the Emperor is thousands of light-years away and probably doesn't care. The Empire's navy is gone. It's just a word, not a weapon.
+</Person1><Person2>He says they need to fight with guns, not with words. He's so practical.
+</Person2><Person1>He is. He reminds them that their lie about having nuclear weapons won't last forever. Anacreon will find out the truth soon. He asks them, "What do you propose to do?"
+</Person1><Person2>And what do they say? Do they finally listen?
+</Person2><Person1>No. They refuse completely. One says building weapons is politics, and they are a scientific foundation. Another says it would take valuable men away from their most important project.
+</Person1><Person2>The Encyclopedia. They are obsessed with it.
+</Person2><Person1>They really are. Pirenne says, "The Encyclopedia first - always." Hardin seems to just… lose his patience. He has a great phrase for this. He says the Board suffers from "Encyclopedia on the brain."
+</Person1><Person2>That’s a funny way to say it. It means it's the only thing they can think about, right?
+</Person2><Person1>Yes, exactly. It's like a song you can't stop hearing in your head. For them, that song is the Encyclopedia. Hardin tries to explain that most of the million people on Terminus are not scientists. It's their home. They care more about their farms and families than a big book of knowledge.
+</Person1><Person2>But the Board shouts him down. They just keep repeating, "The Encyclopedia first."
+</Person2><Person1>And this is where Hardin makes his most powerful point. Pirenne says, "We are scientists." And Hardin jumps on that. He asks, "Are you, though?"
+</Person1><Person2>Ooh, that must have stung.
+</Person2><Person1>It did. He tells them they aren't creating new science. They are just organizing the science of the past. He says the whole galaxy has been doing this for thousands of years, just looking backward. And that, he says, is why everything is falling apart.
+</Person1><Person2>Wow. So the problem isn't just Anacreon. The problem is inside the Foundation itself. They have forgotten how to move forward.
+</Person2><Person1>That’s the heart of it. A conflict between the past and the future. And as Hardin faces this wall of tradition, news arrives of an Imperial Chancellor coming from the center of the Galaxy. At the same time, a mysterious vault, left by the Foundation's creator, Hari Seldon, is about to open for the first time in fifty years. Will the answers they need come from the powerful Empire, or from the forgotten words of their founder? We’ll find out next time.</Person1>

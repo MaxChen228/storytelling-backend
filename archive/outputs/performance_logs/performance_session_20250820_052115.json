@@ -1,0 +1,39 @@
+{
+  "session_id": "session_20250820_052115",
+  "start_time": 1755638475.5555148,
+  "start_datetime": "2025-08-20T05:21:15.555515",
+  "end_time": 1755638494.3865879,
+  "end_datetime": "2025-08-20T05:21:34.386588",
+  "total_duration": 18.83107304573059,
+  "success": false,
+  "config": {
+    "input_source": "https://tw.news.yahoo.com/麥克風沒關-川普曝蒲亭-為了我-達成協議-021649771.html",
+    "input_type": "auto",
+    "english_level": "A2",
+    "target_minutes": 3,
+    "host_voice": "Kore",
+    "expert_voice": "Aoede",
+    "use_podcastfy_tts": false
+  },
+  "output_files": null,
+  "stages": [
+    {
+      "name": "Podcastfy 腳本生成",
+      "start_time": 1755638475.555776,
+      "end_time": 1755638475.555818,
+      "duration": 4.220008850097656e-05,
+      "success": true,
+      "error_message": null,
+      "metadata": null
+    },
+    {
+      "name": "輸入類型檢測",
+      "start_time": 1755638475.555819,
+      "end_time": 1755638494.386505,
+      "duration": 18.83068585395813,
+      "success": true,
+      "error_message": null,
+      "metadata": null
+    }
+  ]
+}

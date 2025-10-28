@@ -1,0 +1,43 @@
+<Person1>Welcome back to Storytelling Series - Beginner Story Guide (A2)! Last time, we left Hari Seldon in a tense courtroom, having just told the Empire's leaders that their entire Galactic Empire will fall. The room was in shock.
+</Person1><Person2>I can only imagine! He basically told them their whole world was ending. What happens right after that moment?
+</Person2><Person1>Well, a commissioner tries to stop him, but Seldon is unstoppable. He continues, painting a very dark picture of the future. He says, "The Empire will vanish and all its good with it."
+</Person1><Person2>All its good? What does he mean by that?
+</Person2><Person1>He describes a future without order. Knowledge will be lost. Trade will stop. He says worlds will lose touch with each other, and interstellar wars will be endless.
+</Person1><Person2>That sounds terrifying. And this will last... forever?
+</Person2><Person1>That's the exact question someone asks in the silent courtroom. And Seldon's answer is even more terrifying. He says the dark ages to come will endure for thirty thousand years.
+</Person1><Person2>Thirty... thousand... years? That is an unbelievable amount of time. Generations of suffering. Is there any hope at all?
+</Person2><Person1>There is. He says a Second Empire will rise, but only after all that suffering. And then he says the most important words: "We must fight that."
+</Person1><Person2>But wait, I'm a little confused. The Advocate pointed this out too. Didn't Seldon just say he couldn't prevent the fall? It sounds like he's contradicting himself.
+</Person2><Person1>That's a great point, and he clarifies it. He says, "I do not say now that we can prevent the fall." But, he says it is possible to shorten the interregnum which will follow.
+</Person1><Person2>Interregnum... that's an interesting word. What does it mean?
+</Person2><Person1>Think of it like a pause. It's a period of time when a country or empire has no leader, no government. It's often a time of chaos and disorder. Seldon is talking about the chaotic pause between the First and Second Empires.
+</Person1><Person2>I see. So he can't stop the fall, but he can make the time of chaos shorter? From thirty thousand years to... what?
+</Person2><Person1>He believes he can reduce it to a single millennium. Just one thousand years. By doing this, he could remove twenty-nine thousand years of misery from human history.
+</Person1><Person2>That is an incredible goal! But how? How could his small group possibly do that?
+</Person2><Person1>By saving knowledge. He explains that when society falls apart, science will be broken into a million pieces. People will only know tiny things, and that knowledge will be lost over time.
+</Person1><Person2>Like trying to build a house when you only have one brick and you've forgotten what a window is.
+</Person2><Person1>Exactly! So his project, with all his thousands of people, is to prepare a giant summary of all knowledge. He calls it the "Encyclopedia Galactica."
+</Person1><Person2>Wow. An encyclopedia for the entire galaxy. So, what do the judges say to this incredible plan?
+</Person2><Person1>Just then, the Chief Commissioner's gavel falls. The trial is over. Seldon quietly sits down next to Gaal, smiles, and asks, "How did you like the show?"
+</Person1><Person2>A show! He calls it a show? As if it were all a performance. Gaal must have been stunned.
+</Person2><Person1>He was. And Seldon even predicts they will now try to make a private deal with him. And of course, he's right. The next day, things are completely different.
+</Person1><Person2>How so?
+</Person2><Person1>It's no longer a public trial. It's just Seldon and Gaal alone with the five commissioners. They're sitting at a table together, and they're even offered cigars. It feels less like a trial and more like a... a dangerous negotiation.
+</Person1><Person2>And this is when the real leader, Linge Chen, finally speaks, right?
+</Person2><Person1>Yes. The man who is the actual Emperor in all but name. Chen is very direct. He asks Seldon why anyone should care about events three hundred years in the future. Then he gets straight to the point. He asks, "Can you tell me why I may not... have you executed tonight?"
+</Person1><Person2>Whoa. He just threatens him directly. How does Seldon even respond to that?
+</Person2><Person1>He responds with a threat of his own. It's brilliant. Seldon tells Chen that killing him now would actually make the fall happen much faster. Not in three centuries, but in fifty years. And... Chen himself would be dead within a single year.
+</Person1><Person2>He's using his own prediction as a weapon! He's telling Chen, "If you kill me, you doom yourself." Does Chen believe him?
+</Person2><Person1>It seems to unnerve him. Chen changes his strategy. He says Seldon's death isn't the only answer. He offers him an alternative: exile.
+</Person1><Person2>Exile? You mean, being sent away?
+</Person2><Person1>Exactly. To be sent away from your home, and you can never return. Chen offers to send Seldon and all one hundred thousand of his followers to a distant planet to work on their Encyclopedia.
+</Person1><Person2>And where is this planet?
+</Person2><Person1>It's called Terminus. And as Seldon points out, it's at the very edge of the galaxy. Chen says it's "somewhat secluded." That's a key word here. It means it's very isolated, far away from everything and everyone.
+</Person1><Person2>So the choice is death... or being sent to a lonely planet at the end of the universe.
+</Person2><Person1>That's the choice. And Chen gives him only five minutes to decide.
+</Person1><Person2>What does he do?
+</Person2><Person1>After a long moment, Seldon says, "I accept exile."
+</Person1><Person2>Gaal must have been so relieved that they weren't going to die. But at the same time... it feels like a defeat. Seldon was beaten. He lost.
+</Person2><Person1>It certainly looks that way. The great Hari Seldon, the man who could see the future, was outsmarted and sent away. It seems like his grand plan to save humanity is over before it even began.
+</Person1><Person2>But something tells me it's not that simple.
+</Person2><Person1>Mmm, you're right to be suspicious. Because what Gaal will soon discover is that this defeat, this exile to the edge of the galaxy... may have been exactly what Hari Seldon wanted all along. Next time, we'll learn the truth behind the trial and hear about a second, even more secret plan. Thanks for joining us!</Person1>

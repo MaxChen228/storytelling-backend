@@ -1,0 +1,83 @@
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                    Storytelling Podcast - 單聲線講書配置                    ║
+# ║     將一本英文書 (TXT) 切成章節，輸出生動、有教學感的單人旁白播客             ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+
+basic:
+  english_level: "beginner"     # beginner / intermediate / advanced
+  episode_length: "medium"          # short / medium / long
+  narrator_voice: "Leda"           # 預設旁白聲線，可填任何 Gemini 預設 voice 名稱
+  start_chapter: 3                  # 從第幾章開始轉換
+  chapters_per_run: 1                # 每次跑多少章
+
+book:
+  chapters_dir: "./data/foundation"     # 書籍資料夾，內含 chapter1.txt, chapter2.txt...
+  file_pattern: "chapter*.txt"          # 章節檔案命名規則（glob）
+  encoding: "utf-8"                     # 預設編碼
+  clean_whitespace: true                # 是否自動清除多餘空行和特殊字元
+  title_from_filename: true             # 使用檔名當章節標題
+  min_words: 0                        # 過短章節會被略過，避免空檔案
+  summaries_dir: "./data/foundation_summaries"  # 濃縮版摘要輸出位置
+  summary_suffix: "_summary.txt"        # 每篇摘要的檔名後綴
+
+storytelling:
+  tone: ["immersive", "expressive", "warm", "curious"]
+  narrative_structure:
+    - "Hook: lead in with one sentence that sets the chapter context and recaps the previous episode"
+    - "Scene Painting: use sensory details to build the setting"
+    - "Conflict or Discovery: show the protagonist's decision or a key insight"
+    - "Language Spotlight: highlight and explain one or two words or phrases"
+    - "Takeaway: wrap the chapter message and plant a teaser for the next episode"
+  engagement_prompts:
+    - "Invite listeners to picture the scene"
+    - "Ask an open-ended question"
+    - "Use a metaphor that ties back to daily life"
+    - "Pause briefly before giving the language cue"
+  sensory_focus: ["sound", "light", "texture", "emotion"]
+  creativity: 0.65
+  english_levels:
+    beginner:
+      label: "Beginner Story Guide (A2)"
+      pacing: "slow, gentle"
+      vocabulary_hint: "Use CEFR A2 vocabulary, keep sentences <= 15 words"
+      explanation_style: "Explain new words naturally in simple English using phrases like 'which means...', 'that is when...', or 'in other words...'. Give clear, concrete examples that relate to the story context."
+      recap_style: "At the end of every segment, recap in simple English"
+      narrator_goal: "Be a friendly teacher who retells the story while teaching survival phrases"
+    intermediate:
+      label: "Intermediate Book Club Host (B1-B2)"
+      pacing: "steady, conversational"
+      vocabulary_hint: "Blend everyday verbs with a few vivid adjectives; explain only tricky idioms"
+      explanation_style: "Insert short clarifications like 'which means...'"
+      recap_style: "Conclude with 2-sentence insight and a learning tip"
+      narrator_goal: "Guide listeners through emotions, then point out language patterns"
+    advanced:
+      label: "Advanced Literary Guide (C1)"
+      pacing: "brisk but thoughtful"
+      vocabulary_hint: "Use figurative language and domain vocabulary; no translations"
+      explanation_style: "Highlight subtext or symbolism instead of literal meanings"
+      recap_style: "End with analytical takeaway plus teaser"
+      narrator_goal: "Deliver an immersive critique-style retelling"
+  lengths:
+    short:
+      word_count: 650
+      max_num_chunks: 4
+      min_chunk_size: 350
+      time_range: "約 4-6 分鐘"
+      approach: "快速 recap + 單一亮點"
+    medium:
+      word_count: 1100
+      max_num_chunks: 6
+      min_chunk_size: 450
+      time_range: "約 7-10 分鐘"
+      approach: "完整章節 → 語言提示 → 下集伏筆"
+    long:
+      word_count: 1500
+      max_num_chunks: 8
+      min_chunk_size: 600
+      time_range: "約 12-15 分鐘"
+      approach: "多段落沉浸式講述"
+
+advanced:
+  llm_model: "gemini-2.5-pro"
+  tts_model: "gemini-2.5-pro-preview-tts"
+  language: "English"
