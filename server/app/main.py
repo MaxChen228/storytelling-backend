@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import PlainTextResponse, StreamingResponse
@@ -22,8 +23,18 @@ from .schemas import (
     TaskCreate,
     TaskDetail,
     TaskItem,
+    TranslationRequest,
+    TranslationResponse,
 )
-from .services import BookData, ChapterData, OutputDataCache, SubtitleData, TaskManager
+from .services import (
+    BookData,
+    ChapterData,
+    OutputDataCache,
+    SubtitleData,
+    TaskManager,
+    TranslationService,
+    TranslationServiceError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +43,11 @@ def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
     settings = settings or ServerSettings.load()
     cache = OutputDataCache(settings.data_root)
     task_manager = TaskManager(settings)
+    try:
+        translation_service = TranslationService.from_settings(settings)
+    except TranslationServiceError as exc:
+        logger.warning("Translation service disabled: %s", exc)
+        translation_service = None
 
     app = FastAPI(
         title="Storytelling Output API",
@@ -42,6 +58,7 @@ def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
     app.state.settings = settings
     app.state.cache = cache
     app.state.task_manager = task_manager
+    app.state.translation_service = translation_service
 
     if settings.cors_origins:
         logger.info("Configuring CORS for origins: %s", settings.cors_origins)
@@ -69,6 +86,10 @@ def get_cache(request: Request) -> OutputDataCache:
 
 def get_task_manager(request: Request) -> TaskManager:
     return request.app.state.task_manager
+
+
+def get_translation_service(request: Request) -> Optional[TranslationService]:
+    return getattr(request.app.state, "translation_service", None)
 
 
 def _require_admin_token(authorization: Optional[str], settings: ServerSettings) -> None:
@@ -210,6 +231,35 @@ def _register_routes(app: FastAPI) -> None:
 
         content = subtitles.srt_path.read_text(encoding="utf-8")
         return PlainTextResponse(content, media_type="text/plain; charset=utf-8", headers=headers)
+
+    @app.post("/translations", response_model=TranslationResponse)
+    async def translate_text(
+        payload: TranslationRequest,
+        translation_service: Optional[TranslationService] = Depends(get_translation_service),
+        settings: ServerSettings = Depends(get_settings),
+    ) -> TranslationResponse:
+        if not translation_service:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Translation service unavailable")
+
+        target_language = payload.target_language or settings.translation_default_target_language
+
+        try:
+            result = await run_in_threadpool(
+                translation_service.translate,
+                payload.text,
+                target_language,
+                payload.source_language,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+        except TranslationServiceError as exc:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+        return TranslationResponse(
+            translated_text=result.translated_text,
+            detected_source_language=result.detected_source_language,
+            cached=result.cached,
+        )
 
     @app.get("/admin/tasks", response_model=List[TaskItem])
     async def list_tasks(

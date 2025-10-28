@@ -9,6 +9,7 @@
 - 📊 生成詞級精準字幕（WhisperX）
 - 🚀 FastAPI 後端 API 服務
 - ⚙️ 支持批次處理和並行執行
+- 🌐 整合 Google 翻譯 API（提供逐句翻譯能力）
 
 ## 快速開始
 
@@ -32,7 +33,15 @@ pip install -r requirements/subtitle.txt
 
 ```bash
 GEMINI_API_KEY=your_gemini_api_key_here
+# Google 翻譯（選填）
+GOOGLE_TRANSLATE_PROJECT_ID=your_gcp_project_id
+GOOGLE_TRANSLATE_LOCATION=global
+TRANSLATION_DEFAULT_TARGET_LANGUAGE=zh-TW
+TRANSLATION_CACHE_SIZE=256
 ```
+
+> 💡 若使用 Google 翻譯，請確保環境已設定 `GOOGLE_APPLICATION_CREDENTIALS`
+指向服務帳戶金鑰 JSON，並於 GCP 專案啟用 Cloud Translation API。
 
 ### 3. 運行腳本生成
 

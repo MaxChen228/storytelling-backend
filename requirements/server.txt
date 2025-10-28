@@ -12,3 +12,6 @@ redis>=5.0.0
 
 # Additional Backend Tools
 python-multipart>=0.0.9
+
+# Translation
+google-cloud-translate>=3.15.0

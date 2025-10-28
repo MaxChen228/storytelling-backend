@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import sys
+import types
 
 import pytest
 from fastapi.testclient import TestClient
@@ -11,7 +12,60 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+
+def _ensure_celery_stub() -> None:
+    if "celery" in sys.modules:
+        return
+
+    class _DummyAsyncResult:
+        def __init__(self, task_id, app=None):
+            self.id = task_id
+            self.app = app
+            self.state = "PENDING"
+            self.date_done = None
+            self.result = None
+            self.traceback = ""
+
+    class _DummyCelery:
+        def __init__(self, name: str):
+            self.name = name
+            self.conf = types.SimpleNamespace(update=lambda **kwargs: None)
+
+        def task(self, name=None, bind=False):
+            def decorator(func):
+                return func
+
+            return decorator
+
+        def signature(self, name):
+            return types.SimpleNamespace(apply_async=lambda **kwargs: None)
+
+    celery_module = types.ModuleType("celery")
+    celery_module.Celery = _DummyCelery
+    celery_module.result = types.ModuleType("celery.result")
+    celery_module.result.AsyncResult = _DummyAsyncResult
+
+    sys.modules["celery"] = celery_module
+    sys.modules["celery.result"] = celery_module.result
+
+
+_ensure_celery_stub()
+
 from server.app import ServerSettings, create_app
+from server.app.services import TranslationResult
+
+
+class DummyTranslationService:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def translate(self, text: str, target_language: str, source_language: str | None = None) -> TranslationResult:
+        self.calls.append((text, target_language, source_language))
+        return TranslationResult(
+            translated_text=f"{text}-{target_language}",
+            detected_source_language=source_language or "en",
+            cached=False,
+        )
 
 
 @pytest.fixture
@@ -119,6 +173,7 @@ def test_client(sample_data: Path) -> TestClient:
         gzip_min_size=32,
     )
     app = create_app(settings)
+    app.state.translation_service = DummyTranslationService()
     return TestClient(app)
 
 
@@ -177,3 +232,36 @@ def test_admin_reload_requires_token(test_client: TestClient) -> None:
     ok = test_client.post("/admin/reload", headers={"Authorization": "Bearer secret-token"})
     assert ok.status_code == 200
     assert ok.json()["status"] == "reloaded"
+
+
+def test_translate_text_success(test_client: TestClient) -> None:
+    response = test_client.post(
+        "/translations",
+        json={
+            "text": "Hello world",
+            "target_language_code": "zh-TW",
+            "source_language_code": "en",
+            "book_id": "demo_book",
+            "chapter_id": "chapter0",
+            "subtitle_id": 1,
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["translated_text"] == "Hello world-zh-TW"
+    assert payload["detected_source_language"] == "en"
+    assert payload["cached"] is False
+
+
+def test_translate_text_service_unavailable(test_client: TestClient) -> None:
+    app = test_client.app
+    original = app.state.translation_service
+    app.state.translation_service = None
+    try:
+        response = test_client.post(
+            "/translations",
+            json={"text": "Hello", "target_language_code": "zh-TW"},
+        )
+        assert response.status_code == 503
+    finally:
+        app.state.translation_service = original
