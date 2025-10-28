@@ -9,6 +9,7 @@ basic:
   narrator_voice: "Leda"           # 預設旁白聲線，可填任何 Gemini 預設 voice 名稱
   start_chapter: 3                  # 從第幾章開始轉換
   chapters_per_run: 1                # 每次跑多少章
+  speaking_pace: "neutral"           # slow / neutral / fast
 
 book:
   chapters_dir: "./data/foundation"     # 書籍資料夾，內含 chapter1.txt, chapter2.txt...
@@ -81,3 +82,13 @@ advanced:
   llm_model: "gemini-2.5-pro"
   tts_model: "gemini-2.5-pro-preview-tts"
   language: "English"
+  tts_pace_profiles:
+    slow:
+      script_hint: "Delivery stays unhurried; articulate each word distinctly with short breaths between clauses."
+      tts_hint: "Maintain an unhurried tempo around 105 words per minute with crisp enunciation and brief pauses between phrases."
+    neutral:
+      script_hint: "Keep a balanced conversational tempo with natural linking between phrases."
+      tts_hint: "Aim for a natural 130 words per minute, balancing articulation clarity with gentle phrase connections."
+    fast:
+      script_hint: "Bring energetic momentum; connect words smoothly with minimal pauses."
+      tts_hint: "Target roughly 160 words per minute, blending phrases with light liaison and avoiding extended silences."

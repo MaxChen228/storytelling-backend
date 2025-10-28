@@ -170,6 +170,7 @@ def build_story_instructions(
     length_cfg: Dict[str, Any],
     prev_summary: str,
     next_summary: str,
+    pace_hint: str,
 ) -> str:
     structure = "\n".join(
         f"{idx + 1}. {section}" for idx, section in enumerate(story_cfg['narrative_structure'])
@@ -184,7 +185,8 @@ def build_story_instructions(
 ROLE & VOICE
 ─ Be the sole narrator, embodying the "{level_profile['label']}" persona.
     ─ Speak directly to the listener as if guiding a book club: first-person, warm, curious, and vividly sensory ({tone}).
-    ─ Output must read like a verbatim transcript: sprinkle natural fillers (e.g., "Mmm...", "uh", soft laughs), brief breaths or pauses (written as "(pause)") only where they heighten authenticity.
+    ─ Output must read like a verbatim transcript: sprinkle natural fillers (e.g., "Mmm...", "uh", soft laughs) and subtle breath cues only where they heighten authenticity.
+    ─ Maintain this pacing guidance: {pace_hint}
 ─ Listener proficiency: {level_profile['vocabulary_hint']}. Obey their needs in every sentence.
 
 STORY TARGET
@@ -198,7 +200,7 @@ STORY TARGET
 
 STYLE DIRECTIVES
     ─ Stay immersive, expressive, and slightly improvisational—capture the cadence of a live storyteller thinking aloud.
-    ─ Use transcript-friendly cues sparingly: e.g., “Mmm…”, “you know,” “(pause)”, “(soft laugh)” to dramatize thoughts, especially before insightful pivots or vocabulary spotlights.
+    ─ Use transcript-friendly cues sparingly: e.g., “Mmm…”, “you know,” “(soft laugh)” to dramatize thoughts, especially before insightful pivots or vocabulary spotlights.
     ─ Sprinkle in {', '.join(story_cfg.get('engagement_prompts', []))}.
     ─ Highlight 1–2 vocabulary items: say the English word, briefly explain meaning per {level_profile['explanation_style']}.
     ─ {level_profile['recap_style']}
@@ -212,7 +214,7 @@ STYLE DIRECTIVES
 
 OUTPUT SAFEGUARDS
 ─ Deliver finished narration only. No scratchpads, planning notes, stage directions, or mention of these instructions.
-    ─ Do not label sections; let the flow imply structure. Stage cues are limited to subtle transcript markers like "(pause)" or "(soft laugh)" when necessary.
+    ─ Do not label sections; let the flow imply structure. Stage cues are limited to subtle transcript markers like soft laughs or quiet breaths when necessary.
     ─ Maintain consistent first-person viewpoint with occasional listener address ("you").
 
     QUICK REFERENCE EXCERPT (for tone calibration only; paraphrase instead of quoting more than two sentences):
@@ -273,6 +275,11 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT, chapter_name: O
         raise ValueError(f"找不到 episode_length '{length_key}' 對應的設定")
 
     narrator_voice = basic.get('narrator_voice', 'Aoede')
+    pace_key = str(basic.get('speaking_pace', 'neutral')).lower()
+    pace_profiles = advanced.get('tts_pace_profiles') or {}
+    pace_profile = pace_profiles.get(pace_key) or pace_profiles.get('neutral') or {}
+    pace_script_hint = pace_profile.get('script_hint', '').strip() or "Keep a balanced conversational tempo suited to attentive learners."
+    pace_tts_hint = pace_profile.get('tts_hint', '').strip()
 
     chapters = load_chapters_from_files(config)
     summary_map = load_summary_map(book_cfg, chapters)
@@ -365,7 +372,8 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT, chapter_name: O
             chapter,
             length_cfg,
             prev_summary,
-            next_summary
+            next_summary,
+            pace_script_hint
         )
         generation_payload = compose_generation_payload(chapter['content'], prev_summary, next_summary)
 
@@ -426,6 +434,9 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT, chapter_name: O
             "narrator_voice": narrator_voice,
             "instructions_chars": len(instructions),
             "narration_pace": level_profile['pacing'],
+            "speaking_pace": pace_key,
+            "speaking_pace_script_hint": pace_script_hint,
+            "speaking_pace_tts_hint": pace_tts_hint,
             "longform": longform,
             "current_summary_file": current_summary_entry.get("file"),
             "current_summary_present": bool((current_summary_entry.get("text") or "").strip()),

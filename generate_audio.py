@@ -69,13 +69,23 @@ def resolve_script_targets(target: Path) -> Tuple[List[Path], Optional[Dict[str,
     raise FileNotFoundError(f"找不到腳本：{target}")
 
 
-def build_tts_prompt(script_text: str, metadata: Dict[str, Any]) -> str:
+def build_tts_prompt(script_text: str, metadata: Dict[str, Any], config: Dict[str, Any]) -> str:
     level_label = metadata.get('level_label', metadata.get('english_level', 'intermediate listeners'))
-    pace = metadata.get('narration_pace', 'steady and clear')
-    instructions = metadata.get('tts_hint', 'single narrator storytelling with gentle teaching moments')
+    base_pace = metadata.get('narration_pace', 'steady and clear')
+    basic_cfg = config.get('basic', {})
+    advanced_cfg = config.get('advanced', {})
+    speaking_pace_key = str(metadata.get('speaking_pace') or basic_cfg.get('speaking_pace', 'neutral')).lower()
+    pace_profiles = advanced_cfg.get('tts_pace_profiles') or {}
+    pace_profile = pace_profiles.get(speaking_pace_key) or pace_profiles.get('neutral') or {}
+    pace_hint = (metadata.get('speaking_pace_tts_hint') or pace_profile.get('tts_hint') or "").strip()
+    tts_focus = metadata.get('tts_hint', 'single narrator storytelling with gentle teaching moments')
+    if pace_hint:
+        pacing_prompt = pace_hint
+    else:
+        pacing_prompt = f"Keep the pacing {base_pace} and ensure consistency."
     return (
         f"Read the following script as a single narrator for {level_label}. "
-        f"Keep the pacing {pace}, emphasize imagery, and follow any inline teaching cues.\n\n{script_text}"
+        f"{pacing_prompt} Emphasize imagery, maintain clarity, and follow inline teaching cues suited to {tts_focus}.\n\n{script_text}"
     )
 
 
@@ -121,7 +131,7 @@ def synthesize_episode(script_dir: Path, audio_dir: Path, config: Dict[str, Any]
     narrator_voice = metadata.get('narrator_voice') or config['basic'].get('narrator_voice', 'Aoede')
     tts_model = config['advanced'].get('tts_model', 'gemini-2.0-flash-exp')
 
-    tts_prompt = build_tts_prompt(script_text, metadata)
+    tts_prompt = build_tts_prompt(script_text, metadata, config)
 
     speech_config = types.SpeechConfig(
         voice_config=types.VoiceConfig(
@@ -157,7 +167,9 @@ def synthesize_episode(script_dir: Path, audio_dir: Path, config: Dict[str, Any]
         "generated_at": timestamp,
         "word_count": metadata.get('actual_words'),
         "book_name": metadata.get('book_name'),
-        "chapter_slug": metadata.get('chapter_slug')
+        "chapter_slug": metadata.get('chapter_slug'),
+        "speaking_pace": metadata.get('speaking_pace') or config.get('basic', {}).get('speaking_pace'),
+        "speaking_pace_tts_hint": metadata.get('speaking_pace_tts_hint'),
     }
     (audio_dir / "metadata.json").write_text(json.dumps(audio_metadata, ensure_ascii=False, indent=2), encoding='utf-8')
 
