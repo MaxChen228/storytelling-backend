@@ -1,0 +1,18 @@
+# 項目核心依賴（精簡版）
+
+# LLM API
+google-generativeai>=0.3.0
+openai>=1.0.0
+
+# 音頻處理
+pydub>=0.25.1
+
+# 工具類
+python-dotenv>=1.0.0
+rich>=13.0.0
+typer>=0.9.0
+pyyaml>=6.0
+
+# HTTP 客戶端
+httpx>=0.27.0
+requests>=2.32.0
