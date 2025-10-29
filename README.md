@@ -6,7 +6,6 @@
 
 - 📝 將英文書籍章節轉換為教學風格的單人旁白腳本
 - 🎙️ 使用 Gemini TTS 生成高質量音頻
-- 🎧 內建 voice_samples 工具，可批次產生 Gemini 聲線試聽檔
 - 📊 生成詞級精準字幕（WhisperX）
 - 🚀 FastAPI 後端 API 服務
 - ⚙️ 支持批次處理和並行執行
@@ -34,7 +33,6 @@ pip install -r requirements/subtitle.txt
 
 ```bash
 GEMINI_API_KEY=your_gemini_api_key_here
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/your-service-account.json
 # Google 翻譯（選填）
 GOOGLE_TRANSLATE_PROJECT_ID=your_gcp_project_id
 GOOGLE_TRANSLATE_LOCATION=global
@@ -42,7 +40,8 @@ TRANSLATION_DEFAULT_TARGET_LANGUAGE=zh-TW
 TRANSLATION_CACHE_SIZE=256
 ```
 
-> 💡 請使用服務帳戶金鑰設定 `GOOGLE_APPLICATION_CREDENTIALS`，以便呼叫 Gemini TTS（Cloud Text-to-Speech GA 模型）與 Cloud Translation API。記得在 GCP 專案中啟用對應服務並開啟計費。
+> 💡 若使用 Google 翻譯，請確保環境已設定 `GOOGLE_APPLICATION_CREDENTIALS`
+指向服務帳戶金鑰 JSON，並於 GCP 專案啟用 Cloud Translation API。
 
 ### 3. 運行腳本生成
 
@@ -54,9 +53,6 @@ TRANSLATION_CACHE_SIZE=256
 python generate_script.py data/foundation chapter1
 python generate_audio.py data/foundation_processed_scripts/chapter1
 python generate_subtitles.py data/foundation_processed_scripts/chapter1
-
-# 產生聲線試聽檔
-python voice_samples/generate_voice_samples.py --config voice_samples/config.yaml
 ```
 
 ### 4. 啟動 API 服務器
@@ -115,7 +111,7 @@ GET /api/audio/{book_id}/{chapter_id}
 ## 技術棧
 
 - **腳本生成**: Google Gemini 2.5 Pro
-- **TTS**: Gemini 2.5 Pro/Flash TTS (Cloud Text-to-Speech)
+- **TTS**: Gemini Multi-Speaker TTS (單人模式)
 - **字幕對齊**: WhisperX (Whisper + 強制對齊)
 - **API 框架**: FastAPI
 - **任務隊列**: Celery (可選)

@@ -13,12 +13,19 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 from dotenv import load_dotenv
-from google.cloud import texttospeech
+from google import genai
+from google.genai import types
 
 from cli_output import basic_config_rows, print_config_table, print_footer, print_header, print_section
 
-CONFIG_PATH_DEFAULT = "./podcast_config.yaml"
 load_dotenv()
+
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+if not GEMINI_API_KEY:
+    print("❌ 請先在 .env 設定 GEMINI_API_KEY")
+    sys.exit(1)
+
+CONFIG_PATH_DEFAULT = "./podcast_config.yaml"
 
 
 def load_config(config_path: str = CONFIG_PATH_DEFAULT) -> Dict[str, Any]:
@@ -113,14 +120,8 @@ def _infer_book_root(script_dir: Path) -> Optional[Path]:
     return script_dir.parent
 
 
-def synthesize_episode(
-    script_dir: Path,
-    audio_dir: Path,
-    config: Dict[str, Any],
-    client: texttospeech.TextToSpeechClient,
-    timestamp: str,
-    save_script_copy: bool = True,
-) -> Tuple[Path, Path]:
+def synthesize_episode(script_dir: Path, audio_dir: Path, config: Dict[str, Any],
+                       client: genai.Client, timestamp: str, save_script_copy: bool = True) -> Tuple[Path, Path]:
     script_file = script_dir / "podcast_script.txt"
     if not script_file.exists():
         raise FileNotFoundError(f"找不到腳本: {script_file}")
@@ -129,58 +130,31 @@ def synthesize_episode(
     metadata_file = script_dir / "metadata.json"
     metadata = json.loads(metadata_file.read_text(encoding='utf-8')) if metadata_file.exists() else {}
 
-    advanced_cfg = config.get('advanced', {})
-    narrator_voice = metadata.get('narrator_voice') or config.get('basic', {}).get('narrator_voice') or "en-US-LedaNeural"
-    tts_model = advanced_cfg.get('tts_model', 'gemini-2.5-pro-tts')
-    language_code = (
-        metadata.get('tts_language')
-        or advanced_cfg.get('language_code')
-        or advanced_cfg.get('language')
-        or "en-US"
-    )
-    audio_encoding_name = (advanced_cfg.get('audio_encoding') or "LINEAR16").upper()
-    sample_rate_hz = int(advanced_cfg.get('sample_rate_hz', 24000))
+    narrator_voice = metadata.get('narrator_voice') or config['basic'].get('narrator_voice', 'Aoede')
+    tts_model = config['advanced'].get('tts_model', 'gemini-2.0-flash-exp')
 
     tts_prompt = build_tts_prompt(script_text, metadata, config)
 
-    voice_kwargs: Dict[str, Any] = {
-        "language_code": language_code,
-        "model_name": tts_model,
-    }
-    if narrator_voice:
-        voice_kwargs["name"] = narrator_voice
-    voice_params = texttospeech.VoiceSelectionParams(**voice_kwargs)
-
-    audio_encoding = getattr(texttospeech.AudioEncoding, audio_encoding_name, texttospeech.AudioEncoding.LINEAR16)
-    audio_config = texttospeech.AudioConfig(
-        audio_encoding=audio_encoding,
-        sample_rate_hertz=sample_rate_hz,
-    )
-
-    synthesis_input = texttospeech.SynthesisInput(text=tts_prompt)
-    response = client.synthesize_speech(
-        request=texttospeech.SynthesizeSpeechRequest(
-            input=synthesis_input,
-            voice=voice_params,
-            audio_config=audio_config,
+    speech_config = types.SpeechConfig(
+        voice_config=types.VoiceConfig(
+            prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=narrator_voice)
         )
     )
-    audio_data = response.audio_content
+
+    response = client.models.generate_content(
+        model=tts_model,
+        contents=tts_prompt,
+        config=types.GenerateContentConfig(
+            response_modalities=["AUDIO"],
+            speech_config=speech_config
+        )
+    )
+
+    audio_data = response.candidates[0].content.parts[0].inline_data.data
 
     audio_dir.mkdir(parents=True, exist_ok=True)
-    extension_map = {
-        texttospeech.AudioEncoding.LINEAR16: "wav",
-        texttospeech.AudioEncoding.MP3: "mp3",
-        texttospeech.AudioEncoding.OGG_OPUS: "ogg",
-        texttospeech.AudioEncoding.MULAW: "mulaw",
-        texttospeech.AudioEncoding.ALAW: "alaw",
-    }
-    file_extension = extension_map.get(audio_encoding, "audio")
-    audio_file = audio_dir / f"podcast.{file_extension}"
-    if audio_encoding == texttospeech.AudioEncoding.LINEAR16:
-        save_wave_file(audio_file, audio_data, rate=sample_rate_hz)
-    else:
-        audio_file.write_bytes(audio_data)
+    audio_file = audio_dir / "podcast.wav"
+    save_wave_file(audio_file, audio_data)
 
     # 只在 legacy 模式或不同目錄時才保存腳本副本
     if save_script_copy and audio_dir != script_dir:
@@ -198,9 +172,6 @@ def synthesize_episode(
         "chapter_slug": metadata.get('chapter_slug'),
         "speaking_pace": metadata.get('speaking_pace') or config.get('basic', {}).get('speaking_pace'),
         "speaking_pace_tts_hint": metadata.get('speaking_pace_tts_hint'),
-        "tts_language_code": language_code,
-        "audio_encoding": audio_encoding_name,
-        "sample_rate_hz": sample_rate_hz,
     }
     (audio_dir / "metadata.json").write_text(json.dumps(audio_metadata, ensure_ascii=False, indent=2), encoding='utf-8')
 
@@ -232,14 +203,7 @@ def generate_audio_from_script(script_reference: str, config_path: str = CONFIG_
         chapter_labels = [entry.get('chapter_slug') or entry.get('chapter_number') for entry in manifest.get('chapters', [])]
         print(f"🗂️ 本次章節: {chapter_labels}")
 
-    try:
-        client = texttospeech.TextToSpeechClient()
-    except Exception as exc:
-        print(f"❌ 無法初始化 Cloud Text-to-Speech 用戶端: {exc}")
-        credentials_hint = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-        if not credentials_hint:
-            print("💡 提示：請設定 GOOGLE_APPLICATION_CREDENTIALS 或使用其它 Application Default Credentials。")
-        return None
+    client = genai.Client(api_key=GEMINI_API_KEY)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     use_book_structure = all(_is_book_chapter_script(Path(script_path)) for script_path in script_dirs)
