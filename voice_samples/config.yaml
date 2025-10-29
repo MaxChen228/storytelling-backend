@@ -1,0 +1,15 @@
+# Gemini TTS voice sample configuration
+# 請依需求調整下列欄位
+
+sample_text: "Hello! This is a sample line for comparing Gemini voices."
+output_dir: ./output/voice_samples
+model: gemini-2.5-pro-tts
+sample_rate_hz: 24000
+
+# voices 可以是字串（僅指定 voice name），或物件，額外提供 language_code / text / model。
+# 提醒：voice 名稱需填入 Cloud Text-to-Speech 提供的 Gemini 聲線 ID（例如 en-US-LedaNeural）。
+voices:
+  - name: en-US-LedaNeural
+    language_code: en-US
+  - name: en-US-RheaNeural
+    language_code: en-US

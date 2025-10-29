@@ -31,80 +31,71 @@ Gemini API 可以使用原生文字轉語音（TTS）生成功能將文字輸入
 ### Python 實作
 
 ```python
-from google import genai
-from google.genai import types
 import wave
+from google.cloud import texttospeech
 
-# 設定音訊檔案保存
-def wave_file(filename, pcm, channels=1, rate=24000, sample_width=2):
+def save_wave(filename: str, pcm: bytes, channels: int = 1, rate: int = 24000, sample_width: int = 2) -> None:
     with wave.open(filename, "wb") as wf:
         wf.setnchannels(channels)
         wf.setsampwidth(sample_width)
         wf.setframerate(rate)
         wf.writeframes(pcm)
 
-client = genai.Client()
-response = client.models.generate_content(
-    model="gemini-2.5-flash-preview-tts",
-    contents="Say cheerfully: Have a wonderful day!",
-    config=types.GenerateContentConfig(
-        response_modalities=["AUDIO"],
-        speech_config=types.SpeechConfig(
-            voice_config=types.VoiceConfig(
-                prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                    voice_name='Kore',
-                )
-            )
-        ),
+client = texttospeech.TextToSpeechClient()
+
+voice_params = texttospeech.VoiceSelectionParams(
+    language_code="en-US",
+    model="gemini-2.5-flash-tts",
+    name="en-US-LedaNeural",  # 請改成你要的 Gemini 聲線
+)
+
+audio_config = texttospeech.AudioConfig(
+    audio_encoding=texttospeech.AudioEncoding.LINEAR16,
+    sample_rate_hertz=24000,
+)
+
+response = client.synthesize_speech(
+    request=texttospeech.SynthesizeSpeechRequest(
+        input=texttospeech.SynthesisInput(text="Say cheerfully: Have a wonderful day!"),
+        voice=voice_params,
+        audio_config=audio_config,
     )
 )
 
-data = response.candidates[0].content.parts[0].inline_data.data
-wave_file('output.wav', data)
+save_wave("output.wav", response.audio_content)
 ```
 
 ### JavaScript 實作
 
 ```javascript
-import {GoogleGenAI} from '@google/genai';
-import wav from 'wav';
-
-async function saveWaveFile(filename, pcmData, channels = 1, rate = 24000, sampleWidth = 2) {
-    return new Promise((resolve, reject) => {
-        const writer = new wav.FileWriter(filename, {
-            channels,
-            sampleRate: rate,
-            bitDepth: sampleWidth * 8,
-        });
-        writer.on('finish', resolve);
-        writer.on('error', reject);
-        writer.write(pcmData);
-        writer.end();
-    });
-}
+import {promises as fs} from 'fs';
+import textToSpeech from '@google-cloud/text-to-speech';
 
 async function main() {
-    const ai = new GoogleGenAI({});
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: 'Say cheerfully: Have a wonderful day!' }] }],
-        config: {
-            responseModalities: ['AUDIO'],
-            speechConfig: {
-                voiceConfig: {
-                    prebuiltVoiceConfig: { voiceName: 'Kore' },
-                },
-            },
+    const client = new textToSpeech.TextToSpeechClient();
+
+    const [response] = await client.synthesizeSpeech({
+        input: {text: 'Say cheerfully: Have a wonderful day!'},
+        voice: {
+            languageCode: 'en-US',
+            model: 'gemini-2.5-flash-tts',
+            name: 'en-US-LedaNeural', // 請改成你要的 Gemini 聲線
+        },
+        audioConfig: {
+            audioEncoding: 'LINEAR16',
+            sampleRateHertz: 24000,
         },
     });
-    
-    const data = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    const audioBuffer = Buffer.from(data, 'base64');
-    await saveWaveFile('output.wav', audioBuffer);
+
+    await fs.writeFile('output.wav', response.audioContent, 'binary');
 }
+
+main().catch(console.error);
 ```
 
 ## 多說話者TTS實作
+
+> ⚠️ 多說話者 Gemini TTS 仍屬預覽功能，目前需使用 `google-genai` SDK 或批次 API；以下範例保持舊流程供參考，正式環境請先確認配額與可用性。
 
 ### Python 實作
 
@@ -120,7 +111,7 @@ Joe: How's it going today Jane?
 Jane: Not too bad, how about you?"""
 
 response = client.models.generate_content(
-    model="gemini-2.5-flash-preview-tts",
+    model="gemini-2.5-flash-tts",
     contents=prompt,
     config=types.GenerateContentConfig(
         response_modalities=["AUDIO"],
@@ -161,7 +152,7 @@ Joe: How's it going today Jane?
 Jane: Not too bad, how about you?`;
 
 const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-preview-tts",
+    model: "gemini-2.5-flash-tts",
     contents: [{ parts: [{ text: prompt }] }],
     config: {
         responseModalities: ['AUDIO'],
@@ -365,4 +356,3 @@ export GEMINI_API_KEY=your_api_key_here
 - 使用批次模式處理大量請求
 - 選擇適合用途的模型（Flash vs Pro）
 - 合理利用上下文快取功能
-
