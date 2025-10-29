@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 import logging
+import math
+import re
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 from threading import RLock
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,16 @@ class ChapterData:
     audio_file: Optional[Path]
     audio_mime_type: Optional[str]
     subtitles: Optional[SubtitleData]
+    word_count: Optional[int]
+    audio_duration_sec: Optional[float]
+    words_per_minute: Optional[float]
+
+
+@dataclass
+class SubtitleMetrics:
+    word_count: Optional[int]
+    audio_duration_sec: Optional[float]
+    words_per_minute: Optional[float]
 
 
 @dataclass
@@ -155,6 +167,28 @@ class OutputDataCache:
         audio_file, audio_mime = self._locate_audio_file(chapter_dir)
         subtitles = self._load_subtitles(chapter_dir)
 
+        word_count = self._coerce_int(metadata_obj.get("actual_words") or metadata_obj.get("word_count"))
+        audio_duration_sec = self._coerce_float(metadata_obj.get("audio_duration_sec") or metadata_obj.get("duration_seconds"))
+        words_per_minute = self._coerce_float(metadata_obj.get("words_per_minute") or metadata_obj.get("wpm"))
+
+        if subtitles and subtitles.srt_path:
+            metrics = self._calculate_subtitle_metrics(subtitles.srt_path)
+            if metrics:
+                if word_count is None and metrics.word_count is not None:
+                    word_count = metrics.word_count
+                if audio_duration_sec is None and metrics.audio_duration_sec is not None:
+                    audio_duration_sec = metrics.audio_duration_sec
+                if words_per_minute is None and metrics.words_per_minute is not None:
+                    words_per_minute = metrics.words_per_minute
+
+                # 將推算結果補充回 metadata 供 API 使用
+                if metrics.word_count is not None:
+                    metadata_obj.setdefault("word_count", metrics.word_count)
+                if metrics.audio_duration_sec is not None:
+                    metadata_obj.setdefault("audio_duration_sec", metrics.audio_duration_sec)
+                if metrics.words_per_minute is not None:
+                    metadata_obj.setdefault("words_per_minute", metrics.words_per_minute)
+
         return ChapterData(
             id=chapter_id,
             title=chapter_title,
@@ -164,6 +198,9 @@ class OutputDataCache:
             audio_file=audio_file,
             audio_mime_type=audio_mime,
             subtitles=subtitles,
+            word_count=word_count,
+            audio_duration_sec=audio_duration_sec,
+            words_per_minute=words_per_minute,
         )
 
     def _locate_audio_file(self, chapter_dir: Path) -> tuple[Optional[Path], Optional[str]]:
@@ -183,6 +220,143 @@ class OutputDataCache:
         if not srt_path.exists():
             return None
         return SubtitleData(srt_path=srt_path)
+
+    def _calculate_subtitle_metrics(self, srt_path: Path) -> Optional[SubtitleMetrics]:
+        try:
+            content = srt_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            logger.warning("Failed to read subtitles %s: %s", srt_path, exc)
+            return None
+
+        blocks = re.split(r"\n\s*\n", content.strip())
+        if not blocks:
+            return None
+
+        time_pattern = re.compile(r"(?P<start>\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(?P<end>\d{2}:\d{2}:\d{2},\d{3})")
+        word_pattern = re.compile(r"[A-Za-z][A-Za-z'\-]*")
+
+        start_times: List[float] = []
+        end_times: List[float] = []
+        total_words = 0
+
+        for raw_block in blocks:
+            lines = [line.strip() for line in raw_block.splitlines() if line.strip()]
+            if len(lines) < 2:
+                continue
+
+            time_line: Optional[str] = None
+            for line in lines[1:]:
+                if "-->" in line:
+                    time_line = line
+                    break
+            if not time_line:
+                continue
+
+            match = time_pattern.search(time_line)
+            if not match:
+                continue
+
+            start = self._parse_srt_timestamp(match.group("start"))
+            end = self._parse_srt_timestamp(match.group("end"))
+            if start is None or end is None or end <= start:
+                continue
+
+            start_times.append(start)
+            end_times.append(end)
+
+            time_index = lines.index(time_line)
+            text_lines = lines[time_index + 1 :]
+            if not text_lines:
+                continue
+
+            text_without_tags = re.sub(r"<[^>]+>", " ", " ".join(text_lines))
+            words = word_pattern.findall(text_without_tags)
+            total_words += len(words)
+
+        if not start_times:
+            return None
+
+        duration = max(end_times) - min(start_times)
+        duration_sec: Optional[float]
+        if duration <= 0:
+            duration_sec = None
+        else:
+            duration_sec = round(duration, 3)
+
+        word_count = total_words if total_words > 0 else None
+
+        words_per_minute: Optional[float] = None
+        if word_count is not None and duration_sec and duration_sec > 0:
+            words_per_minute = round(word_count / (duration_sec / 60.0), 1)
+
+        return SubtitleMetrics(
+            word_count=word_count,
+            audio_duration_sec=duration_sec,
+            words_per_minute=words_per_minute,
+        )
+
+    @staticmethod
+    def _parse_srt_timestamp(raw: str) -> Optional[float]:
+        match = re.match(r"^(\d{2}):(\d{2}):(\d{2}),(\d{3})$", raw.strip())
+        if not match:
+            return None
+        hours, minutes, seconds, millis = match.groups()
+        try:
+            total_seconds = (
+                int(hours) * 3600
+                + int(minutes) * 60
+                + int(seconds)
+                + int(millis) / 1000.0
+            )
+        except ValueError:
+            return None
+        return float(total_seconds)
+
+    @staticmethod
+    def _coerce_int(value: object) -> Optional[int]:
+        if value is None:
+            return None
+        if isinstance(value, bool):
+            return int(value)
+        if isinstance(value, int):
+            return value
+        if isinstance(value, float):
+            if math.isnan(value):
+                return None
+            return int(round(value))
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return None
+            try:
+                return int(stripped)
+            except ValueError:
+                return None
+        return None
+
+    @staticmethod
+    def _coerce_float(value: object) -> Optional[float]:
+        if value is None:
+            return None
+        if isinstance(value, bool):
+            return float(value)
+        if isinstance(value, (int, float)):
+            numeric = float(value)
+            if math.isnan(numeric):
+                return None
+            return numeric
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return None
+            try:
+                numeric = float(stripped)
+                if math.isnan(numeric):
+                    return None
+                return numeric
+            except ValueError:
+                return None
+        return None
 
     def _read_json(self, path: Path) -> Optional[dict]:
         if not path.exists():

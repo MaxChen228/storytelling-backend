@@ -336,6 +336,9 @@ def _to_chapter_item(chapter: ChapterData) -> ChapterItem:
         chapter_number=chapter.number,
         audio_available=chapter.audio_file is not None,
         subtitles_available=chapter.subtitles is not None and chapter.subtitles.srt_path is not None,
+        word_count=chapter.word_count,
+        audio_duration_sec=chapter.audio_duration_sec,
+        words_per_minute=chapter.words_per_minute,
     )
 
 
@@ -354,6 +357,9 @@ def _to_chapter_playback(request: Request, book_id: str, chapter: ChapterData) -
         chapter_number=chapter.number,
         audio_url=audio_url,
         subtitles_url=subtitles_url,
+        word_count=chapter.word_count,
+        audio_duration_sec=chapter.audio_duration_sec,
+        words_per_minute=chapter.words_per_minute,
     )
 
 

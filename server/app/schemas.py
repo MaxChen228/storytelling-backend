@@ -24,6 +24,9 @@ class ChapterItem(BaseModel):
     chapter_number: Optional[int] = None
     audio_available: bool = False
     subtitles_available: bool = False
+    word_count: Optional[int] = None
+    audio_duration_sec: Optional[float] = None
+    words_per_minute: Optional[float] = None
 
 
 class ChapterPlayback(BaseModel):
@@ -34,6 +37,9 @@ class ChapterPlayback(BaseModel):
     chapter_number: Optional[int] = None
     audio_url: Optional[str] = None
     subtitles_url: Optional[str] = None
+    word_count: Optional[int] = None
+    audio_duration_sec: Optional[float] = None
+    words_per_minute: Optional[float] = None
 
 
 class TranslationRequest(BaseModel):
