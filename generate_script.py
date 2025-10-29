@@ -18,6 +18,8 @@ import yaml
 from dotenv import load_dotenv
 from podcastfy.client import generate_podcast
 
+from cli_output import basic_config_rows, print_config_table, print_footer, print_header, print_section
+
 load_dotenv()
 
 CONFIG_PATH_DEFAULT = "./podcast_config.yaml"
@@ -245,9 +247,7 @@ def save_chapter_script(output_dir: Path, script_text: str, metadata: Dict[str, 
 
 
 def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT, chapter_name: Optional[str] = None) -> str:
-    print("=" * 60)
-    print("📚 Storytelling 單聲線腳本生成")
-    print("=" * 60)
+    print_header("📚 Storytelling 單聲線腳本生成")
 
     config = load_config(config_path)
     basic = config['basic']
@@ -319,13 +319,14 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT, chapter_name: O
     if not selected:
         raise ValueError("沒有選到任何章節，請調整 start_chapter 或 chapters_per_run")
 
+    print_config_table(basic_config_rows(basic))
+    print_section("處理資訊")
     print(f"📖 章節資料夾: {book_cfg['chapters_dir']} (符合 {len(chapters)} 個檔案)")
     print(f"📌 全部章節數量: {total_chapters}")
     print(f"🎯 本次處理: 第 {start_chapter} - {start_chapter + len(selected) - 1} 章")
     print(f"🗣️ 英語等級: {level_profile['label']}")
     print(f"🎧 旁白聲線: {narrator_voice}")
     print(f"⏱️ 預計時長: {length_cfg['time_range']} ({length_cfg['word_count']} words)")
-    print("-" * 60)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     chapters_dir_path = Path(book_cfg['chapters_dir']).expanduser().resolve()
@@ -491,12 +492,11 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT, chapter_name: O
     }
     session_manifest.write_text(json.dumps(session_data, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print("=" * 60)
-    print(f"🎉 {book_name} 章節腳本更新！")
-    for entry in session_entries:
-        print(f"   • {entry['chapter_slug']} ({entry['chapter_title']}) → {entry['actual_words']} words")
-    print("=" * 60)
-    print(f"下一步：python generate_audio.py {session_manifest}")
+    details = [
+        f"{entry['chapter_slug']} ({entry['chapter_title']}) → {entry['actual_words']} words"
+        for entry in session_entries
+    ]
+    print_footer("🎉 腳本生成完成", details)
 
     return str(session_manifest)
 

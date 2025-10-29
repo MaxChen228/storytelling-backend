@@ -16,6 +16,8 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+from cli_output import basic_config_rows, print_config_table, print_footer, print_header, print_section
+
 load_dotenv()
 
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
@@ -177,11 +179,12 @@ def synthesize_episode(script_dir: Path, audio_dir: Path, config: Dict[str, Any]
 
 
 def generate_audio_from_script(script_reference: str, config_path: str = CONFIG_PATH_DEFAULT) -> Optional[str]:
-    print("=" * 60)
-    print("🎵 Storytelling 單聲線音頻生成")
-    print("=" * 60)
+    print_header("🎵 Storytelling 單聲線音頻生成")
 
     config = load_config(config_path)
+    basic = config.get("basic", {})
+    print_config_table(basic_config_rows(basic))
+
     script_target = Path(script_reference).resolve()
     try:
         script_dirs, manifest = resolve_script_targets(script_target)
@@ -193,12 +196,12 @@ def generate_audio_from_script(script_reference: str, config_path: str = CONFIG_
         print("❌ 未找到任何腳本")
         return None
 
+    print_section("輸入資訊")
     print(f"📁 腳本來源: {script_target}")
     print(f"📝 章節數量: {len(script_dirs)}")
     if manifest and manifest.get('chapters'):
         chapter_labels = [entry.get('chapter_slug') or entry.get('chapter_number') for entry in manifest.get('chapters', [])]
         print(f"🗂️ 本次章節: {chapter_labels}")
-    print("-" * 60)
 
     client = genai.Client(api_key=GEMINI_API_KEY)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -258,6 +261,11 @@ def generate_audio_from_script(script_reference: str, config_path: str = CONFIG_
         print("❌ 沒有任何音頻成功生成")
         return None
 
+    details = [
+        f"{entry['chapter_slug']} → {entry['audio_dir']}"
+        for entry in generated_entries
+    ]
+
     if use_book_structure and book_root is not None:
         sessions_root = book_root / "sessions"
         audio_session = {
@@ -268,11 +276,7 @@ def generate_audio_from_script(script_reference: str, config_path: str = CONFIG_
         }
         audio_manifest = sessions_root / f"audio_session_{timestamp}.json"
         audio_manifest.write_text(json.dumps(audio_session, ensure_ascii=False, indent=2), encoding='utf-8')
-        print("=" * 60)
-        print("🎉 音頻批次完成！")
-        for entry in generated_entries:
-            print(f"   • {entry['chapter_slug']} → {entry['audio_dir']}")
-        print("=" * 60)
+        print_footer("🎉 音頻生成完成", details)
         return str(audio_manifest)
 
     summary = {
@@ -282,11 +286,7 @@ def generate_audio_from_script(script_reference: str, config_path: str = CONFIG_
     assert legacy_output_dir is not None
     (legacy_output_dir / "batch_manifest.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding='utf-8')
 
-    print("=" * 60)
-    print("🎉 音頻批次完成！")
-    for entry in generated_entries:
-        print(f"   • {entry['chapter_slug']} → {entry['audio_dir']}")
-    print("=" * 60)
+    print_footer("🎉 音頻生成完成", details)
     return str(legacy_output_dir)
 
 

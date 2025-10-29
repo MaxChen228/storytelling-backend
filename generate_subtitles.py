@@ -14,6 +14,10 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+import yaml
+
+from cli_output import basic_config_rows, print_config_table, print_footer, print_header, print_section
+
 # 動態加入測試工具路徑
 SCRIPT_ROOT = Path(__file__).resolve().parent
 ALIGNMENT_DIR = SCRIPT_ROOT / "whisperx_alignment_test" / "scripts"
@@ -36,6 +40,7 @@ except ModuleNotFoundError as exc:  # pragma: no cover - 確保有明確錯誤�
 from text_cleaner import clean_script_for_alignment, prepare_segments
 
 DEFAULT_FOUNDATION_DIR = SCRIPT_ROOT / "output" / "foundation"
+CONFIG_PATH_DEFAULT = "./podcast_config.yaml"
 
 
 def detect_audio_file(chapter_dir: Path) -> Optional[Path]:
@@ -47,11 +52,24 @@ def detect_audio_file(chapter_dir: Path) -> Optional[Path]:
     return None
 
 
+def load_config(config_path: str) -> Optional[dict]:
+    config_file = Path(config_path)
+    if not config_file.exists():
+        return None
+    with config_file.open("r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Generate subtitles via WhisperX")
     parser.add_argument(
         "chapter",
         help="章節名稱 (例如 chapter3) 或章節輸出的絕對路徑",
+    )
+    parser.add_argument(
+        "--config",
+        default=CONFIG_PATH_DEFAULT,
+        help=f"配置文件路徑（預設：{CONFIG_PATH_DEFAULT})",
     )
     parser.add_argument(
         "--device",
@@ -89,6 +107,17 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     args = parser.parse_args(argv)
 
+    print_header("🧾 Storytelling 字幕生成")
+
+    config = load_config(args.config)
+    if config:
+        basic = config.get("basic", {})
+        print_config_table(basic_config_rows(basic))
+    else:
+        print("⚠️ 找不到配置文件，僅顯示預設參數資訊")
+
+    print_section("輸入資訊")
+
     # 解析章節路徑
     chapter_input = Path(args.chapter)
     if chapter_input.is_dir():
@@ -114,9 +143,6 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(f"  SRT : {srt_output}")
         return 0
 
-    print("=" * 60)
-    print("🎯 生成字幕")
-    print("=" * 60)
     print(f"📖 章節: {chapter_dir.name}")
     print(f"📂 音頻: {audio_path}")
     print(f"📝 腳本: {script_path}")
@@ -143,9 +169,11 @@ def main(argv: Optional[list[str]] = None) -> int:
     save_alignment_json(result, json_output)
     generate_srt(result, srt_output)
 
-    print("\n✅ 字幕已產生")
-    print(f"  JSON: {json_output}")
-    print(f"  SRT : {srt_output}")
+    details = [
+        f"JSON: {json_output}",
+        f"SRT : {srt_output}",
+    ]
+    print_footer("🎉 字幕生成完成", details)
     return 0
 
 

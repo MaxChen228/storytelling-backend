@@ -187,12 +187,18 @@ parallel_execute() {
     echo -e "  成功: ${GREEN}$success${NC}"
     echo -e "  失败: ${RED}$failed${NC}"
 
+    if [ "$failed" -gt 0 ]; then
+        return "$failed"
+    fi
+
     return 0
 }
 
 # 顯示標題
 show_header() {
-    clear
+    if [ -t 1 ]; then
+        clear
+    fi
     echo -e "${CYAN}╔══════════════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${CYAN}║         🎙️  Storytelling Podcast - Foundation 專案管理               ║${NC}"
     echo -e "${CYAN}╚══════════════════════════════════════════════════════════════════════════╝${NC}"
@@ -280,7 +286,7 @@ display_chapters() {
     echo "├──────┼─────────────────┼──────────┼──────────┼──────────┼──────────┤"
 
     # 顯示每個章節
-    local index=1
+    local index=0
     for entry in "${chapters[@]}"; do
         IFS='|' read -r chapter has_source has_script has_audio has_subtitle <<< "$entry"
 
@@ -319,15 +325,15 @@ select_chapter() {
     fi
 
     # 使用 >&2 將提示輸出到 stderr，避免污染返回值
-    echo -e "${WHITE}請選擇章節編號：${NC}" >&2
+    echo -e "${WHITE}請選擇章節編號（0 開始）：${NC}" >&2
     read -p "> " choice
 
-    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt ${#chapters[@]} ]; then
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 0 ] || [ "$choice" -ge ${#chapters[@]} ]; then
         echo -e "${RED}${ICON_MISSING} 無效的選擇${NC}" >&2
         return 1
     fi
 
-    local entry="${chapters[$((choice - 1))]}"
+    local entry="${chapters[$choice]}"
     IFS='|' read -r chapter has_source has_script has_audio has_subtitle <<< "$entry"
 
     # 只有這一行輸出到 stdout，作為返回值（新格式：4 個字段）
@@ -339,9 +345,7 @@ generate_script() {
     local chapter=$1
 
     echo ""
-    echo -e "${GREEN}${ICON_SCRIPT} 正在為 ${chapter} 生成腳本...${NC}"
-    echo -e "${GRAY}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo ""
+    echo -e "${GREEN}${ICON_SCRIPT} 生成腳本：${chapter}${NC}"
 
     # 檢查源文件是否存在
     local source_file="$DATA_DIR/${chapter}.txt"
@@ -352,16 +356,12 @@ generate_script() {
     fi
 
     # 調用腳本生成程式
-    $PYTHON generate_script.py "$chapter"
-
-    if [ $? -eq 0 ]; then
-        echo ""
-        echo -e "${GREEN}${ICON_COMPLETE} 腳本生成成功！${NC}"
-        echo -e "${WHITE}輸出位置：${NC}$FOUNDATION_DIR/$chapter/podcast_script.txt"
-    else
+    if ! "$PYTHON" generate_script.py "$chapter"; then
         echo -e "${RED}${ICON_MISSING} 腳本生成失敗${NC}"
         return 1
     fi
+
+    echo -e "${GREEN}${ICON_COMPLETE} 腳本任務完成${NC}"
 }
 
 # 生成音頻
@@ -378,21 +378,15 @@ generate_audio() {
     fi
 
     echo ""
-    echo -e "${GREEN}${ICON_AUDIO} 正在為 ${chapter} 生成音頻...${NC}"
-    echo -e "${GRAY}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo ""
+    echo -e "${GREEN}${ICON_AUDIO} 生成音頻：${chapter}${NC}"
 
     # 調用音頻生成程式
-    $PYTHON generate_audio.py "$FOUNDATION_DIR/$chapter"
-
-    if [ $? -eq 0 ]; then
-        echo ""
-        echo -e "${GREEN}${ICON_COMPLETE} 音頻生成成功！${NC}"
-        echo -e "${WHITE}輸出位置：${NC}$FOUNDATION_DIR/$chapter/podcast.wav"
-    else
+    if ! "$PYTHON" generate_audio.py "$FOUNDATION_DIR/$chapter"; then
         echo -e "${RED}${ICON_MISSING} 音頻生成失敗${NC}"
         return 1
     fi
+
+    echo -e "${GREEN}${ICON_COMPLETE} 音頻任務完成${NC}"
 }
 
 # 生成字幕
@@ -416,24 +410,17 @@ generate_subtitles() {
     fi
 
     local chapter_dir="$FOUNDATION_DIR/$chapter"
-    local subtitle_path="$chapter_dir/subtitles.srt"
 
     echo ""
-    echo -e "${GREEN}${ICON_SUBTITLE} 正在為 ${chapter} 生成字幕...${NC}"
-    echo -e "${GRAY}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo ""
+    echo -e "${GREEN}${ICON_SUBTITLE} 生成字幕：${chapter}${NC}"
 
     local device_flag=("--device" "$SUBTITLE_DEVICE_DEFAULT")
-    $PYTHON generate_subtitles.py "$chapter_dir" "${device_flag[@]}"
-
-    if [ $? -eq 0 ]; then
-        echo ""
-        echo -e "${GREEN}${ICON_COMPLETE} 字幕生成成功！${NC}"
-        echo -e "${WHITE}輸出位置：${NC}$subtitle_path"
-    else
+    if ! "$PYTHON" generate_subtitles.py "$chapter_dir" "${device_flag[@]}"; then
         echo -e "${RED}${ICON_MISSING} 字幕生成失敗${NC}"
         return 1
     fi
+
+    echo -e "${GREEN}${ICON_COMPLETE} 字幕任務完成${NC}"
 }
 
 # 播放音訊並同步字幕
@@ -495,7 +482,7 @@ play_audio_with_subtitles() {
 # 批次生成腳本
 batch_generate_scripts() {
     echo ""
-    echo -e "${GREEN}📚 批次生成腳本${NC}"
+    echo -e "${GREEN}📚 生成腳本（可輸入單章或範圍）${NC}"
     echo -e "${GRAY}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 
@@ -523,7 +510,7 @@ batch_generate_scripts() {
     done
     echo ""
 
-    echo -e "${CYAN}請輸入要生成的章節範圍：${NC}"
+    echo -e "${CYAN}請輸入要生成的章節範圍（索引從 0 開始）：${NC}"
     echo -e "${GRAY}  • 範例: ${WHITE}0-5${GRAY} (生成前 6 章)${NC}"
     echo -e "${GRAY}  • 範例: ${WHITE}0,2,4${GRAY} (生成第 0, 2, 4 章)${NC}"
     echo -e "${GRAY}  • 範例: ${WHITE}1-3,7-9${GRAY} (生成第 1-3 和 7-9 章)${NC}"
@@ -557,13 +544,20 @@ batch_generate_scripts() {
     fi
 
     # 並行執行
-    parallel_execute generate_script "${selected_chapters[@]}"
+    local status=0
+    if ! parallel_execute generate_script "${selected_chapters[@]}"; then
+        status=$?
+        echo ""
+        echo -e "${YELLOW}${ICON_WARNING} 部分章節處理失敗，請檢查以上訊息${NC}"
+    fi
+
+    return $status
 }
 
 # 批次生成音頻
 batch_generate_audio() {
     echo ""
-    echo -e "${GREEN}🎵 批次生成音頻${NC}"
+    echo -e "${GREEN}🎵 生成音頻（可輸入單章或範圍）${NC}"
     echo -e "${GRAY}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 
@@ -596,7 +590,7 @@ batch_generate_audio() {
     done
     echo ""
 
-    echo -e "${CYAN}請輸入要生成的章節範圍：${NC}"
+    echo -e "${CYAN}請輸入要生成的章節範圍（索引從 0 開始）：${NC}"
     echo -e "${GRAY}  • 範例: ${WHITE}0-5${GRAY} (生成前 6 章)${NC}"
     echo -e "${GRAY}  • 範例: ${WHITE}0,2,4${GRAY} (生成第 0, 2, 4 章)${NC}"
     echo -e "${GRAY}  • 範例: ${WHITE}1-3,7-9${GRAY} (生成第 1-3 和 7-9 章)${NC}"
@@ -635,13 +629,20 @@ batch_generate_audio() {
     }
 
     # 並行執行
-    parallel_execute generate_audio_wrapper "${selected_chapters[@]}"
+    local status=0
+    if ! parallel_execute generate_audio_wrapper "${selected_chapters[@]}"; then
+        status=$?
+        echo ""
+        echo -e "${YELLOW}${ICON_WARNING} 部分章節處理失敗，請檢查以上訊息${NC}"
+    fi
+
+    return $status
 }
 
 # 批次生成字幕
 batch_generate_subtitles() {
     echo ""
-    echo -e "${GREEN}${ICON_SUBTITLE} 批次生成字幕${NC}"
+    echo -e "${GREEN}${ICON_SUBTITLE} 生成字幕（可輸入單章或範圍）${NC}"
     echo -e "${GRAY}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 
@@ -672,7 +673,7 @@ batch_generate_subtitles() {
     done
     echo ""
 
-    echo -e "${CYAN}請輸入要生成的章節範圍：${NC}"
+    echo -e "${CYAN}請輸入要生成的章節範圍（索引從 0 開始）：${NC}"
     echo -e "${GRAY}  • 範例: ${WHITE}0-5${GRAY} (生成前 6 章)${NC}"
     echo -e "${GRAY}  • 範例: ${WHITE}0,2,4${GRAY} (生成第 0, 2, 4 章)${NC}"
     echo -e "${GRAY}  • 範例: ${WHITE}1-3,7-9${GRAY} (生成第 1-3 和 7-9 章)${NC}"
@@ -723,8 +724,16 @@ batch_generate_subtitles() {
 
     echo ""
     echo -e "${WHITE}串行執行完成！${NC}"
-    echo -e "  成功: ${GREEN}$success${NC}"
-    echo -e "  失敗: ${RED}$failed${NC}"
+   echo -e "  成功: ${GREEN}$success${NC}"
+   echo -e "  失敗: ${RED}$failed${NC}"
+
+    if [ "$failed" -gt 0 ]; then
+        echo ""
+        echo -e "${YELLOW}${ICON_WARNING} 部分章節處理失敗，請檢查以上訊息${NC}"
+        return "$failed"
+    fi
+
+    return 0
 }
 
 # 主選單
@@ -732,22 +741,19 @@ show_main_menu() {
     echo -e "${WHITE}請選擇操作：${NC}"
     echo ""
     echo -e "${GREEN}📝 腳本生成${NC}"
-    echo -e "  ${BLUE}1)${NC} 為指定章節生成腳本"
-    echo -e "  ${BLUE}2)${NC} 批次生成腳本 ${GRAY}(可選範圍，🚀 並行)${NC}"
+    echo -e "  ${BLUE}1)${NC} 生成腳本 ${GRAY}(0 起索引，可輸入單章或範圍，🚀 並行)${NC}"
     echo ""
     echo -e "${PURPLE}🎵 音頻生成${NC}"
-    echo -e "  ${BLUE}3)${NC} 為指定章節生成音頻 ${GRAY}(需先有腳本)${NC}"
-    echo -e "  ${BLUE}4)${NC} 批次生成音頻 ${GRAY}(可選範圍，🚀 並行)${NC}"
+    echo -e "  ${BLUE}2)${NC} 生成音頻 ${GRAY}(需先有腳本，可輸入單章或範圍，🚀 並行)${NC}"
     echo ""
     echo -e "${CYAN}🧾 字幕生成${NC}"
-    echo -e "  ${BLUE}5)${NC} 為指定章節生成字幕 ${GRAY}(需先有腳本與音頻)${NC}"
-    echo -e "  ${BLUE}6)${NC} 批次生成字幕 ${GRAY}(可選範圍，⏱️  串行)${NC}"
+    echo -e "  ${BLUE}3)${NC} 生成字幕 ${GRAY}(需先有腳本與音頻，可輸入單章或範圍，⏱️  串行)${NC}"
     echo ""
     echo -e "${CYAN}🛠️  工具功能${NC}"
-    echo -e "  ${BLUE}7)${NC} 播放章節音訊（同步字幕）"
-    echo -e "  ${BLUE}8)${NC} 測試 API 連線"
-    echo -e "  ${BLUE}9)${NC} 查看配置說明"
-    echo -e "  ${BLUE}10)${NC} 刷新顯示"
+    echo -e "  ${BLUE}4)${NC} 播放章節音訊（同步字幕）"
+    echo -e "  ${BLUE}5)${NC} 測試 API 連線"
+    echo -e "  ${BLUE}6)${NC} 查看配置說明"
+    echo -e "  ${BLUE}7)${NC} 刷新顯示"
     echo ""
     echo -e "  ${BLUE}0)${NC} 退出"
     echo ""
@@ -763,86 +769,63 @@ main() {
         display_chapters
         show_main_menu
 
-        read -p "請輸入選項 (0-10): " choice
+        read -p "請輸入選項 (0-7): " choice
 
         case $choice in
             1)
-                # 為指定章節生成腳本
-                echo ""
-                local result=$(select_chapter)
-                if [ $? -eq 0 ]; then
-                    IFS='|' read -r chapter has_source has_script has_audio has_subtitle <<< "$result"
-                    generate_script "$chapter"
-
+                # 生成腳本（單章或範圍）
+                if ! batch_generate_scripts; then
                     echo ""
                     read -p "按 Enter 繼續..."
+                    continue
                 fi
+
+                echo ""
+                read -p "按 Enter 繼續..."
                 ;;
 
             2)
-                # 批次生成腳本
-                batch_generate_scripts
+                # 生成音頻（單章或範圍）
+                if ! batch_generate_audio; then
+                    echo ""
+                    read -p "按 Enter 繼續..."
+                    continue
+                fi
 
                 echo ""
                 read -p "按 Enter 繼續..."
                 ;;
 
             3)
-                # 為指定章節生成音頻
-                echo ""
-                local result=$(select_chapter)
-                if [ $? -eq 0 ]; then
-                    IFS='|' read -r chapter has_source has_script has_audio has_subtitle <<< "$result"
-                    generate_audio "$chapter" "$has_script"
-
+                # 生成字幕（單章或範圍）
+                if ! batch_generate_subtitles; then
                     echo ""
                     read -p "按 Enter 繼續..."
+                    continue
                 fi
+
+                echo ""
+                read -p "按 Enter 繼續..."
                 ;;
 
             4)
-                # 批次生成音頻
-                batch_generate_audio
+                # 播放章節音訊＋字幕
+                echo ""
+                local result
+                if ! result=$(select_chapter); then
+                    echo ""
+                    read -p "按 Enter 繼續..."
+                    continue
+                fi
+
+                IFS='|' read -r chapter has_source has_script has_audio has_subtitle <<< "$result"
+                play_audio_with_subtitles "$chapter" "$has_audio" "$has_subtitle"
 
                 echo ""
                 read -p "按 Enter 繼續..."
                 ;;
 
             5)
-                # 為指定章節生成字幕
-                echo ""
-                local result=$(select_chapter)
-                if [ $? -eq 0 ]; then
-                    IFS='|' read -r chapter has_source has_script has_audio has_subtitle <<< "$result"
-                    generate_subtitles "$chapter" "$has_script" "$has_audio"
-
-                    echo ""
-                    read -p "按 Enter 繼續..."
-                fi
-                ;;
-
-            6)
-                # 批次生成字幕
-                batch_generate_subtitles
-
-                echo ""
-                read -p "按 Enter 繼續..."
-                ;;
-
-            7)
-                # 播放章節音訊＋字幕
-                echo ""
-                local result=$(select_chapter)
-                if [ $? -eq 0 ]; then
-                    IFS='|' read -r chapter has_source has_script has_audio has_subtitle <<< "$result"
-                    play_audio_with_subtitles "$chapter" "$has_audio" "$has_subtitle"
-
-                    echo ""
-                    read -p "按 Enter 繼續..."
-                fi
-                ;;
-
-            8)
                 # 測試 API
                 echo ""
                 echo -e "${YELLOW}🛠️  測試 API 連線${NC}"
@@ -852,7 +835,7 @@ main() {
                 read -p "按 Enter 繼續..."
                 ;;
 
-            9)
+            6)
                 # 查看配置
                 echo ""
                 echo -e "${YELLOW}🛠️  配置說明${NC}"
@@ -866,14 +849,16 @@ main() {
                 read -p "按 Enter 繼續..."
                 ;;
 
-            10)
+            7)
                 # 刷新顯示（直接重新進入循環）
                 continue
                 ;;
 
             0)
                 # 退出
-                clear
+                if [ -t 1 ]; then
+                    clear
+                fi
                 echo -e "${GREEN}${ICON_COMPLETE} 感謝使用 Storytelling Podcast 管理工具！${NC}"
                 echo ""
                 exit 0
