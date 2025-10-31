@@ -601,14 +601,22 @@ chapter_range_prompt() {
             nosubtitle)[ "$has_subtitle" != "true" ] || continue ;;
             *) ;;
         esac
-        if [ -n "$optional_status" ]; then
-            case "$optional_status" in
-                requires_script) [ "$has_script" = "true" ] || continue ;;
-                requires_audio)  [ "$has_audio" = "true" ]  || continue ;;
+    if [ -n "$optional_status" ]; then
+        IFS=',' read -ra _optional_filters <<< "$optional_status"
+        local skip_chapter=false
+        for _filter in "${_optional_filters[@]}"; do
+            case "${_filter// /}" in
+                requires_source)   [ "$has_source" = "true" ]   || { skip_chapter=true; break; } ;;
+                requires_summary)  [ "$has_summary" = "true" ]  || { skip_chapter=true; break; } ;;
+                requires_script)   [ "$has_script" = "true" ]   || { skip_chapter=true; break; } ;;
+                requires_audio)    [ "$has_audio" = "true" ]    || { skip_chapter=true; break; } ;;
+                requires_subtitle) [ "$has_subtitle" = "true" ] || { skip_chapter=true; break; } ;;
             esac
-        fi
-        selectable+=("$chapter")
-    done
+        done
+        [ "$skip_chapter" = true ] && continue
+    fi
+    selectable+=("$chapter")
+done
 
     if [ ${#selectable[@]} -eq 0 ]; then
         echo -e "${YELLOW}${ICON_WARNING} 沒有符合條件的章節可供 ${purpose}${NC}"
@@ -648,7 +656,7 @@ chapter_range_prompt() {
 
 batch_generate_scripts() {
     local output
-    if ! output="$(chapter_range_prompt "生成腳本" "source")"; then
+    if ! output="$(chapter_range_prompt "生成腳本" "noscript" "requires_source")"; then
         return 1
     fi
     local chapters=()
@@ -663,10 +671,7 @@ batch_generate_scripts() {
     echo -e "${WHITE}準備為以下章節生成腳本：${NC}"
     printf "  %s\n" "${chapters[@]}"
     echo ""
-    local entry
-    for entry in "${chapters[@]}"; do
-        generate_script "$entry"
-    done
+    parallel_execute generate_script "${chapters[@]}"
 }
 
 batch_generate_audio() {

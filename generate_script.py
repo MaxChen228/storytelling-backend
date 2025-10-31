@@ -421,6 +421,8 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT,
         generation_payload = compose_generation_payload(chapter['content'], prev_summary, next_summary)
 
         conversation_config = {
+            "mode": "monologue",
+            "dialogue_structure": "monologue",
             "word_count": length_cfg['word_count'],
             "max_num_chunks": length_cfg['max_num_chunks'],
             "min_chunk_size": length_cfg['min_chunk_size'],
@@ -431,9 +433,13 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT,
             "output_language": "English",
             "conversation_style": story_cfg.get('tone', []),
             "roles": ["Narrator"],
-            "roles_person1": "Narrator",
-            "dialogue_structure": story_cfg['narrative_structure'],
-            "engagement_techniques": story_cfg['engagement_prompts'],
+            "roles_person1": "Narrator – sole storyteller addressing the listener",
+            "roles_person2": "",
+            "role_descriptions": [
+                "Narrator delivers the entire episode as a continuous first-person monologue; no other speakers appear."
+            ],
+            "story_outline": story_cfg.get('narrative_structure', []),
+            "engagement_techniques": story_cfg.get('engagement_prompts'),
             "creativity": story_cfg.get('creativity', 0.65),
             "user_instructions": instructions
         }
