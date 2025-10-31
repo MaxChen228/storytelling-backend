@@ -23,7 +23,7 @@ from generate_audio import generate_audio_from_script
 class PodcastWorkflow:
     """播客生成工作流程控制器"""
     
-    def __init__(self, mode: str = "dev", auto_confirm: bool = False):
+    def __init__(self, mode: str = "dev", auto_confirm: bool = False, book_id: Optional[str] = None):
         """
         Args:
             mode: 'dev'(開發模式), 'prod'(生產模式), 'custom'(自訂模式)
@@ -31,6 +31,7 @@ class PodcastWorkflow:
         """
         self.mode = mode
         self.auto_confirm = auto_confirm
+        self.book_id = book_id or os.environ.get("STORY_BOOK_ID")
         self.script_dir = None
         self.audio_dir = None
         
@@ -97,10 +98,13 @@ class PodcastWorkflow:
         """執行步驟1：生成腳本"""
         print("\n🚀 步驟 1: 生成腳本")
         print("-"*60)
+        if not self.book_id:
+            print("❌ 請提供書籍識別碼 --book-id 或設定環境變數 STORY_BOOK_ID")
+            return None
         
         try:
             # 調用 step1 的功能
-            script_dir = generate_script_only(config_path)
+            script_dir = generate_script_only(config_path, book_id=self.book_id)
             
             if script_dir:
                 self.script_dir = script_dir
@@ -303,11 +307,13 @@ def main():
                        choices=['script', 'audio'],
                        help='自訂模式要執行的步驟')
     parser.add_argument('--script-dir', help='已有腳本的目錄（用於單獨生成音頻）')
+    parser.add_argument('--book-id',
+                        help='書籍資料夾識別（對應 data/<book>）')
     
     args = parser.parse_args()
     
     # 創建工作流程控制器
-    workflow = PodcastWorkflow(mode=args.mode, auto_confirm=args.auto_confirm)
+    workflow = PodcastWorkflow(mode=args.mode, auto_confirm=args.auto_confirm, book_id=args.book_id)
     
     # 執行工作流程
     success = workflow.run(

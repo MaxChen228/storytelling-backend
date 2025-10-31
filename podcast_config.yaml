@@ -4,22 +4,27 @@
 # ╚══════════════════════════════════════════════════════════════════════════╝
 
 basic:
-  english_level: "beginner"     # beginner / intermediate / advanced
-  episode_length: "medium"          # short / medium / long
-  narrator_voice: "Leda"           # 預設旁白聲線，可填任何 Gemini 預設 voice 名稱
-  start_chapter: 3                  # 從第幾章開始轉換
-  chapters_per_run: 1                # 每次跑多少章
-  speaking_pace: "fast"           # slow / neutral / fast
+  english_level: "beginner"            # beginner / intermediate / advanced
+  episode_length: "medium"             # short / medium / long
+  narrator_voice: "Leda"               # 預設旁白聲線，可填任何 Gemini 預設 voice 名稱
+  start_chapter: 3                     # 從第幾章開始轉換
+  chapters_per_run: 1                  # 每次跑多少章
+  speaking_pace: "fast"                # slow / neutral / fast
 
-book:
-  chapters_dir: "./data/foundation"     # 書籍資料夾，內含 chapter1.txt, chapter2.txt...
-  file_pattern: "chapter*.txt"          # 章節檔案命名規則（glob）
-  encoding: "utf-8"                     # 預設編碼
-  clean_whitespace: true                # 是否自動清除多餘空行和特殊字元
-  title_from_filename: true             # 使用檔名當章節標題
-  min_words: 0                        # 過短章節會被略過，避免空檔案
-  summaries_dir: "./data/foundation_summaries"  # 濃縮版摘要輸出位置
-  summary_suffix: "_summary.txt"        # 每篇摘要的檔名後綴
+paths:
+  books_root: "./data"                 # 所有書籍資料夾的根目錄
+  outputs_root: "./output"             # 各書籍輸出資料夾根目錄
+  transcripts_root: "./data/transcripts"
+
+books:
+  defaults:
+    file_pattern: "chapter*.txt"       # 章節檔案命名規則（glob）
+    encoding: "utf-8"                  # 預設編碼
+    clean_whitespace: true             # 是否自動清除多餘空行和特殊字元
+    title_from_filename: true          # 使用檔名當章節標題
+    min_words: 0                       # 過短章節會被略過
+    summary_subdir: "summaries"        # 摘要儲存於書籍資料夾下的子目錄
+    summary_suffix: "_summary.txt"     # 每篇摘要的檔名後綴
 
 storytelling:
   tone: ["immersive", "expressive", "warm", "curious"]

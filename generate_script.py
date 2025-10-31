@@ -24,12 +24,48 @@ load_dotenv()
 
 CONFIG_PATH_DEFAULT = "./podcast_config.yaml"
 TRANSCRIPT_DIR = Path("./data/transcripts")
-TRANSCRIPT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_config(config_path: str = CONFIG_PATH_DEFAULT) -> Dict[str, Any]:
     with open(config_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
+
+
+def resolve_book_config(config: Dict[str, Any], book_id: Optional[str]) -> Dict[str, Any]:
+    if not book_id:
+        book_id = os.environ.get("STORY_BOOK_ID")
+    if not book_id:
+        raise ValueError("必須指定 --book-id 或設定 STORY_BOOK_ID")
+
+    paths_cfg = config.get("paths", {})
+    books_root = Path(paths_cfg.get("books_root", "./data")).expanduser().resolve()
+    outputs_root = Path(paths_cfg.get("outputs_root", "./output")).expanduser().resolve()
+
+    book_dir = books_root / book_id
+    if not book_dir.exists():
+        raise FileNotFoundError(f"找不到書籍資料夾: {book_dir}")
+
+    books_cfg = config.get("books", {})
+    defaults = books_cfg.get("defaults", {})
+    overrides = (books_cfg.get("overrides", {}) or {}).get(book_id, {})
+
+    merged = dict(defaults)
+    merged.update(overrides)
+    summary_subdir = merged.get("summary_subdir", "summaries")
+    summary_suffix = merged.get("summary_suffix", "_summary.txt")
+
+    merged["book_id"] = book_id
+    merged["books_root"] = str(books_root)
+    merged["outputs_root"] = str(outputs_root)
+    merged["chapters_dir"] = str(book_dir)
+    merged["summary_subdir"] = summary_subdir
+    merged["summary_suffix"] = summary_suffix
+    merged["summaries_dir"] = str((book_dir / summary_subdir).resolve())
+
+    if "book_name_override" not in merged and overrides.get("display_name"):
+        merged["book_name_override"] = overrides["display_name"]
+
+    return merged
 
 
 def clean_text(content: str) -> str:
@@ -246,22 +282,29 @@ def save_chapter_script(output_dir: Path, script_text: str, metadata: Dict[str, 
     metadata_file.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT, chapter_name: Optional[str] = None) -> str:
+def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT,
+                         chapter_name: Optional[str] = None,
+                         book_id: Optional[str] = None) -> str:
     print_header("📚 Storytelling 單聲線腳本生成")
 
     config = load_config(config_path)
+    try:
+        book_cfg = resolve_book_config(config, book_id)
+    except Exception as exc:
+        print_footer("❌ 錯誤", [str(exc)])
+        sys.exit(1)
+
+    config = dict(config)
+    config['book'] = book_cfg
+
+    paths_cfg = config.get('paths', {})
+    transcripts_root = Path(paths_cfg.get('transcripts_root', "./data/transcripts")).expanduser().resolve()
+    global TRANSCRIPT_DIR
+    TRANSCRIPT_DIR = transcripts_root
+    TRANSCRIPT_DIR.mkdir(parents=True, exist_ok=True)
+
     basic = config['basic']
     story_cfg = config['storytelling']
-    book_cfg = config['book']
-    env_book_dir = os.environ.get("STORY_BOOK_PATH")
-    if env_book_dir:
-        book_cfg['chapters_dir'] = env_book_dir
-    env_summaries_dir = os.environ.get("STORY_SUMMARIES_PATH")
-    if env_summaries_dir:
-        book_cfg['summaries_dir'] = env_summaries_dir
-    env_book_name = os.environ.get("STORY_BOOK_NAME")
-    if env_book_name:
-        book_cfg['book_name_override'] = env_book_name
     advanced = config.get('advanced', {})
 
     english_level_key = basic.get('english_level', 'intermediate').lower()
@@ -321,7 +364,8 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT, chapter_name: O
 
     print_config_table(basic_config_rows(basic))
     print_section("處理資訊")
-    print(f"📖 章節資料夾: {book_cfg['chapters_dir']} (符合 {len(chapters)} 個檔案)")
+    print(f"📚 書籍: {book_cfg.get('book_id')} (章節數 {len(chapters)})")
+    print(f"📖 章節資料夾: {book_cfg['chapters_dir']}")
     print(f"📌 全部章節數量: {total_chapters}")
     print(f"🎯 本次處理: 第 {start_chapter} - {start_chapter + len(selected) - 1} 章")
     print(f"🗣️ 英語等級: {level_profile['label']}")
@@ -330,13 +374,10 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT, chapter_name: O
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     chapters_dir_path = Path(book_cfg['chapters_dir']).expanduser().resolve()
-    book_name = book_cfg.get('book_name_override') or os.environ.get('STORY_BOOK_NAME') or chapters_dir_path.name
+    book_name = book_cfg.get('book_name_override') or os.environ.get('STORY_BOOK_NAME') or book_cfg.get('book_id') or chapters_dir_path.name
 
-    if not book_cfg.get('summaries_dir'):
-        default_summary_dir = chapters_dir_path.parent / f"{chapters_dir_path.name}_summaries"
-        book_cfg['summaries_dir'] = str(default_summary_dir)
-
-    book_output_dir = Path("./output") / book_name
+    book_output_root = Path(book_cfg.get('outputs_root', "./output")).expanduser().resolve()
+    book_output_dir = book_output_root / book_name
     # 直接使用 book_output_dir 作為 chapters_root，不再創建 chapters/ 子目錄
     chapters_root = book_output_dir
     sessions_root = book_output_dir / "sessions"
@@ -346,6 +387,7 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT, chapter_name: O
     book_meta_file = book_output_dir / "book_metadata.json"
     book_meta = {
         "book_name": book_name,
+        "book_id": book_cfg.get('book_id', book_name),
         "chapters_dir": str(chapters_dir_path),
         "summaries_dir": book_cfg.get('summaries_dir'),
         "updated_at": timestamp
@@ -484,6 +526,7 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT, chapter_name: O
     session_data = {
         "session_type": "script_generation",
         "book_name": book_name,
+        "book_id": book_cfg.get('book_id', book_name),
         "timestamp": timestamp,
         "chapters_dir": str(chapters_dir_path),
         "output_dir": str(book_output_dir.resolve()),
@@ -532,6 +575,12 @@ if __name__ == "__main__":
         default=CONFIG_PATH_DEFAULT,
         help=f'配置文件路徑（預設：{CONFIG_PATH_DEFAULT}）'
     )
+    parser.add_argument(
+        '--book-id',
+        '-b',
+        default=os.environ.get("STORY_BOOK_ID"),
+        help='要生成的書籍資料夾名稱（必填，可用 STORY_BOOK_ID 環境變數）'
+    )
 
     args = parser.parse_args()
-    generate_script_only(config_path=args.config, chapter_name=args.chapter)
+    generate_script_only(config_path=args.config, chapter_name=args.chapter, book_id=args.book_id)

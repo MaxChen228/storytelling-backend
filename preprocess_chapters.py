@@ -33,6 +33,36 @@ def load_config(config_path: str) -> Dict[str, Any]:
         return yaml.safe_load(f)
 
 
+def resolve_book_config(config: Dict[str, Any], book_id: str) -> Dict[str, Any]:
+    paths_cfg = config.get("paths", {})
+    books_root = Path(paths_cfg.get("books_root", "./data")).expanduser().resolve()
+    if not book_id:
+        raise ValueError("必須指定 --book-id 或環境變數 STORY_BOOK_ID")
+
+    book_dir = books_root / book_id
+    if not book_dir.exists():
+        raise FileNotFoundError(f"找不到書籍資料夾: {book_dir}")
+
+    books_cfg = config.get("books", {})
+    defaults = books_cfg.get("defaults", {})
+    overrides = (books_cfg.get("overrides", {}) or {}).get(book_id, {})
+
+    merged = dict(defaults)
+    merged.update(overrides)
+
+    summary_subdir = merged.get("summary_subdir", "summaries")
+    summary_suffix = merged.get("summary_suffix", "_summary.txt")
+
+    merged["book_id"] = book_id
+    merged["books_root"] = str(books_root)
+    merged["chapters_dir"] = str(book_dir)
+    merged["summary_subdir"] = summary_subdir
+    merged["summary_suffix"] = summary_suffix
+    merged["summaries_dir"] = str((book_dir / summary_subdir).resolve())
+
+    return merged
+
+
 def clean_text(content: str) -> str:
     lines = [line.rstrip() for line in content.splitlines()]
     cleaned: List[str] = []
@@ -148,6 +178,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--config", default="./podcast_config.yaml",
                         help="配置檔路徑 (預設: ./podcast_config.yaml)")
+    parser.add_argument("--book-id",
+                        default=os.environ.get("STORY_BOOK_ID"),
+                        help="要處理的書籍資料夾名稱（必填，可用 STORY_BOOK_ID 環境變數）")
     parser.add_argument("--ratio", type=float, default=8.0,
                         help="摘要壓縮比（原文/摘要字數），預設 8")
     parser.add_argument("--min-summary-words", type=int, default=80,
@@ -162,6 +195,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
                         help="同時送出的請求數 (0 表示依章節數全開)")
     parser.add_argument("--temperature", type=float, default=0.2,
                         help="Gemini 生成摘要時的 temperature")
+    parser.add_argument("--start-chapter", type=int, default=1,
+                        help="要處理的起始章節（1-based，含），預設 1")
+    parser.add_argument("--end-chapter", type=int,
+                        help="要處理的結束章節（1-based，含），預設處理到最後一章")
+    parser.add_argument("--limit", type=int,
+                        help="最多處理多少章（在套用起訖範圍後）")
     return parser
 
 
@@ -179,11 +218,34 @@ def main() -> None:
     args = parser.parse_args()
 
     config = load_config(args.config)
-    book_cfg = config['book']
-    summaries_dir = Path(book_cfg.get('summaries_dir') or (Path(book_cfg['chapters_dir']) / "summaries"))
+    if not args.book_id:
+        print("❌ 必須指定 --book-id 或設定 STORY_BOOK_ID", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        book_cfg = resolve_book_config(config, args.book_id)
+    except Exception as exc:
+        print(f"❌ {exc}")
+        sys.exit(1)
+
+    summaries_dir = Path(book_cfg['summaries_dir'])
     summaries_dir.mkdir(parents=True, exist_ok=True)
 
     chapters = collect_chapter_files(book_cfg)
+    start_chapter = max(1, args.start_chapter)
+    end_chapter = args.end_chapter if args.end_chapter and args.end_chapter >= start_chapter else None
+
+    chapters = [
+        chapter for chapter in chapters
+        if chapter.number >= start_chapter and (end_chapter is None or chapter.number <= end_chapter)
+    ]
+
+    if args.limit is not None and args.limit > 0:
+        chapters = chapters[:args.limit]
+
+    if not chapters:
+        print("⚠️ 範圍過濾後沒有需要處理的章節。")
+        return
     metadata: List[Dict[str, Any]] = []
     generated = 0
     skipped = 0
@@ -259,6 +321,7 @@ def main() -> None:
     meta_path = summaries_dir / "summaries_index.json"
     meta_payload = {
         "generated_at": datetime.utcnow().isoformat() + "Z",
+        "book_id": book_cfg.get("book_id"),
         "chapters_dir": book_cfg['chapters_dir'],
         "model": args.model,
         "ratio": args.ratio,
