@@ -89,6 +89,42 @@ basic:
   narrator_voice: "Aoede"
 ```
 
+**啟用隨機聲線：**
+
+共有三種寫法，擇一即可：
+
+1. 直接將 `narrator_voice` 設為清單，系統會從清單中隨機選一個聲線。
+
+   ```yaml
+   basic:
+     narrator_voice: ["Aoede", "Puck", "Kore"]
+   ```
+
+2. 使用 `"random"` 並提供候選列表：
+
+   ```yaml
+   basic:
+     narrator_voice: "random"
+     narrator_voice_candidates:
+       - "Aoede"
+       - "Charon"
+       - "Puck"
+   ```
+
+3. 保留固定聲線設定，但啟用 `narrator_voice_random: true`，可搭配 `narrator_voice_candidates` 自訂候選。
+
+   ```yaml
+   basic:
+     narrator_voice: "Achird"
+     narrator_voice_random: true
+     narrator_voice_candidates:
+       - "Achird"
+       - "Kore"
+       - "Puck"
+   ```
+
+每次生成腳本時會決定一次聲線並寫入 `metadata.json`，同一批章節會共用同個聲線；若腳本缺少聲線資訊，音頻步驟會從候選列表重新抽選並同步回寫。
+
 #### 語速 (speaking_pace)
 
 控制朗讀速度和節奏。

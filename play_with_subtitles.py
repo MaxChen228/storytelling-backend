@@ -154,6 +154,8 @@ class KeyListener:
                             return "RIGHT"
                         if code == "K":
                             return "LEFT"
+                    elif ch == " ":
+                        return "SPACE"
                     elif ch == "\x03":
                         raise KeyboardInterrupt
                 time.sleep(0.01)
@@ -175,6 +177,9 @@ class KeyListener:
             ch = self._buffer[0]
             if ch == "\x03":
                 raise KeyboardInterrupt
+            if ch == " ":
+                self._buffer = self._buffer[1:]
+                return "SPACE"
             if ch != "\x1b":
                 self._buffer = self._buffer[1:]
                 continue
@@ -206,6 +211,8 @@ class MPVController:
         self._stop_reader = threading.Event()
         self._time_pos = 0.0
         self._time_lock = threading.Lock()
+        self._paused = False
+        self._state_lock = threading.Lock()
         self._ipc_path: Optional[Path] = None
         self._cleanup_dir: Optional[Path] = None
 
@@ -267,6 +274,7 @@ class MPVController:
         self._reader = threading.Thread(target=self._reader_loop, daemon=True)
         self._reader.start()
         self._send({"command": ["observe_property", 1, "time-pos"]})
+        self._send({"command": ["observe_property", 2, "pause"]})
 
     def _reader_loop(self) -> None:
         if not self._reader_file:
@@ -282,6 +290,11 @@ class MPVController:
                     if isinstance(value, (int, float)):
                         with self._time_lock:
                             self._time_pos = float(value)
+                elif data.get("event") == "property-change" and data.get("name") == "pause":
+                    value = data.get("data")
+                    if isinstance(value, bool):
+                        with self._state_lock:
+                            self._paused = value
         self._stop_reader.set()
 
     def _send(self, payload: Dict[str, object]) -> None:
@@ -298,6 +311,17 @@ class MPVController:
 
     def seek(self, seconds: float) -> None:
         self._send({"command": ["seek", seconds, "relative"]})
+
+    def toggle_pause(self) -> bool:
+        with self._state_lock:
+            new_state = not self._paused
+            self._paused = new_state
+        self._send({"command": ["set_property", "pause", new_state]})
+        return new_state
+
+    def is_paused(self) -> bool:
+        with self._state_lock:
+            return self._paused
 
     def poll(self) -> Optional[int]:
         if not self.process:
@@ -447,6 +471,13 @@ def run_show_interactive(
                     controller.seek(-SEEK_STEP_SECONDS)
                     print("\n⏪ 快退 15 秒")
                     continue
+                if key == "SPACE":
+                    paused = controller.toggle_pause()
+                    if paused:
+                        print("\n⏸️ 暫停")
+                    else:
+                        print("\n▶️ 繼續播放")
+                    continue
 
                 current_time = controller.current_time()
                 renderer.update(current_time)
@@ -534,6 +565,7 @@ def main():
     print("▶️  開始播放... 按 Ctrl+C 可提前停止")
     if controller and sys.stdin.isatty():
         print("← → 快退/快進 15 秒")
+        print("空白鍵 暫停/繼續")
     for message in info_messages:
         print(message)
 

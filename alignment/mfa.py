@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import wave
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence, Tuple, List
@@ -141,10 +142,34 @@ def _copy_audio_for_alignment(audio_path: Path, destination: Path) -> None:
     audio.export(destination, format="wav")
 
 
+def _audio_duration_seconds(audio_path: Path) -> float:
+    with wave.open(str(audio_path), "rb") as wf:
+        frames = wf.getnframes()
+        rate = wf.getframerate() or 1
+    return frames / max(rate, 1)
+
+
+def _has_manual_beam(args: Sequence[str]) -> bool:
+    for raw in args:
+        option = raw.split("=", 1)[0]
+        if option in {"--beam", "--retry_beam"}:
+            return True
+    return False
+
+
+def _beam_settings_for_duration(seconds: float) -> Tuple[int, int]:
+    if seconds <= 360:
+        return 10, 40
+    if seconds <= 600:
+        return 60, 200
+    return 100, 400
+
+
 def _run_mfa_align(
     corpus_dir: Path,
     output_dir: Path,
     config: MfaConfig,
+    extra_args: Sequence[str] | None = None,
 ) -> None:
     command: List[str] = [
         config.micromamba_bin,
@@ -158,8 +183,12 @@ def _run_mfa_align(
         config.acoustic_model,
         str(output_dir),
     ]
-    if config.extra_args:
-        command.extend(config.extra_args)
+
+    combined_args: List[str] = list(config.extra_args) if config.extra_args else []
+    if extra_args:
+        combined_args.extend(str(arg) for arg in extra_args)
+    if combined_args:
+        command.extend(combined_args)
     try:
         subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except FileNotFoundError as exc:
@@ -366,7 +395,18 @@ def align_chapter_with_mfa(
     _copy_audio_for_alignment(audio_source, corpus_audio)
     shutil.copy2(transcript_path, corpus_text)
 
-    _run_mfa_align(corpus_dir, aligned_dir, cfg)
+    dynamic_args: List[str] = []
+    base_extra_args = list(cfg.extra_args) if cfg.extra_args else []
+    if not _has_manual_beam(base_extra_args):
+        duration_seconds = _audio_duration_seconds(corpus_audio)
+        beam, retry = _beam_settings_for_duration(duration_seconds)
+        dynamic_args.extend(["--beam", str(beam), "--retry_beam", str(retry)])
+        print(
+            f"   Auto-adjusted MFA beam={beam} retry={retry} "
+            f"(duration {duration_seconds/60:.2f} min)"
+        )
+
+    _run_mfa_align(corpus_dir, aligned_dir, cfg, extra_args=dynamic_args)
 
     textgrid_path = aligned_dir / f"{base_name}.TextGrid"
     if not textgrid_path.exists():

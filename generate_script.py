@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 from podcastfy.client import generate_podcast
 
 from cli_output import basic_config_rows, print_config_table, print_footer, print_header, print_section
+from voice_utils import choose_narrator_voice
 
 load_dotenv()
 
@@ -317,7 +318,7 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT,
     if not length_cfg:
         raise ValueError(f"找不到 episode_length '{length_key}' 對應的設定")
 
-    narrator_voice = basic.get('narrator_voice', 'Aoede')
+    narrator_voice, narrator_voice_pool, narrator_randomized = choose_narrator_voice(basic)
     pace_key = str(basic.get('speaking_pace', 'neutral')).lower()
     pace_profiles = advanced.get('tts_pace_profiles') or {}
     pace_profile = pace_profiles.get(pace_key) or pace_profiles.get('neutral') or {}
@@ -369,7 +370,11 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT,
     print(f"📌 全部章節數量: {total_chapters}")
     print(f"🎯 本次處理: 第 {start_chapter} - {start_chapter + len(selected) - 1} 章")
     print(f"🗣️ 英語等級: {level_profile['label']}")
-    print(f"🎧 旁白聲線: {narrator_voice}")
+    if narrator_randomized:
+        pool_preview = ", ".join(narrator_voice_pool)
+        print(f"🎧 旁白聲線: {narrator_voice} (隨機，候選: {pool_preview})")
+    else:
+        print(f"🎧 旁白聲線: {narrator_voice}")
     print(f"⏱️ 預計時長: {length_cfg['time_range']} ({length_cfg['word_count']} words)")
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -494,6 +499,10 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT,
             "previous_summary_present": bool(prev_summary),
             "next_summary_present": bool(next_summary)
         }
+
+        if narrator_randomized:
+            metadata["narrator_voice_pool"] = narrator_voice_pool
+            metadata["narrator_voice_randomized"] = True
 
         save_chapter_script(script_output_dir, script_text, metadata)
         session_entries.append(

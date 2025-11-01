@@ -52,7 +52,7 @@ graph LR
 
 **三步驟生成播客：**
 1. **腳本** - `./run.sh` → 選項 1）生成腳本
-2. **音頻** - `./run.sh` → 選項 2）生成音頻（自動生成字幕）
+2. **音頻** - `./run.sh` → 選項 2）生成音頻（字幕需另行執行選項 3）
 3. **服務** - `uvicorn server.app.main:app --reload`
 
 ## 文檔導航
@@ -160,6 +160,8 @@ basic:
   speaking_pace: "slow"
 ```
 
+> 若想讓每次播客隨機換聲線，可改成 `narrator_voice: ["Aoede", "Puck", "Kore"]` 或設定 `narrator_voice: "random"` 並提供 `narrator_voice_candidates`。詳見[配置文檔](docs/setup/configuration.md#旁白聲音-narrator_voice)。
+
 ## API 服務
 
 啟動開發服務器：
@@ -189,7 +191,7 @@ A: 已使用 Montreal Forced Aligner 實現詞級對齊，自動解決同步問�
 A: 使用 `./run.sh` 選項 1）或 2），支持範圍選擇（如 `0-5,7-9`）。
 
 ### Q: 如何更改聲音？
-A: 修改 `podcast_config.yaml` 中的 `narrator_voice`，可選值見[配置文檔](docs/setup/configuration.md#聲音選項)。
+A: 修改 `podcast_config.yaml` 中的聲線配置；支援固定值、候選清單或 `random` 隨機模式。詳細示例見[配置文檔](docs/setup/configuration.md#旁白聲音-narrator_voice)。
 
 👉 **[查看更多問題](docs/operations/troubleshooting.md)**
 

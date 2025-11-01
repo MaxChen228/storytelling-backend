@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import time
+import wave
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
@@ -86,6 +87,7 @@ class ChapterStatus:
     has_script: bool
     has_audio: bool
     has_subtitle: bool
+    audio_subtitle_gap: Optional[float] = None
 
 
 ARTIFACT_LABELS = {
@@ -118,6 +120,77 @@ def natural_key(text: str) -> Tuple[object, ...]:
         else:
             key.append(part.lower())
     return tuple(key)
+
+
+def _parse_srt_timestamp(raw: str) -> Optional[float]:
+    raw = raw.strip()
+    if not raw:
+        return None
+    try:
+        hours, minutes, remainder = raw.split(":")
+        seconds, millis = remainder.split(",")
+        return (
+            int(hours) * 3600
+            + int(minutes) * 60
+            + int(seconds)
+            + int(millis) / 1000.0
+        )
+    except (ValueError, AttributeError):
+        return None
+
+
+def _chapter_audio_duration(chapter_dir: Path) -> Optional[float]:
+    wav_path = chapter_dir / "podcast.wav"
+    if wav_path.exists():
+        try:
+            with wave.open(str(wav_path), "rb") as wf:
+                frames = wf.getnframes()
+                rate = wf.getframerate() or 1
+            return frames / max(rate, 1)
+        except (OSError, wave.Error):
+            return None
+    mp3_path = chapter_dir / "podcast.mp3"
+    if mp3_path.exists():
+        try:
+            from pydub import AudioSegment  # lazy import
+
+            audio = AudioSegment.from_file(mp3_path)
+            return len(audio) / 1000.0
+        except Exception:
+            return None
+    return None
+
+
+def _chapter_last_subtitle_end(chapter_dir: Path) -> Optional[float]:
+    srt_path = chapter_dir / "subtitles.srt"
+    if not srt_path.exists():
+        return None
+    try:
+        content = srt_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        content = srt_path.read_text(encoding="utf-8", errors="ignore")
+    for line in reversed(content.splitlines()):
+        if "-->" not in line:
+            continue
+        try:
+            _, end = line.split("-->")
+        except ValueError:
+            continue
+        ts = _parse_srt_timestamp(end)
+        if ts is not None:
+            return ts
+    return None
+
+
+def _format_gap_seconds(value: Optional[float]) -> str:
+    if value is None:
+        return "—"
+    sign = "+" if value >= 0 else "-"
+    total = abs(value)
+    minutes, seconds = divmod(total, 60)
+    if minutes >= 1:
+        return f"{sign}{int(minutes)}m{seconds:04.1f}s"
+    return f"{sign}{seconds:.1f}s"
 
 
 def resolve_path(base: Path, raw: str) -> Path:
@@ -314,6 +387,12 @@ class StorytellingCLI:
             script = (chapter_dir / "podcast_script.txt").exists()
             audio = (chapter_dir / "podcast.wav").exists() or (chapter_dir / "podcast.mp3").exists()
             subtitle = (chapter_dir / "subtitles.srt").exists()
+            gap: Optional[float] = None
+            if audio and subtitle:
+                audio_duration = _chapter_audio_duration(chapter_dir)
+                subtitle_end = _chapter_last_subtitle_end(chapter_dir)
+                if audio_duration is not None and subtitle_end is not None:
+                    gap = audio_duration - subtitle_end
             statuses.append(
                 ChapterStatus(
                     slug=slug,
@@ -322,6 +401,7 @@ class StorytellingCLI:
                     has_script=script,
                     has_audio=audio,
                     has_subtitle=subtitle,
+                    audio_subtitle_gap=gap,
                 )
             )
         return statuses
@@ -335,10 +415,11 @@ class StorytellingCLI:
             print(colorize(f"{ICON_WARNING} 尚未找到任何章節或源文件", "yellow", self.use_color))
             print()
             return
-        header = ("Idx", "Chapter", "Source", "Summary", "Script", "Audio", "Subtitle")
+        header = ("Idx", "Chapter", "Source", "Summary", "Script", "Audio", "Subtitle", "ΔAudio-Sub")
         widths = [len(h) for h in header]
         rows: List[Tuple[str, ...]] = []
         for idx, status in enumerate(statuses):
+            gap_label = _format_gap_seconds(status.audio_subtitle_gap)
             row = (
                 str(idx),
                 status.slug,
@@ -347,6 +428,7 @@ class StorytellingCLI:
                 "✓" if status.has_script else "✗",
                 "✓" if status.has_audio else "✗",
                 "✓" if status.has_subtitle else "✗",
+                gap_label,
             )
             rows.append(row)
             widths = [max(widths[i], len(row[i])) for i in range(len(header))]
@@ -357,6 +439,11 @@ class StorytellingCLI:
 
         def draw_row(values: Sequence[str]) -> str:
             cells: List[str] = []
+            gap_value: Optional[float] = None
+            if len(values) >= len(header) and values[0].isdigit():
+                index = int(values[0])
+                if 0 <= index < len(statuses):
+                    gap_value = statuses[index].audio_subtitle_gap
             for i, value in enumerate(values):
                 padded = value.ljust(widths[i])
                 if self.use_color and i >= 2:
@@ -364,6 +451,8 @@ class StorytellingCLI:
                         padded = colorize(padded, "green", True)
                     elif value == "✗":
                         padded = colorize(padded, "red", True)
+                if self.use_color and header[i] == "ΔAudio-Sub" and gap_value is not None and gap_value > 1.5:
+                    padded = colorize(padded, "red", True)
                 cells.append(f" {padded} ")
             return f"│{'│'.join(cells)}│"
 
