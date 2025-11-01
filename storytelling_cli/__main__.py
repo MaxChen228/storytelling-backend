@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+import json
 import os
 import re
 import shutil
@@ -11,7 +13,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import yaml
 
@@ -84,6 +86,16 @@ class ChapterStatus:
     has_script: bool
     has_audio: bool
     has_subtitle: bool
+
+
+ARTIFACT_LABELS = {
+    "summary": "摘要",
+    "script": "腳本",
+    "audio": "音頻",
+    "subtitle": "字幕",
+}
+
+ARTIFACT_CHOICES = tuple(ARTIFACT_LABELS.keys())
 
 
 # ---------------------------------------------------------------------------
@@ -236,6 +248,9 @@ class StorytellingCLI:
             summary_suffix=summary_suffix,
             book_output_dir=book_output_dir,
         )
+
+    def set_book_context(self, book_id: str) -> None:
+        self.book_context = self.load_book_context(book_id)
 
     def choose_book(self, initial: bool = False) -> bool:
         while True:
@@ -463,6 +478,217 @@ class StorytellingCLI:
             print(colorize(f"{ICON_MISSING} {exc}", "red", self.use_color))
             return []
 
+    # ---------------- Deletion helpers -----------------
+
+    def _load_json_file(self, path: Path) -> Dict[str, Any]:
+        if not path.exists():
+            return {}
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            print(colorize(f"{ICON_WARNING} 解析 JSON 失敗：{path}", "yellow", self.use_color))
+            return {}
+
+    def _write_json_file(self, path: Path, payload: Dict[str, Any]) -> None:
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def _resolve_chapter_dir(self, slug: str) -> Path:
+        ctx = self.book_context
+        if not ctx:
+            raise RuntimeError("尚未選擇書籍")
+        return ctx.book_output_dir / slug
+
+    def _available_chapters_for_artifact(self, artifact: str) -> List[ChapterStatus]:
+        predicate_map = {
+            "summary": lambda status: status.has_summary,
+            "script": lambda status: status.has_script,
+            "audio": lambda status: status.has_audio,
+            "subtitle": lambda status: status.has_subtitle,
+        }
+        predicate = predicate_map.get(artifact)
+        if not predicate:
+            return []
+        return [status for status in self.scan_chapters() if predicate(status)]
+
+    def _prompt_chapter_selection(self, artifact: str) -> List[str]:
+        available = self._available_chapters_for_artifact(artifact)
+        label = ARTIFACT_LABELS.get(artifact, artifact)
+        if not available:
+            print(colorize(f"{ICON_WARNING} 沒有任何章節包含可刪除的{label}", "yellow", self.use_color))
+            return []
+        print(colorize("可刪除的章節（索引從 0 開始）：", "white", self.use_color))
+        for idx, status in enumerate(available):
+            print(colorize(f"  [{idx}] {status.slug}", "gray", self.use_color))
+        print()
+        try:
+            raw = input(colorize("請輸入章節索引（支援 0,3,5-7 或 all）：\n> ", "cyan", self.use_color))
+        except EOFError:
+            return []
+        sorted_slugs = [status.slug for status in available]
+        try:
+            return self._parse_selection(raw, sorted_slugs)
+        except ValueError as exc:
+            print(colorize(f"{ICON_MISSING} {exc}", "red", self.use_color))
+            return []
+
+    def _delete_summary(self, slug: str) -> bool:
+        ctx = self.book_context
+        if not ctx:
+            raise RuntimeError("尚未選擇書籍")
+        summary_file = ctx.summary_dir / f"{slug}{ctx.summary_suffix}"
+        if not summary_file.exists():
+            print(colorize(f"{ICON_MISSING} 找不到摘要：{summary_file}", "red", self.use_color))
+            return False
+        summary_file.unlink()
+        print(colorize(f"{ICON_COMPLETE} 已刪除摘要：{slug}", "green", self.use_color))
+        return True
+
+    def _delete_script(self, slug: str) -> bool:
+        chapter_dir = self._resolve_chapter_dir(slug)
+        candidates = [chapter_dir / "podcast_script.txt", chapter_dir / "script.txt"]
+        removed = False
+        for candidate in candidates:
+            if candidate.exists():
+                candidate.unlink()
+                removed = True
+        if not removed:
+            print(colorize(f"{ICON_MISSING} 找不到腳本：{chapter_dir}", "red", self.use_color))
+            return False
+        print(colorize(f"{ICON_COMPLETE} 已刪除腳本：{slug}", "green", self.use_color))
+        return True
+
+    def _delete_audio(self, slug: str) -> bool:
+        chapter_dir = self._resolve_chapter_dir(slug)
+        patterns = ["podcast.wav", "podcast.mp3"]
+        removed_files: List[Path] = []
+        for pattern in patterns:
+            target = chapter_dir / pattern
+            if target.exists():
+                target.unlink()
+                removed_files.append(target)
+        for extra in list(chapter_dir.glob("podcast_part*.wav")) + list(chapter_dir.glob("podcast_part*.mp3")):
+            if extra.exists():
+                extra.unlink()
+                removed_files.append(extra)
+        audio_meta = chapter_dir / "audio_metadata.json"
+        if audio_meta.exists():
+            audio_meta.unlink()
+            removed_files.append(audio_meta)
+        if not removed_files:
+            print(colorize(f"{ICON_MISSING} 找不到音頻檔案：{chapter_dir}", "red", self.use_color))
+            return False
+
+        metadata_path = chapter_dir / "metadata.json"
+        metadata = self._load_json_file(metadata_path)
+        if metadata.get("audio_file"):
+            metadata["audio_file"] = None
+            self._write_json_file(metadata_path, metadata)
+
+        print(colorize(f"{ICON_COMPLETE} 已刪除音頻：{slug}", "green", self.use_color))
+        return True
+
+    def _delete_subtitle(self, slug: str) -> bool:
+        chapter_dir = self._resolve_chapter_dir(slug)
+        subtitle_file = chapter_dir / "subtitles.srt"
+        aligned_json = chapter_dir / "aligned_transcript.json"
+        removed = False
+        for target in (subtitle_file, aligned_json):
+            if target.exists():
+                target.unlink()
+                removed = True
+        if not removed:
+            print(colorize(f"{ICON_MISSING} 找不到字幕：{chapter_dir}", "red", self.use_color))
+            return False
+
+        metadata_path = chapter_dir / "metadata.json"
+        metadata = self._load_json_file(metadata_path)
+        keys_to_remove = [key for key in list(metadata.keys()) if key.startswith("alignment_")]
+        changed = False
+        for key in keys_to_remove:
+            metadata.pop(key, None)
+            changed = True
+        if changed:
+            self._write_json_file(metadata_path, metadata)
+
+        audio_meta_path = chapter_dir / "audio_metadata.json"
+        audio_metadata = self._load_json_file(audio_meta_path)
+        audio_keys = [key for key in list(audio_metadata.keys()) if key.startswith("alignment_")]
+        audio_changed = False
+        for key in audio_keys:
+            audio_metadata.pop(key, None)
+            audio_changed = True
+        if audio_changed:
+            self._write_json_file(audio_meta_path, audio_metadata)
+
+        print(colorize(f"{ICON_COMPLETE} 已刪除字幕：{slug}", "green", self.use_color))
+        return True
+
+    def _delete_artifact(self, artifact: str, slug: str) -> bool:
+        handlers = {
+            "summary": self._delete_summary,
+            "script": self._delete_script,
+            "audio": self._delete_audio,
+            "subtitle": self._delete_subtitle,
+        }
+        handler = handlers.get(artifact)
+        if not handler:
+            print(colorize(f"{ICON_MISSING} 未支援的刪除類型：{artifact}", "red", self.use_color))
+            return False
+        return handler(slug)
+
+    def delete_artifact_menu(self) -> None:
+        print(colorize("選擇刪除項目：", "cyan", self.use_color))
+        options = {"1": "summary", "2": "script", "3": "audio", "4": "subtitle"}
+        for key, artifact in options.items():
+            label = ARTIFACT_LABELS.get(artifact, artifact)
+            print(colorize(f"  {key}) 刪除{label}", "gray", self.use_color))
+        print()
+        choice = input(colorize("> ", "white", self.use_color)).strip()
+        artifact = options.get(choice)
+        if not artifact:
+            print(colorize(f"{ICON_MISSING} 無效的選擇", "red", self.use_color))
+            return
+        slugs = self._prompt_chapter_selection(artifact)
+        if not slugs:
+            return
+        label = ARTIFACT_LABELS.get(artifact, artifact)
+        targets_preview = ", ".join(slugs)
+        confirm = input(
+            colorize(f"確認刪除 {label}（{targets_preview}）？ (y/N)：\n> ", "yellow", self.use_color)
+        ).strip().lower()
+        if confirm not in {"y", "yes"}:
+            print(colorize(f"{ICON_WARNING} 已取消刪除", "yellow", self.use_color))
+            return
+        for slug in slugs:
+            self._delete_artifact(artifact, slug)
+
+    def delete_artifact_cli(self, artifact: str, slug: str, *, assume_yes: bool = False) -> bool:
+        artifact = artifact.lower()
+        label = ARTIFACT_LABELS.get(artifact, artifact)
+        if artifact not in ARTIFACT_LABELS:
+            print(colorize(f"{ICON_MISSING} 未支援的刪除類型：{artifact}", "red", self.use_color))
+            return False
+        available_slugs = {status.slug for status in self._available_chapters_for_artifact(artifact)}
+        if slug not in available_slugs:
+            # 允許直接檢查檔案是否存在（避免狀態表尚未刷新）
+            if artifact != "summary" and not (self._resolve_chapter_dir(slug)).exists():
+                print(colorize(f"{ICON_MISSING} 找不到章節：{slug}", "red", self.use_color))
+                return False
+            if artifact == "summary":
+                ctx = self.book_context
+                if not ctx:
+                    raise RuntimeError("尚未選擇書籍")
+                summary_file = ctx.summary_dir / f"{slug}{ctx.summary_suffix}"
+                if not summary_file.exists():
+                    print(colorize(f"{ICON_MISSING} 找不到摘要：{slug}", "red", self.use_color))
+                    return False
+        if not assume_yes:
+            response = input(colorize(f"確認刪除 {label}（{slug}）？ (y/N)：\n> ", "yellow", self.use_color)).strip().lower()
+            if response not in {"y", "yes"}:
+                print(colorize(f"{ICON_WARNING} 已取消刪除", "yellow", self.use_color))
+                return False
+        return self._delete_artifact(artifact, slug)
+
     # ---------------- Subprocess helpers -----------------
 
     def _run_subprocess(self, args: Sequence[str]) -> None:
@@ -503,6 +729,8 @@ class StorytellingCLI:
                 sys.executable,
                 "generate_audio.py",
                 str(ctx.book_output_dir / chapter),
+                "--config",
+                str(self.paths.config_path),
             ]
         )
         print(colorize(f"{ICON_COMPLETE} 音頻完成：{chapter}", "green", self.use_color))
@@ -685,7 +913,8 @@ class StorytellingCLI:
             print("  3) 生成字幕")
             print("  4) 生成摘要")
             print("  5) 播放音頻")
-            print("  6) 切換書籍")
+            print("  6) 刪除輸出")
+            print("  7) 切換書籍")
             print("  r) 重新整理")
             print("  q) 離開")
             print()
@@ -705,6 +934,8 @@ class StorytellingCLI:
             elif choice == "5":
                 self.play_audio_menu()
             elif choice == "6":
+                self.delete_artifact_menu()
+            elif choice == "7":
                 if not self.choose_book():
                     continue
             elif choice.lower() == "r":
@@ -715,9 +946,42 @@ class StorytellingCLI:
             else:
                 print(colorize(f"{ICON_WARNING} 無效選項", "yellow", self.use_color))
 
+def parse_cli_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Storytelling CLI")
+    subparsers = parser.add_subparsers(dest="command")
 
-def main() -> None:
+    delete_parser = subparsers.add_parser("delete", help="刪除指定章節的輸出")
+    delete_parser.add_argument("artifact", choices=ARTIFACT_CHOICES, help="要刪除的類型")
+    delete_parser.add_argument("chapter", help="章節 slug，如 chapter12")
+    delete_parser.add_argument("--book-id", dest="book_id", help="指定書籍 ID（預設會開啟互動選擇）")
+    delete_parser.add_argument("--yes", dest="assume_yes", action="store_true", help="跳過刪除確認")
+
+    return parser.parse_args(argv)
+
+
+def main(argv: Optional[Sequence[str]] = None) -> None:
+    args = parse_cli_args(argv)
     cli = StorytellingCLI()
+
+    if getattr(args, "command", None) == "delete":
+        book_id = getattr(args, "book_id", None)
+        if book_id:
+            try:
+                cli.set_book_context(book_id)
+            except Exception as exc:  # pragma: no cover - interactive path
+                print(colorize(f"{ICON_MISSING} {exc}", "red", cli.use_color))
+                sys.exit(1)
+        else:
+            if not cli.choose_book(initial=True):
+                return
+        if not cli.book_context:
+            print(colorize(f"{ICON_MISSING} 尚未選擇書籍", "red", cli.use_color))
+            sys.exit(1)
+        success = cli.delete_artifact_cli(args.artifact, args.chapter, assume_yes=getattr(args, "assume_yes", False))
+        if not success:
+            sys.exit(1)
+        return
+
     if not cli.choose_book(initial=True):
         return
     cli.main_menu()

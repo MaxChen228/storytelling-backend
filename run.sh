@@ -14,4 +14,9 @@ if [ ! -x "$PYTHON_BIN" ]; then
     exit 1
 fi
 
+if [ "$#" -gt 0 ] && [ "${1}" = "delete" ]; then
+    shift
+    exec "$PYTHON_BIN" -m storytelling_cli delete "$@"
+fi
+
 exec "$PYTHON_BIN" -m storytelling_cli "$@"
