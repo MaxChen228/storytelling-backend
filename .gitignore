@@ -20,6 +20,8 @@ env/
 # Google Cloud service account credentials
 *.service-account.json
 new-pro-*.json
+secrets/
+!secrets/.gitkeep
 
 # Output Directories
 output/
