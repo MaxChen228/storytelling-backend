@@ -49,8 +49,6 @@ MODULE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = MODULE_DIR.parent
 CONFIG_PATH = REPO_ROOT / "podcast_config.yaml"
 
-SUBTITLE_DEVICE_DEFAULT = os.environ.get("PODCAST_SUBTITLE_DEVICE", "cpu")
-
 SCRIPT_BATCH_SIZE_DEFAULT = int(os.environ.get("PODCAST_SCRIPT_BATCH_SIZE", "10") or "10")
 SCRIPT_BATCH_DELAY_DEFAULT = int(os.environ.get("PODCAST_SCRIPT_BATCH_DELAY", "10") or "10")
 AUDIO_BATCH_SIZE_DEFAULT = int(os.environ.get("PODCAST_AUDIO_BATCH_SIZE", "5") or "5")
@@ -529,8 +527,6 @@ class StorytellingCLI:
                 str(chapter_dir),
                 "--config",
                 str(self.paths.config_path),
-                "--device",
-                SUBTITLE_DEVICE_DEFAULT,
             ]
         )
         print(colorize(f"{ICON_COMPLETE} 字幕完成：{chapter}", "green", self.use_color))

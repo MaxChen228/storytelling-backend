@@ -5,6 +5,7 @@ Storytelling 模式 - Step 2：將單聲線腳本轉成單聲線音頻
 
 import json
 import os
+import shutil
 import sys
 import wave
 from datetime import datetime
@@ -17,6 +18,7 @@ from google import genai
 from google.genai import types
 
 from cli_output import basic_config_rows, print_config_table, print_footer, print_header, print_section
+from alignment.mfa import MfaAlignmentError, MfaConfig, align_chapter_with_mfa, build_config_from_dict
 
 load_dotenv()
 
@@ -185,6 +187,8 @@ def generate_audio_from_script(script_reference: str, config_path: str = CONFIG_
     basic = config.get("basic", {})
     print_config_table(basic_config_rows(basic))
 
+    mfa_config: MfaConfig = build_config_from_dict(config)
+
     script_target = Path(script_reference).resolve()
     try:
         script_dirs, manifest = resolve_script_targets(script_target)
@@ -242,8 +246,39 @@ def generate_audio_from_script(script_reference: str, config_path: str = CONFIG_
                 audio_dir = (legacy_output_dir / chapter_root.name) if legacy_output_dir else chapter_root / "audio"
                 # 舊架構下保存腳本副本（腳本和音頻在不同目錄）
                 chapter_audio_dir, audio_file = synthesize_episode(script_path, audio_dir, config, client, timestamp, save_script_copy=True)
+            alignment_result = align_chapter_with_mfa(script_path, config=mfa_config, audio_path=audio_file)
+
+            final_srt_path = alignment_result.srt_path
+            if chapter_audio_dir.resolve() != script_path.resolve():
+                target_srt = chapter_audio_dir / "subtitles.srt"
+                shutil.copy2(alignment_result.srt_path, target_srt)
+                final_srt_path = target_srt
+
+            print(f"🧾 字幕完成：{final_srt_path}")
+            print(
+                f"   ↳ 對齊成功 {alignment_result.matched_tokens}/{alignment_result.total_tokens}"
+                f"，缺詞 {alignment_result.missing_tokens}"
+            )
+
             metadata_file = script_path / "metadata.json"
             metadata = json.loads(metadata_file.read_text(encoding='utf-8')) if metadata_file.exists() else {}
+            metadata.update(alignment_result.as_metadata())
+            metadata["alignment_srt"] = str(final_srt_path)
+            metadata_file.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding='utf-8')
+
+            audio_metadata_file = chapter_audio_dir / "metadata.json"
+            audio_metadata = json.loads(audio_metadata_file.read_text(encoding='utf-8')) if audio_metadata_file.exists() else {}
+            audio_metadata.update(
+                {
+                    "alignment_mode": "mfa",
+                    "alignment_srt": str(final_srt_path),
+                    "alignment_matched": alignment_result.matched_tokens,
+                    "alignment_missing": alignment_result.missing_tokens,
+                    "alignment_total_tokens": alignment_result.total_tokens,
+                }
+            )
+            audio_metadata_file.write_text(json.dumps(audio_metadata, ensure_ascii=False, indent=2), encoding='utf-8')
+
             generated_entries.append({
                 "chapter_slug": metadata.get('chapter_slug', chapter_root.name),
                 "chapter_number": metadata.get('chapter_number'),
@@ -251,9 +286,15 @@ def generate_audio_from_script(script_reference: str, config_path: str = CONFIG_
                 "script_dir": str(script_path),
                 "audio_dir": str(chapter_audio_dir),
                 "audio_file": str(audio_file),
+                "alignment_srt": str(final_srt_path),
+                "alignment_matched": alignment_result.matched_tokens,
+                "alignment_missing": alignment_result.missing_tokens,
+                "alignment_total_tokens": alignment_result.total_tokens,
                 "generated_at": timestamp
             })
             print(f"✅ 完成：{chapter_audio_dir}")
+        except MfaAlignmentError as exc:
+            print(f"❌ MFA 對齊失敗 ({script_path}): {exc}")
         except Exception as exc:
             print(f"❌ 章節失敗 ({script_path}): {exc}")
 

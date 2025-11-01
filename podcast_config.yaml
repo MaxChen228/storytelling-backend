@@ -97,3 +97,16 @@ advanced:
     fast:
       script_hint: "Bring energetic momentum; connect words smoothly with minimal pauses."
       tts_hint: "Target roughly 160 words per minute, blending phrases with light liaison and avoiding extended silences."
+
+alignment:
+  mfa:
+    micromamba_bin: "/opt/homebrew/opt/micromamba/bin/micromamba"
+    env_name: "aligner"
+    dictionary: "english_mfa"
+    acoustic_model: "english_mfa"
+    temp_root: "./.mfa_work"
+    keep_intermediate: false
+    keep_workdir: false
+    extra_args:
+      - "--clean"
+      - "--disable_mp"

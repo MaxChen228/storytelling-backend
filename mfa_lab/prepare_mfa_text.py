@@ -4,18 +4,12 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
+
+from alignment.mfa import clean_script_for_alignment
 
 
 def clean_text(script_path: Path) -> str:
-    repo_root = Path(__file__).resolve().parents[1]
-    tools_dir = repo_root / "whisperx_alignment_test" / "scripts"
-    if str(tools_dir) not in sys.path:
-        sys.path.insert(0, str(tools_dir))
-
-    from text_cleaner import clean_script_for_alignment  # noqa: WPS433
-
     raw = script_path.read_text(encoding="utf-8")
     cleaned = clean_script_for_alignment(raw)
     # MFA 對 \n 斷行敏感，保留句子換行以利閱讀

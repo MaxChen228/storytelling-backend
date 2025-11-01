@@ -6,6 +6,7 @@ openai>=1.0.0
 
 # 音頻處理
 pydub>=0.25.1
+praatio>=6.2.0
 
 # 工具類
 python-dotenv>=1.0.0

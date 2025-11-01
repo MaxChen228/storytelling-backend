@@ -12,8 +12,7 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 PROJECT_NAME="storytelling"
-VENV_PATH="$ROOT_DIR/.venvs/$PROJECT_NAME"
-BOOTSTRAP="$ROOT_DIR/scripts/bootstrap_venv.sh"
+VENV_PATH="$ROOT_DIR/.venv"
 MIN_PY_VERSION="3.9"
 
 echo "🎙️ Storytelling Podcast - 環境初始化"
@@ -37,7 +36,18 @@ fi
 
 # 建立 / 更新虛擬環境
 echo -e "${YELLOW}→ 建立或更新虛擬環境...${NC}"
-bash "$BOOTSTRAP" "$PROJECT_NAME"
+if [ ! -d "$VENV_PATH" ]; then
+    echo -e "   建立 .venv 於 $VENV_PATH"
+    python3 -m venv "$VENV_PATH"
+else
+    echo -e "   .venv 已存在：$VENV_PATH"
+fi
+
+# shellcheck disable=SC1090
+source "$VENV_PATH/bin/activate"
+python -m pip install --upgrade pip >/dev/null
+pip install -r "$ROOT_DIR/requirements/base.txt"
+deactivate >/dev/null
 
 # 驗證安裝
 # shellcheck disable=SC1090
