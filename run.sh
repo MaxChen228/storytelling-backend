@@ -676,7 +676,7 @@ batch_generate_scripts() {
 
 batch_generate_audio() {
     local output
-    if ! output="$(chapter_range_prompt "生成音頻" "script")"; then
+    if ! output="$(chapter_range_prompt "生成音頻" "noaudio" "requires_script")"; then
         return 1
     fi
     local chapters=()
@@ -696,7 +696,7 @@ batch_generate_audio() {
 
 batch_generate_subtitles() {
     local output
-    if ! output="$(chapter_range_prompt "生成字幕" "audio" "requires_script")"; then
+    if ! output="$(chapter_range_prompt "生成字幕" "nosubtitle" "requires_audio,requires_script")"; then
         return 1
     fi
     local chapters=()

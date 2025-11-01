@@ -9,7 +9,7 @@ basic:
   narrator_voice: "Achird"               # 預設旁白聲線，可填任何 Gemini 預設 voice 名稱
   start_chapter: 3                     # 從第幾章開始轉換
   chapters_per_run: 1                  # 每次跑多少章
-  speaking_pace: "neutral"                # slow / neutral / fast
+  speaking_pace: "slow"                # slow / neutral / fast
 
 paths:
   books_root: "./data"                 # 所有書籍資料夾的根目錄

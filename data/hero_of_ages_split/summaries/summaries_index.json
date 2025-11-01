@@ -1,0 +1,820 @@
+{
+  "generated_at": "2025-10-31T16:36:48.192374Z",
+  "book_id": "hero_of_ages_split",
+  "chapters_dir": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split",
+  "model": "gemini-2.5-flash",
+  "ratio": 8.0,
+  "min_summary_words": 80,
+  "max_summary_words": 400,
+  "workers": 101,
+  "items": [
+    {
+      "chapter": 151,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter150.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter150_summary.txt",
+      "word_count": 340,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 152,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter151.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter151_summary.txt",
+      "word_count": 1527,
+      "target_summary_words": 191,
+      "status": "generated"
+    },
+    {
+      "chapter": 190,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter189.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter189_summary.txt",
+      "word_count": 347,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 149,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter148.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter148_summary.txt",
+      "word_count": 497,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 160,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter159.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter159_summary.txt",
+      "word_count": 1583,
+      "target_summary_words": 198,
+      "status": "generated"
+    },
+    {
+      "chapter": 198,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter197.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter197_summary.txt",
+      "word_count": 1417,
+      "target_summary_words": 177,
+      "status": "generated"
+    },
+    {
+      "chapter": 192,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter191.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter191_summary.txt",
+      "word_count": 1420,
+      "target_summary_words": 178,
+      "status": "generated"
+    },
+    {
+      "chapter": 150,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter149.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter149_summary.txt",
+      "word_count": 1358,
+      "target_summary_words": 170,
+      "status": "generated"
+    },
+    {
+      "chapter": 143,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter142.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter142_summary.txt",
+      "word_count": 287,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 136,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter135.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter135_summary.txt",
+      "word_count": 698,
+      "target_summary_words": 87,
+      "status": "generated"
+    },
+    {
+      "chapter": 141,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter140.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter140_summary.txt",
+      "word_count": 290,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 181,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter180.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter180_summary.txt",
+      "word_count": 1122,
+      "target_summary_words": 140,
+      "status": "generated"
+    },
+    {
+      "chapter": 154,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter153.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter153_summary.txt",
+      "word_count": 662,
+      "target_summary_words": 83,
+      "status": "generated"
+    },
+    {
+      "chapter": 191,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter190.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter190_summary.txt",
+      "word_count": 1482,
+      "target_summary_words": 185,
+      "status": "generated"
+    },
+    {
+      "chapter": 138,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter137.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter137_summary.txt",
+      "word_count": 921,
+      "target_summary_words": 115,
+      "status": "generated"
+    },
+    {
+      "chapter": 158,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter157.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter157_summary.txt",
+      "word_count": 1445,
+      "target_summary_words": 181,
+      "status": "generated"
+    },
+    {
+      "chapter": 145,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter144.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter144_summary.txt",
+      "word_count": 1466,
+      "target_summary_words": 183,
+      "status": "generated"
+    },
+    {
+      "chapter": 101,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter100.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter100_summary.txt",
+      "word_count": 1472,
+      "target_summary_words": 184,
+      "status": "generated"
+    },
+    {
+      "chapter": 178,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter177.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter177_summary.txt",
+      "word_count": 1491,
+      "target_summary_words": 186,
+      "status": "generated"
+    },
+    {
+      "chapter": 127,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter126.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter126_summary.txt",
+      "word_count": 890,
+      "target_summary_words": 111,
+      "status": "generated"
+    },
+    {
+      "chapter": 109,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter108.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter108_summary.txt",
+      "word_count": 1378,
+      "target_summary_words": 172,
+      "status": "generated"
+    },
+    {
+      "chapter": 134,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter133.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter133_summary.txt",
+      "word_count": 1374,
+      "target_summary_words": 172,
+      "status": "generated"
+    },
+    {
+      "chapter": 187,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter186.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter186_summary.txt",
+      "word_count": 619,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 103,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter102.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter102_summary.txt",
+      "word_count": 1557,
+      "target_summary_words": 195,
+      "status": "generated"
+    },
+    {
+      "chapter": 105,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter104.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter104_summary.txt",
+      "word_count": 1442,
+      "target_summary_words": 180,
+      "status": "generated"
+    },
+    {
+      "chapter": 157,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter156.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter156_summary.txt",
+      "word_count": 722,
+      "target_summary_words": 90,
+      "status": "generated"
+    },
+    {
+      "chapter": 123,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter122.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter122_summary.txt",
+      "word_count": 1499,
+      "target_summary_words": 187,
+      "status": "generated"
+    },
+    {
+      "chapter": 161,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter160.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter160_summary.txt",
+      "word_count": 1198,
+      "target_summary_words": 150,
+      "status": "generated"
+    },
+    {
+      "chapter": 156,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter155.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter155_summary.txt",
+      "word_count": 1437,
+      "target_summary_words": 180,
+      "status": "generated"
+    },
+    {
+      "chapter": 125,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter124.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter124_summary.txt",
+      "word_count": 1367,
+      "target_summary_words": 171,
+      "status": "generated"
+    },
+    {
+      "chapter": 111,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter110.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter110_summary.txt",
+      "word_count": 1392,
+      "target_summary_words": 174,
+      "status": "generated"
+    },
+    {
+      "chapter": 173,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter172.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter172_summary.txt",
+      "word_count": 1470,
+      "target_summary_words": 184,
+      "status": "generated"
+    },
+    {
+      "chapter": 186,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter185.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter185_summary.txt",
+      "word_count": 1298,
+      "target_summary_words": 162,
+      "status": "generated"
+    },
+    {
+      "chapter": 133,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter132.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter132_summary.txt",
+      "word_count": 1320,
+      "target_summary_words": 165,
+      "status": "generated"
+    },
+    {
+      "chapter": 184,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter183.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter183_summary.txt",
+      "word_count": 1385,
+      "target_summary_words": 173,
+      "status": "generated"
+    },
+    {
+      "chapter": 185,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter184.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter184_summary.txt",
+      "word_count": 717,
+      "target_summary_words": 90,
+      "status": "generated"
+    },
+    {
+      "chapter": 196,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter195.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter195_summary.txt",
+      "word_count": 1315,
+      "target_summary_words": 164,
+      "status": "generated"
+    },
+    {
+      "chapter": 107,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter106.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter106_summary.txt",
+      "word_count": 634,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 147,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter146.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter146_summary.txt",
+      "word_count": 580,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 137,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter136.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter136_summary.txt",
+      "word_count": 1310,
+      "target_summary_words": 164,
+      "status": "generated"
+    },
+    {
+      "chapter": 106,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter105.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter105_summary.txt",
+      "word_count": 1306,
+      "target_summary_words": 163,
+      "status": "generated"
+    },
+    {
+      "chapter": 113,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter112.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter112_summary.txt",
+      "word_count": 1530,
+      "target_summary_words": 191,
+      "status": "generated"
+    },
+    {
+      "chapter": 135,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter134.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter134_summary.txt",
+      "word_count": 1314,
+      "target_summary_words": 164,
+      "status": "generated"
+    },
+    {
+      "chapter": 102,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter101.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter101_summary.txt",
+      "word_count": 940,
+      "target_summary_words": 118,
+      "status": "generated"
+    },
+    {
+      "chapter": 131,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter130.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter130_summary.txt",
+      "word_count": 472,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 172,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter171.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter171_summary.txt",
+      "word_count": 603,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 180,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter179.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter179_summary.txt",
+      "word_count": 745,
+      "target_summary_words": 93,
+      "status": "generated"
+    },
+    {
+      "chapter": 121,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter120.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter120_summary.txt",
+      "word_count": 1416,
+      "target_summary_words": 177,
+      "status": "generated"
+    },
+    {
+      "chapter": 120,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter119.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter119_summary.txt",
+      "word_count": 794,
+      "target_summary_words": 99,
+      "status": "generated"
+    },
+    {
+      "chapter": 164,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter163.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter163_summary.txt",
+      "word_count": 1301,
+      "target_summary_words": 163,
+      "status": "generated"
+    },
+    {
+      "chapter": 115,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter114.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter114_summary.txt",
+      "word_count": 1408,
+      "target_summary_words": 176,
+      "status": "generated"
+    },
+    {
+      "chapter": 132,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter131.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter131_summary.txt",
+      "word_count": 1514,
+      "target_summary_words": 189,
+      "status": "generated"
+    },
+    {
+      "chapter": 139,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter138.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter138_summary.txt",
+      "word_count": 807,
+      "target_summary_words": 101,
+      "status": "generated"
+    },
+    {
+      "chapter": 199,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter198.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter198_summary.txt",
+      "word_count": 1394,
+      "target_summary_words": 174,
+      "status": "generated"
+    },
+    {
+      "chapter": 177,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter176.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter176_summary.txt",
+      "word_count": 1030,
+      "target_summary_words": 129,
+      "status": "generated"
+    },
+    {
+      "chapter": 155,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter154.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter154_summary.txt",
+      "word_count": 1617,
+      "target_summary_words": 202,
+      "status": "generated"
+    },
+    {
+      "chapter": 116,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter115.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter115_summary.txt",
+      "word_count": 920,
+      "target_summary_words": 115,
+      "status": "generated"
+    },
+    {
+      "chapter": 142,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter141.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter141_summary.txt",
+      "word_count": 1300,
+      "target_summary_words": 162,
+      "status": "generated"
+    },
+    {
+      "chapter": 176,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter175.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter175_summary.txt",
+      "word_count": 1574,
+      "target_summary_words": 197,
+      "status": "generated"
+    },
+    {
+      "chapter": 169,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter168.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter168_summary.txt",
+      "word_count": 1021,
+      "target_summary_words": 128,
+      "status": "generated"
+    },
+    {
+      "chapter": 124,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter123.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter123_summary.txt",
+      "word_count": 1346,
+      "target_summary_words": 168,
+      "status": "generated"
+    },
+    {
+      "chapter": 170,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter169.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter169_summary.txt",
+      "word_count": 1400,
+      "target_summary_words": 175,
+      "status": "generated"
+    },
+    {
+      "chapter": 122,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter121.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter121_summary.txt",
+      "word_count": 1313,
+      "target_summary_words": 164,
+      "status": "generated"
+    },
+    {
+      "chapter": 201,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter200.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter200_summary.txt",
+      "word_count": 1267,
+      "target_summary_words": 158,
+      "status": "generated"
+    },
+    {
+      "chapter": 174,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter173.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter173_summary.txt",
+      "word_count": 680,
+      "target_summary_words": 85,
+      "status": "generated"
+    },
+    {
+      "chapter": 140,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter139.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter139_summary.txt",
+      "word_count": 1304,
+      "target_summary_words": 163,
+      "status": "generated"
+    },
+    {
+      "chapter": 200,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter199.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter199_summary.txt",
+      "word_count": 1274,
+      "target_summary_words": 159,
+      "status": "generated"
+    },
+    {
+      "chapter": 108,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter107.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter107_summary.txt",
+      "word_count": 1136,
+      "target_summary_words": 142,
+      "status": "generated"
+    },
+    {
+      "chapter": 194,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter193.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter193_summary.txt",
+      "word_count": 1300,
+      "target_summary_words": 162,
+      "status": "generated"
+    },
+    {
+      "chapter": 195,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter194.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter194_summary.txt",
+      "word_count": 550,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 114,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter113.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter113_summary.txt",
+      "word_count": 1289,
+      "target_summary_words": 161,
+      "status": "generated"
+    },
+    {
+      "chapter": 130,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter129.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter129_summary.txt",
+      "word_count": 1307,
+      "target_summary_words": 163,
+      "status": "generated"
+    },
+    {
+      "chapter": 119,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter118.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter118_summary.txt",
+      "word_count": 1443,
+      "target_summary_words": 180,
+      "status": "generated"
+    },
+    {
+      "chapter": 118,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter117.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter117_summary.txt",
+      "word_count": 567,
+      "target_summary_words": 80,
+      "status": "generated"
+    },
+    {
+      "chapter": 159,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter158.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter158_summary.txt",
+      "word_count": 1127,
+      "target_summary_words": 141,
+      "status": "generated"
+    },
+    {
+      "chapter": 128,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter127.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter127_summary.txt",
+      "word_count": 1306,
+      "target_summary_words": 163,
+      "status": "generated"
+    },
+    {
+      "chapter": 189,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter188.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter188_summary.txt",
+      "word_count": 916,
+      "target_summary_words": 114,
+      "status": "generated"
+    },
+    {
+      "chapter": 117,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter116.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter116_summary.txt",
+      "word_count": 1198,
+      "target_summary_words": 150,
+      "status": "generated"
+    },
+    {
+      "chapter": 146,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter145.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter145_summary.txt",
+      "word_count": 1283,
+      "target_summary_words": 160,
+      "status": "generated"
+    },
+    {
+      "chapter": 110,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter109.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter109_summary.txt",
+      "word_count": 739,
+      "target_summary_words": 92,
+      "status": "generated"
+    },
+    {
+      "chapter": 167,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter166.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter166_summary.txt",
+      "word_count": 1257,
+      "target_summary_words": 157,
+      "status": "generated"
+    },
+    {
+      "chapter": 104,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter103.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter103_summary.txt",
+      "word_count": 944,
+      "target_summary_words": 118,
+      "status": "generated"
+    },
+    {
+      "chapter": 175,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter174.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter174_summary.txt",
+      "word_count": 1184,
+      "target_summary_words": 148,
+      "status": "generated"
+    },
+    {
+      "chapter": 193,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter192.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter192_summary.txt",
+      "word_count": 1302,
+      "target_summary_words": 163,
+      "status": "generated"
+    },
+    {
+      "chapter": 162,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter161.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter161_summary.txt",
+      "word_count": 763,
+      "target_summary_words": 95,
+      "status": "generated"
+    },
+    {
+      "chapter": 144,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter143.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter143_summary.txt",
+      "word_count": 972,
+      "target_summary_words": 122,
+      "status": "generated"
+    },
+    {
+      "chapter": 168,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter167.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter167_summary.txt",
+      "word_count": 1305,
+      "target_summary_words": 163,
+      "status": "generated"
+    },
+    {
+      "chapter": 112,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter111.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter111_summary.txt",
+      "word_count": 1301,
+      "target_summary_words": 163,
+      "status": "generated"
+    },
+    {
+      "chapter": 179,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter178.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter178_summary.txt",
+      "word_count": 923,
+      "target_summary_words": 115,
+      "status": "generated"
+    },
+    {
+      "chapter": 153,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter152.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter152_summary.txt",
+      "word_count": 1445,
+      "target_summary_words": 181,
+      "status": "generated"
+    },
+    {
+      "chapter": 171,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter170.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter170_summary.txt",
+      "word_count": 1312,
+      "target_summary_words": 164,
+      "status": "generated"
+    },
+    {
+      "chapter": 183,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter182.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter182_summary.txt",
+      "word_count": 1004,
+      "target_summary_words": 126,
+      "status": "generated"
+    },
+    {
+      "chapter": 163,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter162.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter162_summary.txt",
+      "word_count": 1026,
+      "target_summary_words": 128,
+      "status": "generated"
+    },
+    {
+      "chapter": 165,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter164.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter164_summary.txt",
+      "word_count": 824,
+      "target_summary_words": 103,
+      "status": "generated"
+    },
+    {
+      "chapter": 188,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter187.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter187_summary.txt",
+      "word_count": 1137,
+      "target_summary_words": 142,
+      "status": "generated"
+    },
+    {
+      "chapter": 182,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter181.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter181_summary.txt",
+      "word_count": 1092,
+      "target_summary_words": 136,
+      "status": "generated"
+    },
+    {
+      "chapter": 129,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter128.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter128_summary.txt",
+      "word_count": 1302,
+      "target_summary_words": 163,
+      "status": "generated"
+    },
+    {
+      "chapter": 126,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter125.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter125_summary.txt",
+      "word_count": 740,
+      "target_summary_words": 92,
+      "status": "generated"
+    },
+    {
+      "chapter": 197,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter196.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter196_summary.txt",
+      "word_count": 1133,
+      "target_summary_words": 142,
+      "status": "generated"
+    },
+    {
+      "chapter": 166,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter165.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter165_summary.txt",
+      "word_count": 1046,
+      "target_summary_words": 131,
+      "status": "generated"
+    },
+    {
+      "chapter": 148,
+      "file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/chapter147.txt",
+      "summary_file": "/Users/chenliangyu/Desktop/podcast-workspace/storytelling-backend/data/hero_of_ages_split/summaries/chapter147_summary.txt",
+      "word_count": 1269,
+      "target_summary_words": 159,
+      "status": "generated"
+    }
+  ]
+}

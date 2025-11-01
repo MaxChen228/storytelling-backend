@@ -1,0 +1,38 @@
+<Person1>Welcome to Storytelling Series - Beginner Story Guide (A2)! Last time, we felt the tension building on Anacreon. The powerful regent, Wienis, was about to have a very serious conversation with his nephew, the young King Lepold. Wienis has a plan for war, but he needs the king's support. Let's step into that room and see what happens.
+</Person1><Person2>I'm ready. It feels like a storm is about to break.
+</Person2><Person1>It really does. Picture a grand room in the palace. Wienis breaks the silence. His voice is firm as he tells Lepold, "You will come of age in two months... you will be king henceforward, Lepold."
+</Person1><Person2>Henceforward? What does that mean exactly?
+</Person2><Person1>Ah, good question! Henceforward means 'from this time on'. Wienis is saying that Lepold's childhood is over. From this moment, he must act like a true king.
+</Person1><Person2>Got it. So, the pressure is on.
+</Person2><Person1>Exactly. And then Wienis drops the bomb. He says, simply, "There will be war, Lepold."
+</Person1><Person2>Wow. Just like that? How does Lepold react?
+</Person2><Person1>He's completely shocked. "War!" he says. He doesn't understand. He thought there was a truce, an agreement not to fight. And besides, the Foundation is helping them! They are repairing a giant spaceship for Anacreon. Why would they do that if they wanted war?
+</Person1><Person2>That's a good point. He's not a fool, then.
+</Person2><Person1>He's not, but he is naive. And Wienis... well, Wienis is very, very clever. He twists his lip into a little smile, and the friendliness in his voice disappears. He tells Lepold that the Foundation is the real enemy. He says they have all the power, all the amazing science, and they only give Anacreon the little bits that are left over.
+</Person1><Person2>He's painting them as greedy and controlling.
+</Person2><Person1>Precisely. Lepold timidly suggests that maybe they should be grateful for the help they receive. And Wienis just roars with anger. "Grateful?" he shouts. He says the Foundation is keeping real power from them, power that could make Anacreon rulers of the galaxy!
+</Person1><Person2>So he's appealing to Lepold's ambition now. His pride.
+</Person2><Person1>Yes! He puts his hand on Lepold's knee and says, "Your children and your children's children may be kings of the universe!" And you can just see the change in Lepold. His back straightens. A sparkle appears in his eyes. Suddenly, he sees it. He says, "What right have they to keep it to themselves? Not fair, you know."
+</Person1><Person2>Wienis has him. He's completely turned him around.
+</Person2><Person1>He has. Wienis then adds another layer of fear. He asks what would happen if their neighbor, Smyrno, attacks the Foundation first and takes all that power. Anacreon would become weak, a vassal. Lepold would lose his throne.
+</Person1><Person2>Now Lepold is excited. He shouts, "We must strike first! It's simply self-defense!"
+</Person2><Person1>Mmm, yes. Wienis's smile gets a little wider. He has won. He even reminds Lepold of a time when his grandfather was humiliated by the Foundation's leader, a "sly cur" with "not a drop of noble blood." This makes Lepold's face turn red with anger.
+</Person1><Person2>So now it's personal. It's about family honor.
+</Person2><Person1>It is. Lepold is fully convinced. He says, "It seems only proper that Anacreon wipe out this nest of troublemakers, and that immediately." But Wienis tells him to wait. First, for the spaceship to be repaired. And second... for Salvor Hardin to arrive.
+</Person1><Person2>Salvor Hardin himself? The leader of the Foundation? I bet that changed the mood.
+</Person2><Person1>Instantly. The hard lines on Lepold's face soften. He becomes a scared boy again. He just whispers the name, "Salvor Hardin!" He admits he's afraid... a little.
+</Person1><Person2>Why is he so afraid of Hardin? And of the Foundation?
+</Person2><Person1>Well, it's more than just Hardin. Lepold says attacking the Foundation would be... uh... "blasphemous." That's a difficult word. It means going against something holy, against God. He's worried about the Galactic Spirit. He talks about the Prophet Hari Seldon and his commandments. All the common people believe in this religion.
+</Person1><Person2>But Wienis doesn't believe in it, does he?
+</Person2><Person1>Not at all! He calls it "mummery" and "nonsense." But then he explains something very important. He tells Lepold that this foolish religion is actually very useful. Why? Because it teaches the people that the king has a divine right to rule. It makes Lepold seem like he is "more than half a god."
+</Person1><Person2>Ah, so the religion is just a tool for control.
+</Person2><Person1>Exactly. Wienis says, "It eliminates all possibilities of revolts and insures absolute obedience." And that is why Lepold, the semi-divine king, must be the one to order the war. Not Wienis, the regent, who is only human.
+</Person1><Person2>That is some next-level manipulation.
+</Person2><Person1>It truly is. He promises Lepold that once the Foundation is gone, no one will deny that he is a god. They will control all the amazing technology, and together, they will build an empire. The conversation ends, and Wienis tells Lepold to get along.
+</Person1><Person2>But there's a final warning, isn't there?
+</Person2><Person1>Oh, yes. A chilling one. As Lepold leaves, Wienis smiles and tells him to be careful on his Nyak hunts. He mentions the... "unfortunate accident" to Lepold's father. He says, with needle guns firing everywhere, one can never tell what might happen. It's a clear threat.
+</Person1><Person2>Do what I say, or you'll have an "accident" too. Terrifying.
+</Person2><Person1>Lepold understands. He leaves the room with heavy thoughts. He knows he must defeat the Foundation. But he also realizes that after the war... his uncle Wienis and his two sons are the next in line for the throne. But then, he remembers something. He is the king. And kings... well, kings can order people to be executed.
+</Person1><Person2>Wow. So a little bit of steel is growing in the young king after all.
+</Person2><Person1>It seems so. Wienis may have created a king who is more dangerous than he thinks. So, the plan for war is set on Anacreon. But what is happening back on Terminus? Next time, we will hear from someone who has just returned from Anacreon. He brings very strange and worrying news about the Foundation's religion there... a religion that makes the king a god. Why would Salvor Hardin create a system that gives his enemy so much power? It's a puzzle we'll start to solve in our next chapter.
+</Person1><Person1>Join me then. Goodbye for now!</Person1>

@@ -1,0 +1,63 @@
+<Person1>Welcome to Storytelling Series - Beginner Story Guide (A2)! Last time, we left Sermak and his friends feeling hopeless. They learned that Salvor Hardin’s plan on Anacreon had made the king a powerful, god-like figure, making any rebellion impossible. Sermak was so confused and angry, and things were about to get even more intense.
+</Person1><Person2>Right, because Hardin was arming Anacreon, but also making its king stronger. It felt like a contradiction, and Sermak just couldn't understand why.
+</Person2><Person1>Exactly. And that’s where our story picks up. Picture this: a room filled with tension. Everyone is trying to talk at once, the noise is overwhelming. Sermak is slamming his hand on the table, trying to get everyone to be quiet.
+</Person1><Person2>Oh, I can just feel the chaos. It sounds like a very stressful meeting.
+</Person2><Person1>It is! And then, suddenly, the front door opens with a crash. A man named Levi Norast comes in. He’s wearing a heavy overcoat, and he’s covered in snow. He doesn't even stop to take his coat off, he just runs up the stairs.
+</Person1><Person2>He must have some urgent news!
+</Person2><Person1>He does! He shouts, "Look at that!" and throws a cold, wet newspaper onto the table. He says the news is everywhere, on the visicasters too. Everyone leans in, all five of them, to read the paper.
+</Person1><Person2>And what does it say? What’s the big news?
+</Person2><Person1>Sermak reads it, and his voice is just a whisper. "Great Space," he says, "he’s going to Anacreon! Going to Anacreon!"
+</Person1><Person2>Hardin is going to Anacreon? Now? After everything they just learned? To them, that must look like proof that he's a traitor.
+</Person2><Person1>That's exactly what they think. Another man, Tarki, gets very excited and squeaks, "It is treason!" He believes Hardin has sold them out and is now going to Anacreon to get his reward.
+</Person1><Person2>So this just confirms all their worst fears.
+</Person2><Person1>Completely. Sermak stands up. He’s made a decision. He says, "We’ve no choice now. I’m going to ask the Council tomorrow that Hardin be impeached."
+</Person1><Person2>Impeached? What does that mean, exactly?
+</Person2><Person1>Good question. To be impeached means to formally accuse a public official of a serious crime. In other words, Sermak wants to officially remove Hardin from his job as mayor of Terminus. It's a very serious political move.
+</Person1><Person2>Wow. So they are declaring political war on Hardin.
+</Person2><Person1>Yes. And the story then shifts. Imagine a very different scene. It’s early morning, before the sun is up. It has stopped snowing, but the ground is covered in a thick, white blanket. A sleek ground car is moving slowly through the empty streets.
+</Person1><Person2>It sounds so quiet and… lonely. A big contrast to the loud, angry meeting.
+</Person2><Person1>It is. The light is a murky gray, and it feels cold in every sense of the word. Inside the car are Salvor Hardin and his trusted friend, Yohan Lee.
+</Person1><Person2>So Hardin is already on his way? He’s really doing it.
+</Person2><Person1>He is. And Lee is not happy about it. He’s grumbling, telling Hardin, "It's going to look bad, Hardin. They're going to say you sneaked away."
+</Person1><Person2>Which is… well, it’s true, isn't it? He is sneaking away at dawn.
+</Person2><Person1>Hardin doesn’t deny it. He just says he needs to get to Anacreon without trouble. He leans back in his seat and shivers a little, annoyed by the cold world outside the window.
+</Person1><Person2>Even though he's in a warm car. It’s like the political situation is making everything feel cold.
+</Person2><Person1>That’s a great way to put it. Lee is much more direct. He wishes they could "weather-condition" Sermak, maybe by putting him in a nice, dry prison cell.
+</Person1><Person2>(laughs) Okay, so Lee is not a subtle man. He wants to solve the problem directly.
+</Person2><Person1>Not at all. But Hardin disagrees. He says that kind of violence would only make things worse. He points out that Lee’s two bodyguards are in the front seat, hands ready on their weapons. Hardin says, "You evidently want to stir up civil war."
+</Person1><Person2>And does Lee think they're already in one?
+</Person2><Person1>He basically does. He starts listing all the bad things that have happened. One: Sermak demanded Hardin's impeachment in the City Council yesterday.
+</Person1><Person2>And did it work?
+</Person2><Person1>No, Hardin responds coolly that the motion was defeated. But Lee points out the vote was 206 to 184. A majority of only twenty-two votes. They expected to win by at least sixty. It was much too close.
+</Person1><Person2>Oh, so Hardin’s support is weaker than he thought. That’s not good.
+</Person2><Person1>Not at all. And Lee continues. Two: after the vote, all fifty-nine members of Sermak’s Actionist Party stood up and walked out of the Council meeting in protest.
+</Person1><Person2>That’s a powerful statement. The government is divided.
+</Person2><Person1>Deeply. And three: before leaving, Sermak shouted that Hardin was a traitor and that his party's name, 'Actionist', was not just for show. They plan to take action.
+</Person1><Person2>This is so much worse than I realized. It sounds like the whole government on Terminus is about to collapse. And Hardin is just… leaving?
+</Person2><Person1>That's what Lee can't understand! He tells Hardin he should stay and face them, even declare martial law if he has to.
+</Person1><Person2>Martial law? That sounds serious.
+</Person2><Person1>It is. Martial law is when the military takes control of the government, usually during an emergency. It means the normal laws are suspended. Lee is suggesting a military takeover to stop Sermak.
+</Person1><Person2>But Hardin is against violence. What does he say?
+</Person2><Person1>He says, "Violence is the last refuge of the incompetent." But this is where we see Hardin’s real plan begin to unfold. He changes the subject. He reminds Lee about the Time Vault.
+</Person1><Person2>The Time Vault! Where the recording of Hari Seldon appeared thirty years ago, right?
+</Person2><Person1>Exactly. Hardin points out that appearance was during their first major crisis. And now, they are in their second major crisis. And in three weeks, it will be the eightieth anniversary of the Foundation.
+</Person1><Person2>He thinks Hari Seldon is going to appear again!
+</Person2><Person1>He thinks it's possible. He has a plan. He tells Lee, "At today's session of the Council, just after you announce that I have left for Anacreon, you will announce, officially, that there will be another Hari Seldon recording."
+</Person1><Person2>But… is that true? Does he know for sure?
+</Person2><Person1>He doesn't! He tells Lee it doesn't matter if they believe it. He says, "It will confuse them, which is all I want." He thinks the confusion will make them wait, postpone any action until after that date. It buys him time.
+</Person1><Person2>That is a brilliant, and very risky, move. He's bluffing to stop a civil war.
+</Person2><Person1>It’s a huge gamble. They arrive at the airport, and Hardin says goodbye to Lee. He tells him he trusts him to handle things, to stay in the "frying pan" but out of the fire. Then the air lock closes, and the spaceship is gone.
+</Person1><Person2>So now Hardin is alone, flying toward his enemy, and leaving a political firestorm behind him. What happens when he gets to Anacreon?
+</Person2><Person1>Well, he doesn't go to the main planet right away. He spends time visiting eight other star systems in the kingdom, meeting with Foundation representatives there. He’s gathering information.
+</Person1><Person2>He’s always one step ahead, isn't he? He’s not just walking in blind.
+</Person2><Person1>Never. But the trip makes him realize just how huge Anacreon is. Nineteen billion people. It's staggering. He finally arrives on the capital planet just a day before the new king’s coronation.
+</Person1><Person2>The timing is perfect, as always.
+</Person2><Person1>The whole planet is in a state of "feverish religious pageantry." That’s a wonderful phrase. It means everyone is wildly and excitedly celebrating the religious festival for their god-king. Hardin meets with his ambassador, Verisof, for just half an hour, but it's enough.
+</Person1><Person2>So he has a plan for what to do at the palace?
+</Person2><Person1>He does. That night, he goes to a grand ball in the palace. It’s filled with glittering, important nobles. But Hardin stays near the wall, trying not to be noticed. He sees the king, Lepold, from a distance, surrounded by a "deadly blaze of radioactive aura."
+</Person1><Person2>That's the science trick Bort was talking about! The fake divine light.
+</Person2><Person1>Precisely. And soon, the king will sit on his massive throne, which will then rise into the air and float to a window so the cheering crowds outside can see him. It’s all a show, of course. The throne just has a hidden nuclear motor inside.
+</Person1><Person2>It’s incredible. A whole kingdom built on scientific tricks disguised as miracles. And Hardin is walking right into the middle of it, completely alone.
+</Person2><Person1>He is. He's facing a rebellion at home and a powerful, manipulated kingdom abroad. He seems to have a plan, but it's built on a lie about Hari Seldon, and now he has to confront the very people who think he's a traitor. It’s an incredibly dangerous position.
+</Person1><Person2>I can't wait to see what he does next. How does he handle the god-king and his court?
+</Person2><Person1>Well, that's where things get even more interesting. Hardin is about to have a private meeting with Prince Regent Wienis, the man who truly holds the power. And Wienis has a shocking plan of his own—a plan that involves an attack on Terminus itself. We'll find out what happens when they come face to face, next time. Goodbye for now!</Person1>
