@@ -17,6 +17,10 @@ env/
 .env.local
 .env.*.local
 
+# Google Cloud service account credentials
+*.service-account.json
+new-pro-*.json
+
 # Output Directories
 output/
 data/*_processed_scripts/
