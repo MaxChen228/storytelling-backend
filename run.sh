@@ -57,13 +57,23 @@ fi
 SUBTITLE_DEVICE_DEFAULT="${PODCAST_SUBTITLE_DEVICE:-cpu}"
 
 # Script generation batching (cap requests per wave)
-SCRIPT_BATCH_SIZE="${PODCAST_SCRIPT_BATCH_SIZE:-5}"
+SCRIPT_BATCH_SIZE="${PODCAST_SCRIPT_BATCH_SIZE:-10}"
 if ! [[ "$SCRIPT_BATCH_SIZE" =~ ^[1-9][0-9]*$ ]]; then
-    SCRIPT_BATCH_SIZE=5
+    SCRIPT_BATCH_SIZE=10
 fi
-SCRIPT_BATCH_DELAY="${PODCAST_SCRIPT_BATCH_DELAY:-30}"
+SCRIPT_BATCH_DELAY="${PODCAST_SCRIPT_BATCH_DELAY:-10}"
 if ! [[ "$SCRIPT_BATCH_DELAY" =~ ^[0-9]+$ ]]; then
-    SCRIPT_BATCH_DELAY=30
+    SCRIPT_BATCH_DELAY=10
+fi
+
+# Audio generation batching (limit simultaneous TTS calls)
+AUDIO_BATCH_SIZE="${PODCAST_AUDIO_BATCH_SIZE:-5}"
+if ! [[ "$AUDIO_BATCH_SIZE" =~ ^[1-9][0-9]*$ ]]; then
+    AUDIO_BATCH_SIZE=5
+fi
+AUDIO_BATCH_DELAY="${PODCAST_AUDIO_BATCH_DELAY:-60}"
+if ! [[ "$AUDIO_BATCH_DELAY" =~ ^[0-9]+$ ]]; then
+    AUDIO_BATCH_DELAY=60
 fi
 
 # --------------------------------------------------------------------------
@@ -687,7 +697,7 @@ batch_generate_scripts() {
     local had_failures=false
 
     echo ""
-    echo -e "${WHITE}共 ${total_chapters} 章節，批次大小 ${batch_size}，共 ${total_batches} 批。${NC}"
+    echo -e "${WHITE}共 ${total_chapters} 章節，腳本批次大小 ${batch_size}，共 ${total_batches} 批。${NC}"
 
     while [ $start -lt $total_chapters ]; do
         local remaining=$((total_chapters - start))
@@ -698,7 +708,7 @@ batch_generate_scripts() {
         local chunk=("${chapters[@]:$start:$current_size}")
 
         echo ""
-        echo -e "${CYAN}批次 ${batch_index}/${total_batches}${NC}"
+        echo -e "${CYAN}腳本批次 ${batch_index}/${total_batches}${NC}"
         printf "  %s\n" "${chunk[@]}"
         echo ""
 
@@ -709,7 +719,7 @@ batch_generate_scripts() {
         ((start+=current_size))
         if [ $batch_index -lt $total_batches ] && [ "$batch_delay" -gt 0 ]; then
             echo ""
-            echo -e "${GRAY}⏳ 等待 ${batch_delay} 秒後處理下一批...${NC}"
+            echo -e "${GRAY}⏳ 等待 ${batch_delay} 秒後處理下一批腳本...${NC}"
             sleep "$batch_delay"
         fi
 
@@ -736,11 +746,50 @@ batch_generate_audio() {
         echo -e "${YELLOW}沒有符合的章節${NC}"
         return 1
     fi
+
+    local total_chapters=${#chapters[@]}
+    local batch_size=$AUDIO_BATCH_SIZE
+    local batch_delay=$AUDIO_BATCH_DELAY
+    local total_batches=$(( (total_chapters + batch_size - 1) / batch_size ))
+    local batch_index=1
+    local start=0
+    local had_failures=false
+
     echo ""
-    echo -e "${WHITE}準備為以下章節生成音頻：${NC}"
-    printf "  %s\n" "${chapters[@]}"
-    echo ""
-    parallel_execute generate_audio "${chapters[@]}"
+    echo -e "${WHITE}共 ${total_chapters} 章節，音頻批次大小 ${batch_size}，共 ${total_batches} 批。${NC}"
+
+    while [ $start -lt $total_chapters ]; do
+        local remaining=$((total_chapters - start))
+        local current_size=$batch_size
+        if [ $remaining -lt $batch_size ]; then
+            current_size=$remaining
+        fi
+        local chunk=("${chapters[@]:$start:$current_size}")
+
+        echo ""
+        echo -e "${CYAN}音頻批次 ${batch_index}/${total_batches}${NC}"
+        printf "  %s\n" "${chunk[@]}"
+        echo ""
+
+        if ! parallel_execute generate_audio "${chunk[@]}"; then
+            had_failures=true
+        fi
+
+        ((start+=current_size))
+        if [ $batch_index -lt $total_batches ] && [ "$batch_delay" -gt 0 ]; then
+            echo ""
+            echo -e "${GRAY}⏳ 等待 ${batch_delay} 秒後處理下一批音頻...${NC}"
+            sleep "$batch_delay"
+        fi
+
+        ((batch_index++))
+    done
+
+    if [ "$had_failures" = true ]; then
+        echo ""
+        echo -e "${YELLOW}${ICON_WARNING} 部分音頻批次失敗，請檢查上方輸出並視需要重試。${NC}"
+        return 1
+    fi
 }
 
 batch_generate_subtitles() {
