@@ -1,0 +1,17 @@
+# 產出資料
+*.wav
+*.srt
+*.TextGrid
+*_transcript.txt
+
+# 對齊輸出與臨時資料夾
+*_aligned/
+*_corpus/
+aligned/
+corpus/
+
+# 環境與工具
+micromamba/
+
+# Python cache
+__pycache__/
