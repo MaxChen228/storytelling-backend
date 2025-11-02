@@ -87,6 +87,7 @@ class ChapterStatus:
     has_script: bool
     has_audio: bool
     has_subtitle: bool
+    audio_duration: Optional[float] = None
     audio_subtitle_gap: Optional[float] = None
 
 
@@ -191,6 +192,12 @@ def _format_gap_seconds(value: Optional[float]) -> str:
     if minutes >= 1:
         return f"{sign}{int(minutes)}m{seconds:04.1f}s"
     return f"{sign}{seconds:.1f}s"
+
+
+def _format_duration_mmss(value: float) -> str:
+    total = max(0.0, value)
+    minutes, seconds = divmod(total, 60)
+    return f"({int(minutes):02d}:{int(seconds):02d})"
 
 
 def resolve_path(base: Path, raw: str) -> Path:
@@ -391,12 +398,11 @@ class StorytellingCLI:
             script = (chapter_dir / "podcast_script.txt").exists()
             audio = (chapter_dir / "podcast.wav").exists() or (chapter_dir / "podcast.mp3").exists()
             subtitle = (chapter_dir / "subtitles.srt").exists()
+            audio_duration = _chapter_audio_duration(chapter_dir) if audio else None
+            subtitle_end = _chapter_last_subtitle_end(chapter_dir) if subtitle else None
             gap: Optional[float] = None
-            if audio and subtitle:
-                audio_duration = _chapter_audio_duration(chapter_dir)
-                subtitle_end = _chapter_last_subtitle_end(chapter_dir)
-                if audio_duration is not None and subtitle_end is not None:
-                    gap = audio_duration - subtitle_end
+            if audio_duration is not None and subtitle_end is not None:
+                gap = audio_duration - subtitle_end
             statuses.append(
                 ChapterStatus(
                     slug=slug,
@@ -405,6 +411,7 @@ class StorytellingCLI:
                     has_script=script,
                     has_audio=audio,
                     has_subtitle=subtitle,
+                    audio_duration=audio_duration,
                     audio_subtitle_gap=gap,
                 )
             )
@@ -455,11 +462,12 @@ class StorytellingCLI:
             print(colorize(f"{ICON_WARNING} 尚未找到任何章節或源文件", "yellow", self.use_color))
             print()
             return
-        header = ("Idx", "Chapter", "Source", "Summary", "Script", "Audio", "Subtitle", "ΔAudio-Sub")
+        header = ("Idx", "Chapter", "Source", "Summary", "Script", "Audio", "Audio(s)", "Subtitle", "ΔAudio-Sub")
         widths = [len(h) for h in header]
         rows: List[Tuple[str, ...]] = []
         for idx, status in enumerate(statuses):
             gap_label = _format_gap_seconds(status.audio_subtitle_gap)
+            audio_duration_label = _format_duration_mmss(status.audio_duration) if status.audio_duration is not None else "—"
             row = (
                 str(idx),
                 status.slug,
@@ -467,6 +475,7 @@ class StorytellingCLI:
                 "✓" if status.has_summary else "✗",
                 "✓" if status.has_script else "✗",
                 "✓" if status.has_audio else "✗",
+                audio_duration_label,
                 "✓" if status.has_subtitle else "✗",
                 gap_label,
             )
@@ -626,6 +635,30 @@ class StorytellingCLI:
         if not ctx:
             raise RuntimeError("尚未選擇書籍")
         return ctx.book_output_dir / slug
+
+    def _preview_script(self, chapter: str, lines: int = 40) -> None:
+        ctx = self.book_context
+        if not ctx:
+            print(colorize(f"{ICON_MISSING} 尚未選擇書籍", "red", self.use_color))
+            return
+        script_path = ctx.book_output_dir / chapter / "podcast_script.txt"
+        if not script_path.exists():
+            print(colorize(f"{ICON_MISSING} 找不到腳本：{script_path}", "red", self.use_color))
+            return
+        try:
+            content = script_path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            content = script_path.read_text(encoding="utf-8", errors="ignore")
+        lines = max(1, lines)
+        preview_lines = content.splitlines()[:lines]
+        print()
+        print(colorize(f"{ICON_SCRIPT} 腳本預覽：{chapter}", "green", self.use_color))
+        for idx, value in enumerate(preview_lines, start=1):
+            print(colorize(f"{idx:>3}: {value}", "gray", self.use_color))
+        remaining = len(content.splitlines()) - len(preview_lines)
+        if remaining > 0:
+            print(colorize(f"… 其餘 {remaining} 行未顯示", "gray", self.use_color))
+        print()
 
     def _available_chapters_for_artifact(self, artifact: str) -> List[ChapterStatus]:
         predicate_map = {
@@ -1030,7 +1063,23 @@ class StorytellingCLI:
         if not (0 <= idx < len(selectable)):
             print(colorize(f"{ICON_MISSING} 無效的選擇", "red", self.use_color))
             return
-        self._play_audio(selectable[idx].slug)
+        chapter = selectable[idx].slug
+        while True:
+            print()
+            print(colorize(f"選擇操作（{chapter}）：", "cyan", self.use_color))
+            print("  1) 查看腳本")
+            print("  2) 播放音頻")
+            print("  b) 返回")
+            action = input(colorize("> ", "white", self.use_color)).strip().lower()
+            if action in {"1", "script"}:
+                self._preview_script(chapter)
+                continue
+            if action in {"2", "audio", "play"}:
+                self._play_audio(chapter)
+                break
+            if action in {"b", "back", "q"}:
+                break
+            print(colorize(f"{ICON_WARNING} 無效選項", "yellow", self.use_color))
 
     # ---------------- Main loop -----------------
 
