@@ -366,6 +366,10 @@ class StorytellingCLI:
 
     # ---------------- Chapter scanning -----------------
 
+    def _timing_outliers(self, threshold: float = 1.5) -> List[ChapterStatus]:
+        statuses = self.scan_chapters()
+        return [status for status in statuses if status.audio_subtitle_gap is not None and status.audio_subtitle_gap > threshold]
+
     def scan_chapters(self) -> List[ChapterStatus]:
         if not self.book_context:
             return []
@@ -406,6 +410,42 @@ class StorytellingCLI:
             )
         return statuses
 
+    def repair_timing_outliers(self, threshold: float = 1.5) -> None:
+        if not self.book_context:
+            print(colorize(f"{ICON_MISSING} 尚未選擇書籍", "red", self.use_color))
+            return
+
+        outliers = self._timing_outliers(threshold)
+        if not outliers:
+            print(colorize(f"{ICON_INFO} 沒有任何字幕需修復 (門檻 {threshold:.1f}s)", "cyan", self.use_color))
+            return
+
+        print(colorize(f"{ICON_INFO} 將修復以下字幕與音檔差值 > {threshold:.1f}s 的章節：", "cyan", self.use_color))
+        for status in outliers:
+            gap_str = _format_gap_seconds(status.audio_subtitle_gap)
+            print(colorize(f"  • {status.slug} (Δ {gap_str})", "gray", self.use_color))
+        print()
+
+        successes: List[str] = []
+        failures: List[Tuple[str, str]] = []
+        for status in outliers:
+            slug = status.slug
+            try:
+                self._generate_script(slug)
+                self._generate_audio(slug, align=True)
+                self._generate_subtitles(slug)
+                successes.append(slug)
+            except Exception as exc:
+                failures.append((slug, str(exc)))
+                print(colorize(f"{ICON_MISSING} 章節 {slug} 修復失敗：{exc}", "red", self.use_color))
+
+        if successes:
+            print(colorize(f"{ICON_COMPLETE} 修復完成的章節：{', '.join(successes)}", "green", self.use_color))
+        if failures:
+            print(colorize(f"{ICON_WARNING} 修復失敗的章節：", "yellow", self.use_color))
+            for slug, message in failures:
+                print(colorize(f"  • {slug} → {message}", "yellow", self.use_color))
+        print()
     def display_chapters(self) -> None:
         statuses = self.scan_chapters()
         print()
@@ -805,7 +845,7 @@ class StorytellingCLI:
         )
         print(colorize(f"{ICON_COMPLETE} 腳本完成：{chapter}", "green", self.use_color))
 
-    def _generate_audio(self, chapter: str) -> None:
+    def _generate_audio(self, chapter: str, align: bool = False) -> None:
         ctx = self.book_context
         if not ctx:
             raise RuntimeError("尚未選擇書籍")
@@ -813,15 +853,16 @@ class StorytellingCLI:
         if not script_file.exists():
             raise FileNotFoundError(f"{chapter} 尚未生成腳本")
         print(colorize(f"{ICON_AUDIO} 生成音頻：{chapter}", "green", self.use_color))
-        self._run_subprocess(
-            [
-                sys.executable,
-                "generate_audio.py",
-                str(ctx.book_output_dir / chapter),
-                "--config",
-                str(self.paths.config_path),
-            ]
-        )
+        args = [
+            sys.executable,
+            "generate_audio.py",
+            str(ctx.book_output_dir / chapter),
+            "--config",
+            str(self.paths.config_path),
+        ]
+        if align:
+            args.append("--align")
+        self._run_subprocess(args)
         print(colorize(f"{ICON_COMPLETE} 音頻完成：{chapter}", "green", self.use_color))
 
     def _generate_subtitles(self, chapter: str) -> None:
@@ -1004,6 +1045,7 @@ class StorytellingCLI:
             print("  5) 播放音頻")
             print("  6) 刪除輸出")
             print("  7) 切換書籍")
+            print("  8) 修復字幕時間差")
             print("  r) 重新整理")
             print("  q) 離開")
             print()
@@ -1027,6 +1069,8 @@ class StorytellingCLI:
             elif choice == "7":
                 if not self.choose_book():
                     continue
+            elif choice == "8":
+                self.repair_timing_outliers()
             elif choice.lower() == "r":
                 continue
             elif choice.lower() == "q":
