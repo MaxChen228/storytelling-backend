@@ -77,6 +77,25 @@ rename_book() {
     "$PYTHON_BIN" "$REPO_ROOT/scripts/rename_book.py"
 }
 
+manage_books() {
+    echo "📚 目前書籍列表："
+    list_books
+    echo
+    printf "需要進行改名嗎？(y/N)："
+    read -r answer
+    case "$answer" in
+        y|Y)
+            rename_book
+            echo
+            echo "📚 更新後的書籍列表："
+            list_books
+            ;;
+        *)
+            echo "ℹ️  未進行改名。"
+            ;;
+    esac
+}
+
 if [ "$#" -gt 0 ]; then
     if [ "${1}" = "delete" ]; then
         shift
@@ -91,10 +110,9 @@ while true; do
     echo
     echo "====== Storytelling 工具 ======"
     echo "1) 啟動互動式 CLI"
-    echo "2) 書籍改名（rename_book）"
+    echo "2) 查看 / 改名書籍"
     echo "3) 手動同步 output → GCS"
-    echo "4) 列出可用書籍"
-    echo "5) 離開"
+    echo "4) 離開"
     printf "請選擇："
     read -r choice
     echo
@@ -103,15 +121,12 @@ while true; do
             run_storytelling_cli
             ;;
         2)
-            rename_book
+            manage_books
             ;;
         3)
             manual_sync
             ;;
-        4)
-            list_books
-            ;;
-        5|q|Q)
+        4|q|Q)
             echo "再見！"
             exit 0
             ;;
