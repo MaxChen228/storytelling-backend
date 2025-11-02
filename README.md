@@ -135,8 +135,11 @@ storytelling-backend/
         └── chapter0/
             ├── podcast_script.txt
             ├── podcast.wav
+            ├── podcast.mp3
             └── subtitles.srt
 ```
+
+> 提示：從現在起，音頻生成會同時寫出 `podcast.wav`（供後續處理使用）與 `podcast.mp3`（壓縮版，適合上傳/部署）。
 
 ## 配置示例
 

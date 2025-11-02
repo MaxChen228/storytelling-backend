@@ -17,6 +17,7 @@ import yaml
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from pydub import AudioSegment
 
 from cli_output import basic_config_rows, print_config_table, print_footer, print_header, print_section
 from alignment.mfa import MfaAlignmentError, MfaConfig, align_chapter_with_mfa, build_config_from_dict
@@ -44,6 +45,13 @@ def save_wave_file(filename: Path, pcm_data: bytes, channels: int = 1,
         wf.setsampwidth(sample_width)
         wf.setframerate(rate)
         wf.writeframes(pcm_data)
+
+
+def save_mp3_file(wav_path: Path, mp3_path: Path, bitrate: str = "192k") -> None:
+    """Convert a WAV file to MP3 using pydub/ffmpeg."""
+    audio = AudioSegment.from_file(wav_path)
+    mp3_path.parent.mkdir(parents=True, exist_ok=True)
+    audio.export(str(mp3_path), format="mp3", bitrate=bitrate)
 
 
 def resolve_script_targets(target: Path) -> Tuple[List[Path], Optional[Dict[str, Any]]]:
@@ -182,6 +190,12 @@ def synthesize_episode(
     audio_file = audio_dir / "podcast.wav"
     save_wave_file(audio_file, audio_data)
 
+    mp3_file = audio_dir / "podcast.mp3"
+    try:
+        save_mp3_file(audio_file, mp3_file)
+    except Exception as exc:  # pragma: no cover - depends on ffmpeg availability
+        print(f"⚠️  無法轉換 MP3：{mp3_file} ({exc})")
+
     # 只在 legacy 模式或不同目錄時才保存腳本副本
     if save_script_copy and audio_dir != script_dir:
         (audio_dir / "script.txt").write_text(script_text, encoding='utf-8')
@@ -192,6 +206,7 @@ def synthesize_episode(
         "script_dir": str(script_dir),
         "script_file": str(script_file),
         "audio_file": str(audio_file),
+        "audio_file_mp3": str(mp3_file),
         "generated_at": timestamp,
         "word_count": metadata.get('actual_words'),
         "book_name": metadata.get('book_name'),

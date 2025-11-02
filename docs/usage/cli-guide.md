@@ -122,8 +122,11 @@ export PODCAST_SCRIPT_BATCH_DELAY=10  # 批次間延遲（秒）
 - 必須已生成腳本：`output/{book_id}/{chapter}/podcast_script.txt`
 
 **輸出位置：**
-- `output/{book_id}/{chapter}/podcast.wav` - 音頻文件
+- `output/{book_id}/{chapter}/podcast.wav` - 原始音頻（保留給字幕對齊等流程）
+- `output/{book_id}/{chapter}/podcast.mp3` - 壓縮音頻，適合上傳/播放
 - `output/{book_id}/{chapter}/subtitles.srt` - 字幕文件（自動生成）
+
+> 小提醒：如果有舊章節只有 WAV，可執行 `scripts/convert_wav_to_mp3.py` 一次性補齊 MP3。
 
 **批次處理設置：**
 ```bash
