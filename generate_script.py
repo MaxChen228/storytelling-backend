@@ -330,38 +330,31 @@ def generate_script_only(config_path: str = CONFIG_PATH_DEFAULT,
     total_chapters = len(chapters)
 
     # 如果指定了章節名稱，找到對應的索引
-    if chapter_name:
-        # 找到匹配的章節
-        chapter_index = None
-        for idx, ch in enumerate(chapters):
-            # 檢查檔案名稱（不含副檔名）或標題是否匹配
-            if 'source_path' in ch:
-                file_stem = Path(ch['source_path']).stem
-                if file_stem == chapter_name:
-                    chapter_index = idx
-                    break
-            # 也嘗試用標題匹配
-            if ch.get('title') == chapter_name:
+    if not chapter_name:
+        raise ValueError(
+            "未指定章節。請透過 CLI 選擇章節，或以 `python generate_script.py chapter3` 指定要生成的章節。"
+        )
+
+    # 找到匹配的章節
+    chapter_index = None
+    for idx, ch in enumerate(chapters):
+        # 檢查檔案名稱（不含副檔名）或標題是否匹配
+        if 'source_path' in ch:
+            file_stem = Path(ch['source_path']).stem
+            if file_stem == chapter_name:
                 chapter_index = idx
                 break
+        # 也嘗試用標題匹配
+        if ch.get('title') == chapter_name:
+            chapter_index = idx
+            break
 
-        if chapter_index is None:
-            raise ValueError(f"找不到章節：{chapter_name}")
+    if chapter_index is None:
+        raise ValueError(f"找不到章節：{chapter_name}")
 
-        # 設置為只生成這一章
-        start_chapter = chapter_index + 1
-        chapters_per_run = 1
-        print(f"🎯 指定章節模式: {chapter_name} (第 {chapter_index + 1} 章)")
-    else:
-        # 使用配置文件中的設定
-        start_chapter = max(1, int(basic.get('start_chapter', 1)))
-        chapters_per_run = max(1, int(basic.get('chapters_per_run', 1)))
-
-    end_index = start_chapter - 1 + chapters_per_run
-    selected = chapters[start_chapter - 1:end_index]
-
-    if not selected:
-        raise ValueError("沒有選到任何章節，請調整 start_chapter 或 chapters_per_run")
+    start_chapter = chapter_index + 1
+    selected = [chapters[chapter_index]]
+    print(f"🎯 指定章節模式: {chapter_name} (第 {chapter_index + 1} 章) － 本次僅處理此章節")
 
     print_config_table(basic_config_rows(basic))
     print_section("處理資訊")
@@ -565,13 +558,10 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 使用範例:
-  # 使用配置文件中的設定生成章節
-  python generate_script.py
-
   # 指定配置文件
   python generate_script.py --config custom_config.yaml
 
-  # 生成特定章節（忽略配置文件中的 start_chapter）
+  # 生成特定章節
   python generate_script.py chapter3
 
   # 生成特定章節並指定配置文件
@@ -582,7 +572,7 @@ if __name__ == "__main__":
         'chapter',
         nargs='?',
         default=None,
-        help='要生成的章節名稱（例如：chapter3），不指定則使用配置文件中的設定'
+        help='要生成的章節名稱（例如：chapter3）'
     )
     parser.add_argument(
         '--config',

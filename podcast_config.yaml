@@ -13,8 +13,6 @@ basic:
     - "Zephyr"
     - "Achird"
 
-  start_chapter: 3                     # 從第幾章開始轉換
-  chapters_per_run: 1                  # 每次跑多少章
   speaking_pace: "slow"                # slow / neutral / fast
 
 paths:
