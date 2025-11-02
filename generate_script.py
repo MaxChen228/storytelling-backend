@@ -263,11 +263,9 @@ OUTPUT SAFEGUARDS
 
 
 def clean_speaker_tags(text: str) -> str:
-    """移除 Podcastfy 生成的說話者標籤（單人旁白模式不需要）"""
-    # 移除所有 <PersonN> 和 </PersonN> 標籤
-    cleaned = re.sub(r'</?Person\d+>', '', text)
-    # 移除可能的多餘空行
-    cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
+    """去除所有標籤並壓縮多餘空行。"""
+    cleaned = re.sub(r"<[^>]+>", "", text)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
     return cleaned.strip()
 
 

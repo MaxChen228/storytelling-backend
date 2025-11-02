@@ -204,15 +204,10 @@ class OutputDataCache:
         )
 
     def _locate_audio_file(self, chapter_dir: Path) -> tuple[Optional[Path], Optional[str]]:
-        audio_candidates = [
-            ("podcast.wav", "audio/wav"),
-            ("podcast.mp3", "audio/mpeg"),
-            ("podcast.m4a", "audio/mp4"),
-        ]
-        for filename, mime_type in audio_candidates:
-            path = chapter_dir / filename
-            if path.exists():
-                return path, mime_type
+        """Frontend expects MP3; only surface audio when podcast.mp3 exists."""
+        mp3_path = chapter_dir / "podcast.mp3"
+        if mp3_path.exists():
+            return mp3_path, "audio/mpeg"
         return None, None
 
     def _load_subtitles(self, chapter_dir: Path) -> Optional[SubtitleData]:
