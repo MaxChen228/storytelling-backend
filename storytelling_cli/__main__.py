@@ -3,22 +3,20 @@
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import re
 import shutil
 import subprocess
 import sys
-import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Callable
 
 import yaml
 from storytelling_cli.status import ChapterStatus, natural_key, scan_chapters as status_scan_chapters
 from storytelling_cli.table import build_chapter_table
 from storytelling_cli.io import ConsoleIO
+from storytelling_cli.services.chapters import ChapterService
 
 # ---------------------------------------------------------------------------
 # Constants & helpers
@@ -134,12 +132,17 @@ def resolve_path(base: Path, raw: str) -> Path:
 class StorytellingCLI:
     """Interactive command-line interface for storytelling backend workflows."""
 
-    def __init__(self) -> None:
+    def __init__(self, io: Optional[ConsoleIO] = None) -> None:
         self.paths = self._load_paths()
         self.config = self._load_config()
         self.book_context: Optional[BookContext] = None
         self.use_color = sys.stdout.isatty()
-        self.io = ConsoleIO(use_color=self.use_color, colorize_fn=colorize)
+        self.io = io or ConsoleIO(use_color=self.use_color, colorize_fn=colorize)
+        self.chapter_service = ChapterService(
+            repo_root=self.paths.repo_root,
+            config_path=self.paths.config_path,
+            io=self.io,
+        )
         self.script_batch_size = max(1, SCRIPT_BATCH_SIZE_DEFAULT)
         self.script_batch_delay = max(0, SCRIPT_BATCH_DELAY_DEFAULT)
         self.audio_batch_size = max(1, AUDIO_BATCH_SIZE_DEFAULT)
@@ -329,9 +332,13 @@ class StorytellingCLI:
         for status in outliers:
             slug = status.slug
             try:
-                self._generate_script(slug)
-                self._generate_audio(slug, align=True)
-                self._generate_subtitles(slug)
+                ctx = self.book_context
+                if not ctx:
+                    raise RuntimeError("尚未選擇書籍")
+                chapter_dir = ctx.book_output_dir / slug
+                self.chapter_service.generate_script(ctx.book_id, slug)
+                self.chapter_service.generate_audio(chapter_dir, slug, align=True)
+                self.chapter_service.generate_subtitles(chapter_dir, slug)
                 successes.append(slug)
             except Exception as exc:
                 failures.append((slug, str(exc)))
@@ -469,18 +476,6 @@ class StorytellingCLI:
 
     # ---------------- Deletion helpers -----------------
 
-    def _load_json_file(self, path: Path) -> Dict[str, Any]:
-        if not path.exists():
-            return {}
-        try:
-            return json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            self.io.print(f"{ICON_WARNING} 解析 JSON 失敗：{path}", color="yellow")
-            return {}
-
-    def _write_json_file(self, path: Path, payload: Dict[str, Any]) -> None:
-        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-
     def _resolve_chapter_dir(self, slug: str) -> Path:
         ctx = self.book_context
         if not ctx:
@@ -544,110 +539,24 @@ class StorytellingCLI:
             self.io.print(f"{ICON_MISSING} {exc}", color="red")
             return []
 
-    def _delete_summary(self, slug: str) -> bool:
+    def _artifact_handlers(self) -> Dict[str, Callable[[str], bool]]:
         ctx = self.book_context
         if not ctx:
             raise RuntimeError("尚未選擇書籍")
-        summary_file = ctx.summary_dir / f"{slug}{ctx.summary_suffix}"
-        if not summary_file.exists():
-            self.io.print(f"{ICON_MISSING} 找不到摘要：{summary_file}", color="red")
-            return False
-        summary_file.unlink()
-        self.io.print(f"{ICON_COMPLETE} 已刪除摘要：{slug}", color="green")
-        return True
-
-    def _delete_script(self, slug: str) -> bool:
-        chapter_dir = self._resolve_chapter_dir(slug)
-        candidates = [chapter_dir / "podcast_script.txt", chapter_dir / "script.txt"]
-        removed = False
-        for candidate in candidates:
-            if candidate.exists():
-                candidate.unlink()
-                removed = True
-        if not removed:
-            self.io.print(f"{ICON_MISSING} 找不到腳本：{chapter_dir}", color="red")
-            return False
-        self.io.print(f"{ICON_COMPLETE} 已刪除腳本：{slug}", color="green")
-        return True
-
-    def _delete_audio(self, slug: str) -> bool:
-        chapter_dir = self._resolve_chapter_dir(slug)
-        patterns = ["podcast.wav", "podcast.mp3"]
-        removed_files: List[Path] = []
-        for pattern in patterns:
-            target = chapter_dir / pattern
-            if target.exists():
-                target.unlink()
-                removed_files.append(target)
-        for extra in list(chapter_dir.glob("podcast_part*.wav")) + list(chapter_dir.glob("podcast_part*.mp3")):
-            if extra.exists():
-                extra.unlink()
-                removed_files.append(extra)
-        audio_meta = chapter_dir / "audio_metadata.json"
-        if audio_meta.exists():
-            audio_meta.unlink()
-            removed_files.append(audio_meta)
-        if not removed_files:
-            self.io.print(f"{ICON_MISSING} 找不到音頻檔案：{chapter_dir}", color="red")
-            return False
-
-        metadata_path = chapter_dir / "metadata.json"
-        metadata = self._load_json_file(metadata_path)
-        if metadata.get("audio_file"):
-            metadata["audio_file"] = None
-            self._write_json_file(metadata_path, metadata)
-
-        self.io.print(f"{ICON_COMPLETE} 已刪除音頻：{slug}", color="green")
-        return True
-
-    def _delete_subtitle(self, slug: str) -> bool:
-        chapter_dir = self._resolve_chapter_dir(slug)
-        subtitle_file = chapter_dir / "subtitles.srt"
-        aligned_json = chapter_dir / "aligned_transcript.json"
-        removed = False
-        for target in (subtitle_file, aligned_json):
-            if target.exists():
-                target.unlink()
-                removed = True
-        if not removed:
-            self.io.print(f"{ICON_MISSING} 找不到字幕：{chapter_dir}", color="red")
-            return False
-
-        metadata_path = chapter_dir / "metadata.json"
-        metadata = self._load_json_file(metadata_path)
-        keys_to_remove = [key for key in list(metadata.keys()) if key.startswith("alignment_")]
-        changed = False
-        for key in keys_to_remove:
-            metadata.pop(key, None)
-            changed = True
-        if changed:
-            self._write_json_file(metadata_path, metadata)
-
-        audio_meta_path = chapter_dir / "audio_metadata.json"
-        audio_metadata = self._load_json_file(audio_meta_path)
-        audio_keys = [key for key in list(audio_metadata.keys()) if key.startswith("alignment_")]
-        audio_changed = False
-        for key in audio_keys:
-            audio_metadata.pop(key, None)
-            audio_changed = True
-        if audio_changed:
-            self._write_json_file(audio_meta_path, audio_metadata)
-
-        self.io.print(f"{ICON_COMPLETE} 已刪除字幕：{slug}", color="green")
-        return True
-
-    def _delete_artifact(self, artifact: str, slug: str) -> bool:
-        handlers = {
-            "summary": self._delete_summary,
-            "script": self._delete_script,
-            "audio": self._delete_audio,
-            "subtitle": self._delete_subtitle,
+        return {
+            "summary": lambda slug: self.chapter_service.delete_summary(
+                ctx.summary_dir / f"{slug}{ctx.summary_suffix}", slug
+            ),
+            "script": lambda slug: self.chapter_service.delete_script(
+                self._resolve_chapter_dir(slug), slug
+            ),
+            "audio": lambda slug: self.chapter_service.delete_audio(
+                self._resolve_chapter_dir(slug), slug
+            ),
+            "subtitle": lambda slug: self.chapter_service.delete_subtitle(
+                self._resolve_chapter_dir(slug), slug
+            ),
         }
-        handler = handlers.get(artifact)
-        if not handler:
-            self.io.print(f"{ICON_MISSING} 未支援的刪除類型：{artifact}", color="red")
-            return False
-        return handler(slug)
 
     def delete_artifact_menu(self) -> None:
         self.io.print("選擇刪除項目：", color="cyan")
@@ -672,8 +581,13 @@ class StorytellingCLI:
         if confirm not in {"y", "yes"}:
             self.io.print(f"{ICON_WARNING} 已取消刪除", color="yellow")
             return
+        handlers = self._artifact_handlers()
+        handler = handlers.get(artifact)
+        if not handler:
+            self.io.print(f"{ICON_MISSING} 未支援的刪除類型：{artifact}", color="red")
+            return
         for slug in slugs:
-            self._delete_artifact(artifact, slug)
+            handler(slug)
 
     def delete_artifact_cli(self, artifact: str, slug: str, *, assume_yes: bool = False) -> bool:
         artifact = artifact.lower()
@@ -700,105 +614,26 @@ class StorytellingCLI:
             if response not in {"y", "yes"}:
                 self.io.print(f"{ICON_WARNING} 已取消刪除", color="yellow")
                 return False
-        return self._delete_artifact(artifact, slug)
-
-    # ---------------- Subprocess helpers -----------------
-
-    def _run_subprocess(self, args: Sequence[str]) -> None:
-        subprocess.run(
-            list(args),
-            check=True,
-            cwd=str(self.paths.repo_root),
-        )
-
-    def _generate_script(self, chapter: str) -> None:
-        ctx = self.book_context
-        if not ctx:
-            raise RuntimeError("尚未選擇書籍")
-        self.io.print(f"{ICON_SCRIPT} 生成腳本：{chapter}", color="green")
-        self._run_subprocess(
-            [
-                sys.executable,
-                "generate_script.py",
-                chapter,
-                "--config",
-                str(self.paths.config_path),
-                "--book-id",
-                ctx.book_id,
-            ]
-        )
-        self.io.print(f"{ICON_COMPLETE} 腳本完成：{chapter}", color="green")
-
-    def _generate_audio(self, chapter: str, align: bool = False) -> None:
-        ctx = self.book_context
-        if not ctx:
-            raise RuntimeError("尚未選擇書籍")
-        script_file = ctx.book_output_dir / chapter / "podcast_script.txt"
-        if not script_file.exists():
-            raise FileNotFoundError(f"{chapter} 尚未生成腳本")
-        self.io.print(f"{ICON_AUDIO} 生成音頻：{chapter}", color="green")
-        args = [
-            sys.executable,
-            "generate_audio.py",
-            str(ctx.book_output_dir / chapter),
-            "--config",
-            str(self.paths.config_path),
-        ]
-        if align:
-            args.append("--align")
-        self._run_subprocess(args)
-        self.io.print(f"{ICON_COMPLETE} 音頻完成：{chapter}", color="green")
-
-    def _generate_subtitles(self, chapter: str) -> None:
-        ctx = self.book_context
-        if not ctx:
-            raise RuntimeError("尚未選擇書籍")
-        chapter_dir = ctx.book_output_dir / chapter
-        script_file = chapter_dir / "podcast_script.txt"
-        audio_wav = chapter_dir / "podcast.wav"
-        audio_mp3 = chapter_dir / "podcast.mp3"
-        if not script_file.exists():
-            raise FileNotFoundError(f"{chapter} 尚未生成腳本")
-        if not audio_wav.exists() and not audio_mp3.exists():
-            raise FileNotFoundError(f"{chapter} 尚未生成音頻")
-        self.io.print(f"{ICON_SUBTITLE} 生成字幕：{chapter}", color="green")
-        self._run_subprocess(
-            [
-                sys.executable,
-                "generate_subtitles.py",
-                str(chapter_dir),
-                "--config",
-                str(self.paths.config_path),
-            ]
-        )
-        self.io.print(f"{ICON_COMPLETE} 字幕完成：{chapter}", color="green")
+        handler = self._artifact_handlers().get(artifact)
+        if not handler:
+            self.io.print(f"{ICON_MISSING} 未支援的刪除類型：{artifact}", color="red")
+            return False
+        return handler(slug)
 
     def _generate_summaries(self) -> None:
         ctx = self.book_context
         if not ctx:
             return
-        self.io.print(f"{ICON_SUMMARY} 生成摘要", color="cyan")
         start = self.io.prompt("輸入起始章節（1-based，預設 1）：\n> ", color="gray").strip()
         end = self.io.prompt("輸入結束章節（1-based，預設至最後一章，留空代表全部）：\n> ", color="gray").strip()
         force_choice = self.io.prompt("是否覆寫已存在摘要？ (y/N)：\n> ", color="gray").strip()
 
-        args = [
-            sys.executable,
-            "preprocess_chapters.py",
-            "--config",
-            str(self.paths.config_path),
-            "--book-id",
+        self.chapter_service.generate_summaries(
             ctx.book_id,
-        ]
-        if start.isdigit():
-            args.extend(["--start-chapter", start])
-        if end.isdigit():
-            args.extend(["--end-chapter", end])
-        if force_choice.lower() == "y":
-            args.append("--force")
-
-        self.io.print(f"{ICON_INFO} 命令：{' '.join(args)}", color="gray")
-        self._run_subprocess(args)
+            start,
+            end,
+            force_choice.lower() == "y",
+        )
 
     def _play_audio(self, chapter: str) -> None:
         ctx = self.book_context
@@ -817,7 +652,7 @@ class StorytellingCLI:
         player_script = self.paths.repo_root / "play_with_subtitles.py"
         self.io.print(f"{ICON_PLAY} 播放：{chapter}", color="green")
         if subtitle.exists() and player_script.exists():
-            self._run_subprocess([sys.executable, str(player_script), str(audio), str(subtitle)])
+            self.chapter_service.run_command([sys.executable, str(player_script), str(audio), str(subtitle)])
             return
         if shutil.which("afplay"):
             subprocess.run(["afplay", str(audio)], check=True)
@@ -829,70 +664,58 @@ class StorytellingCLI:
 
     # ---------------- Batch executors -----------------
 
-    def _run_batch(self, chapters: List[str], batch_size: int, delay: int, label: str, worker) -> None:
-        total = len(chapters)
-        total_batches = (total + batch_size - 1) // batch_size
-        self.io.print()
-        self.io.print(f"共 {total} 章節，{label}批次大小 {batch_size}，共 {total_batches} 批。", color="white")
-        start = 0
-        batch_index = 1
-        failures: List[str] = []
-        while start < total:
-            chunk = chapters[start : start + batch_size]
-            self.io.print()
-            self.io.print(f"{label}批次 {batch_index}/{total_batches}", color="cyan")
-            for slug in chunk:
-                self.io.print(f"  {slug}", color="white")
-            self.io.print()
-            self.io.print(f"{ICON_ROCKET} 並行執行 {len(chunk)} 個任務...", color="gray")
-            with ThreadPoolExecutor(max_workers=len(chunk)) as executor:
-                future_map = {executor.submit(worker, slug): slug for slug in chunk}
-                for future in as_completed(future_map):
-                    slug = future_map[future]
-                    try:
-                        future.result()
-                    except subprocess.CalledProcessError:
-                        failures.append(slug)
-                        self.io.print(f"{ICON_MISSING} 任務失敗：{slug}", color="red")
-                    except Exception as exc:  # pragma: no cover - unexpected path
-                        failures.append(slug)
-                        self.io.print(f"{ICON_MISSING} 任務失敗：{slug} ({exc})", color="red")
-            start += len(chunk)
-            batch_index += 1
-            if start < total and delay > 0:
-                self.io.print()
-                self.io.print(f"{ICON_HOURGLASS} 等待 {delay} 秒後處理下一批{label}...", color="gray")
-                time.sleep(delay)
-        if failures:
-            self.io.print()
-            self.io.print(f"{ICON_WARNING} 部分 {label} 批次失敗：{', '.join(failures)}", color="yellow")
-        else:
-            self.io.print()
-            self.io.print(f"{ICON_COMPLETE} 全部 {label} 任務完成", color="green")
-
     # ---------------- Menu actions -----------------
 
     def batch_generate_scripts(self) -> None:
+        if not self.book_context:
+            self.io.print(f"{ICON_MISSING} 尚未選擇書籍", color="red")
+            return
         chapters = self.chapter_range_prompt("生成腳本", "noscript", "requires_source")
         if not chapters:
             return
-        self._run_batch(chapters, self.script_batch_size, self.script_batch_delay, "腳本", self._generate_script)
+        ctx = self.book_context
+        assert ctx is not None
+        self.chapter_service.run_batch(
+            chapters,
+            self.script_batch_size,
+            self.script_batch_delay,
+            "腳本",
+            lambda slug: self.chapter_service.generate_script(ctx.book_id, slug),
+        )
 
     def batch_generate_audio(self) -> None:
+        if not self.book_context:
+            self.io.print(f"{ICON_MISSING} 尚未選擇書籍", color="red")
+            return
         chapters = self.chapter_range_prompt("生成音頻", "noaudio", "requires_script")
         if not chapters:
             return
-        self._run_batch(chapters, self.audio_batch_size, self.audio_batch_delay, "音頻", self._generate_audio)
+        ctx = self.book_context
+        assert ctx is not None
+        self.chapter_service.run_batch(
+            chapters,
+            self.audio_batch_size,
+            self.audio_batch_delay,
+            "音頻",
+            lambda slug: self.chapter_service.generate_audio(ctx.book_output_dir / slug, slug),
+        )
 
     def batch_generate_subtitles(self) -> None:
+        if not self.book_context:
+            self.io.print(f"{ICON_MISSING} 尚未選擇書籍", color="red")
+            return
         chapters = self.chapter_range_prompt("生成字幕", "nosubtitle", "requires_script,requires_audio")
         if not chapters:
             return
-        for chapter in chapters:
-            try:
-                self._generate_subtitles(chapter)
-            except Exception as exc:  # pragma: no cover - interactive path
-                self.io.print(f"{ICON_MISSING} 字幕生成失敗：{chapter} ({exc})", color="red")
+        ctx = self.book_context
+        assert ctx is not None
+        self.chapter_service.run_batch(
+            chapters,
+            self.audio_batch_size,
+            0,
+            "字幕",
+            lambda slug: self.chapter_service.generate_subtitles(ctx.book_output_dir / slug, slug),
+        )
 
     def play_audio_menu(self) -> None:
         statuses = self.scan_chapters()
