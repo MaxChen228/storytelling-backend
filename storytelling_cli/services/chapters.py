@@ -246,6 +246,36 @@ class ChapterService:
             self.io.print()
             self.io.print(f"✅ 全部 {label} 任務完成", color="green")
 
+    def run_serial(
+        self,
+        chapters: Sequence[str],
+        label: str,
+        worker: BatchWorker,
+    ) -> None:
+        total = len(chapters)
+        if total == 0:
+            return
+        self.io.print()
+        self.io.print(f"共 {total} 章節，依序處理{label}任務。", color="white")
+        failures: List[str] = []
+        for index, slug in enumerate(chapters, start=1):
+            self.io.print()
+            self.io.print(f"{label} {index}/{total}", color="cyan")
+            self.io.print(f"  {slug}", color="white")
+            try:
+                worker(slug)
+            except subprocess.CalledProcessError:
+                failures.append(slug)
+                self.io.print(f"❌ 任務失敗：{slug}", color="red")
+            except Exception as exc:  # pragma: no cover - unexpected path
+                failures.append(slug)
+                self.io.print(f"❌ 任務失敗：{slug} ({exc})", color="red")
+        self.io.print()
+        if failures:
+            self.io.print(f"⚠️ 部分 {label} 任務失敗：{', '.join(failures)}", color="yellow")
+        else:
+            self.io.print(f"✅ 全部 {label} 任務完成", color="green")
+
     # ------------------------------------------------------------------ JSON helpers
     def _load_json(self, path: Path) -> dict:
         if not path.exists():

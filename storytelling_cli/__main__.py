@@ -709,10 +709,8 @@ class StorytellingCLI:
             return
         ctx = self.book_context
         assert ctx is not None
-        self.chapter_service.run_batch(
+        self.chapter_service.run_serial(
             chapters,
-            self.audio_batch_size,
-            0,
             "字幕",
             lambda slug: self.chapter_service.generate_subtitles(ctx.book_output_dir / slug, slug),
         )
