@@ -9,7 +9,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -20,9 +20,6 @@ from .schemas import (
     BookItem,
     ChapterItem,
     ChapterPlayback,
-    TaskCreate,
-    TaskDetail,
-    TaskItem,
     TranslationRequest,
     TranslationResponse,
 )
@@ -31,7 +28,6 @@ from .services import (
     ChapterData,
     OutputDataCache,
     SubtitleData,
-    TaskManager,
     TranslationService,
     TranslationServiceError,
 )
@@ -42,7 +38,6 @@ logger = logging.getLogger(__name__)
 def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
     settings = settings or ServerSettings.load()
     cache = OutputDataCache(settings.data_root)
-    task_manager = TaskManager(settings)
     try:
         translation_service = TranslationService.from_settings(settings)
     except TranslationServiceError as exc:
@@ -57,7 +52,6 @@ def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
 
     app.state.settings = settings
     app.state.cache = cache
-    app.state.task_manager = task_manager
     app.state.translation_service = translation_service
 
     if settings.cors_origins:
@@ -83,23 +77,8 @@ def get_settings(request: Request) -> ServerSettings:
 def get_cache(request: Request) -> OutputDataCache:
     return request.app.state.cache
 
-
-def get_task_manager(request: Request) -> TaskManager:
-    return request.app.state.task_manager
-
-
 def get_translation_service(request: Request) -> Optional[TranslationService]:
     return getattr(request.app.state, "translation_service", None)
-
-
-def _require_admin_token(authorization: Optional[str], settings: ServerSettings) -> None:
-    if not settings.api_token:
-        return
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid token")
-    token = authorization.split("Bearer ", 1)[1].strip()
-    if token != settings.api_token:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized")
 
 
 def _register_routes(app: FastAPI) -> None:
@@ -261,67 +240,6 @@ def _register_routes(app: FastAPI) -> None:
             cached=result.cached,
         )
 
-    @app.get("/admin/tasks", response_model=List[TaskItem])
-    async def list_tasks(
-        authorization: Optional[str] = Header(default=None, alias="Authorization"),
-        manager: TaskManager = Depends(get_task_manager),
-        settings: ServerSettings = Depends(get_settings),
-    ) -> List[TaskItem]:
-        _require_admin_token(authorization, settings)
-        return manager.list()
-
-    @app.post("/admin/tasks", response_model=TaskDetail, status_code=status.HTTP_201_CREATED)
-    async def submit_task(
-        payload: TaskCreate,
-        authorization: Optional[str] = Header(default=None, alias="Authorization"),
-        manager: TaskManager = Depends(get_task_manager),
-        settings: ServerSettings = Depends(get_settings),
-    ) -> TaskDetail:
-        _require_admin_token(authorization, settings)
-        try:
-            return manager.submit(payload)
-        except ValueError as exc:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-
-    @app.get("/admin/tasks/{task_id}", response_model=TaskDetail)
-    async def get_task_detail(
-        task_id: str,
-        authorization: Optional[str] = Header(default=None, alias="Authorization"),
-        manager: TaskManager = Depends(get_task_manager),
-        settings: ServerSettings = Depends(get_settings),
-    ) -> TaskDetail:
-        _require_admin_token(authorization, settings)
-        try:
-            return manager.get(task_id)
-        except KeyError as exc:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found") from exc
-
-    @app.get("/admin/tasks/{task_id}/log", response_class=PlainTextResponse)
-    async def get_task_log(
-        task_id: str,
-        authorization: Optional[str] = Header(default=None, alias="Authorization"),
-        manager: TaskManager = Depends(get_task_manager),
-        settings: ServerSettings = Depends(get_settings),
-    ) -> PlainTextResponse:
-        _require_admin_token(authorization, settings)
-        try:
-            log_path = manager.log_path(task_id)
-        except KeyError as exc:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found") from exc
-        except FileNotFoundError as exc:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log not available") from exc
-        content = log_path.read_text(encoding="utf-8", errors="ignore")
-        return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
-
-    @app.post("/admin/reload")
-    async def force_reload(
-        authorization: Optional[str] = Header(default=None, alias="Authorization"),
-        cache: OutputDataCache = Depends(get_cache),
-        settings: ServerSettings = Depends(get_settings),
-    ) -> dict[str, str]:
-        _require_admin_token(authorization, settings)
-        cache.refresh(force=True)
-        return {"status": "reloaded"}
 
 
 def _to_book_item(book: BookData) -> BookItem:

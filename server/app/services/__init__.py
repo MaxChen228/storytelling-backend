@@ -6,7 +6,6 @@ from .filesystem import (
     OutputDataCache,
     SubtitleData,
 )
-from .task_manager import TaskManager
 from .translation import TranslationResult, TranslationService, TranslationServiceError
 
 __all__ = [
@@ -14,7 +13,6 @@ __all__ = [
     "ChapterData",
     "OutputDataCache",
     "SubtitleData",
-    "TaskManager",
     "TranslationResult",
     "TranslationService",
     "TranslationServiceError",

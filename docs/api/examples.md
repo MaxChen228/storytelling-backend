@@ -39,36 +39,6 @@ curl -X POST http://localhost:8000/translations \
   }'
 ```
 
-### 管理員操作
-
-```bash
-# 設置 Token
-TOKEN="your_api_token"
-
-# 獲取任務列表
-curl -H "Authorization: Bearer $TOKEN" \
-  http://localhost:8000/admin/tasks
-
-# 提交腳本生成任務
-curl -X POST \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "task_type": "generate_script",
-    "book_id": "foundation",
-    "chapters": ["chapter0", "chapter1"]
-  }' \
-  http://localhost:8000/admin/tasks
-
-# 獲取任務詳情
-curl -H "Authorization: Bearer $TOKEN" \
-  http://localhost:8000/admin/tasks/task_20250101_120000_abc123
-
-# 獲取任務日誌
-curl -H "Authorization: Bearer $TOKEN" \
-  http://localhost:8000/admin/tasks/task_20250101_120000_abc123/log
-```
-
 ## Python 範例
 
 ### 安裝依賴
@@ -163,83 +133,6 @@ result = client.translate(
     target_language="zh-TW"
 )
 print("翻譯結果:", result["translated_text"])
-```
-
-### 管理員客戶端
-
-```python
-class PodcastAdminClient(PodcastAPIClient):
-    def __init__(self, base_url="http://localhost:8000", api_token=None):
-        super().__init__(base_url)
-        self.api_token = api_token
-        if api_token:
-            self.session.headers.update({
-                "Authorization": f"Bearer {api_token}"
-            })
-
-    def list_tasks(self):
-        """獲取任務列表"""
-        response = self.session.get(f"{self.base_url}/admin/tasks")
-        response.raise_for_status()
-        return response.json()
-
-    def submit_task(self, task_type, book_id=None, chapters=None, **kwargs):
-        """提交任務"""
-        payload = {
-            "task_type": task_type,
-            "book_id": book_id,
-            "chapters": chapters or [],
-            **kwargs
-        }
-        response = self.session.post(
-            f"{self.base_url}/admin/tasks",
-            json=payload
-        )
-        response.raise_for_status()
-        return response.json()
-
-    def get_task(self, task_id):
-        """獲取任務詳情"""
-        response = self.session.get(
-            f"{self.base_url}/admin/tasks/{task_id}"
-        )
-        response.raise_for_status()
-        return response.json()
-
-    def get_task_log(self, task_id):
-        """獲取任務日誌"""
-        response = self.session.get(
-            f"{self.base_url}/admin/tasks/{task_id}/log"
-        )
-        response.raise_for_status()
-        return response.text
-
-# 使用示例
-admin_client = PodcastAdminClient(api_token="your_token")
-
-# 提交腳本生成任務
-task = admin_client.submit_task(
-    task_type="generate_script",
-    book_id="foundation",
-    chapters=["chapter0", "chapter1"]
-)
-print("任務已提交:", task["id"])
-
-# 檢查任務狀態
-import time
-while True:
-    task_detail = admin_client.get_task(task["id"])
-    print(f"狀態: {task_detail['status']}")
-
-    if task_detail["status"] in ["succeeded", "failed"]:
-        break
-
-    time.sleep(5)
-
-# 獲取日誌
-log = admin_client.get_task_log(task["id"])
-print("任務日誌:")
-print(log)
 ```
 
 ## JavaScript/TypeScript 範例

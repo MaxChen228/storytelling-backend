@@ -114,14 +114,12 @@ subtitles.srt
 - `services/`: 業務邏輯
   - `OutputDataCache`: 文件系統緩存
   - `TranslationService`: Google 翻譯集成
-  - `TaskManager`: 後台任務管理
 
 **特性**:
 - ETag 緩存驗證
 - 範圍請求支持（音頻流）
 - CORS 支持
 - GZip 壓縮
-- 管理員認證
 
 ## 數據流
 
@@ -347,9 +345,8 @@ except subprocess.CalledProcessError as e:
 
 ### 功能擴展點
 
-1. **任務隊列** (Celery)
-   - 異步任務處理
-   - 任務調度
+1. **任務隊列**（未來擴展）
+   - 如需遠端提交/排程，可重新整合任務佇列
 
 2. **多語言支持**
    - 添加新的語言級別
@@ -374,8 +371,8 @@ except subprocess.CalledProcessError as e:
 
 ### API 認證
 
-- Bearer Token
-- 管理端點保護
+- 當前公開端點無需 Bearer Token
+- 若未來重新啟用管理任務 API，再評估權限策略
 
 ## 下一步
 

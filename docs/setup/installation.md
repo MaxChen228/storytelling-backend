@@ -214,9 +214,6 @@ GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
 ### 可選依賴
 
 ```bash
-# Celery（任務隊列）
-pip install celery redis
-
 # 開發工具
 pip install pytest pytest-cov black ruff
 ```

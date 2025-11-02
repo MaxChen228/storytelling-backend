@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import sys
-import types
 
 import pytest
 from fastapi.testclient import TestClient
@@ -12,44 +11,6 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-
-def _ensure_celery_stub() -> None:
-    if "celery" in sys.modules:
-        return
-
-    class _DummyAsyncResult:
-        def __init__(self, task_id, app=None):
-            self.id = task_id
-            self.app = app
-            self.state = "PENDING"
-            self.date_done = None
-            self.result = None
-            self.traceback = ""
-
-    class _DummyCelery:
-        def __init__(self, name: str):
-            self.name = name
-            self.conf = types.SimpleNamespace(update=lambda **kwargs: None)
-
-        def task(self, name=None, bind=False):
-            def decorator(func):
-                return func
-
-            return decorator
-
-        def signature(self, name):
-            return types.SimpleNamespace(apply_async=lambda **kwargs: None)
-
-    celery_module = types.ModuleType("celery")
-    celery_module.Celery = _DummyCelery
-    celery_module.result = types.ModuleType("celery.result")
-    celery_module.result.AsyncResult = _DummyAsyncResult
-
-    sys.modules["celery"] = celery_module
-    sys.modules["celery.result"] = celery_module.result
-
-
-_ensure_celery_stub()
 
 from server.app import ServerSettings, create_app
 from server.app.services import TranslationResult
@@ -168,7 +129,6 @@ def sample_data(tmp_path: Path) -> Path:
 def test_client(sample_data: Path) -> TestClient:
     settings = ServerSettings(
         data_root=sample_data,
-        api_token="secret-token",
         cors_origins=[],
         gzip_min_size=32,
     )
@@ -223,15 +183,6 @@ def test_audio_range_request(test_client: TestClient) -> None:
 def test_transcript_endpoint_removed(test_client: TestClient) -> None:
     response = test_client.get("/books/demo_book/chapters/chapter0/transcript")
     assert response.status_code == 404
-
-
-def test_admin_reload_requires_token(test_client: TestClient) -> None:
-    missing = test_client.post("/admin/reload")
-    assert missing.status_code == 401
-
-    ok = test_client.post("/admin/reload", headers={"Authorization": "Bearer secret-token"})
-    assert ok.status_code == 200
-    assert ok.json()["status"] == "reloaded"
 
 
 def test_translate_text_success(test_client: TestClient) -> None:

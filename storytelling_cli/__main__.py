@@ -18,6 +18,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 import yaml
 from storytelling_cli.status import ChapterStatus, natural_key, scan_chapters as status_scan_chapters
 from storytelling_cli.table import build_chapter_table
+from storytelling_cli.io import ConsoleIO
 
 # ---------------------------------------------------------------------------
 # Constants & helpers
@@ -138,6 +139,7 @@ class StorytellingCLI:
         self.config = self._load_config()
         self.book_context: Optional[BookContext] = None
         self.use_color = sys.stdout.isatty()
+        self.io = ConsoleIO(use_color=self.use_color, colorize_fn=colorize)
         self.script_batch_size = max(1, SCRIPT_BATCH_SIZE_DEFAULT)
         self.script_batch_delay = max(0, SCRIPT_BATCH_DELAY_DEFAULT)
         self.audio_batch_size = max(1, AUDIO_BATCH_SIZE_DEFAULT)
@@ -254,39 +256,39 @@ class StorytellingCLI:
         while True:
             books = self.list_books()
             if not books:
-                print(colorize(f"{ICON_WARNING} 在 {self.paths.books_root} 下找不到任何書籍章節", "yellow", self.use_color))
+                self.io.print(f"{ICON_WARNING} 在 {self.paths.books_root} 下找不到任何書籍章節", color="yellow")
                 return False
 
-            print()
-            print(colorize("可用書籍：", "cyan", self.use_color))
-            print()
+            self.io.print()
+            self.io.print("可用書籍：", color="cyan")
+            self.io.print()
             for idx, book in enumerate(books):
                 line = (
                     f"  [{idx}] {book['display_name']} "
                     f"(章節: {book['total_chapters']}, 已有摘要: {book['summary_count']})"
                 )
-                print(colorize(line, "gray", self.use_color))
-            print()
-            choice = input(colorize("請輸入書籍索引（或 q 離開）：\n> ", "white", self.use_color)).strip()
+                self.io.print(line, color="gray")
+            self.io.print()
+            choice = self.io.prompt("請輸入書籍索引（或 q 離開）：\n> ", color="white").strip()
             if choice.lower() == "q":
                 if initial:
                     sys.exit(0)
                 return False
             if not choice.isdigit():
-                print(colorize(f"{ICON_MISSING} 無效的選擇", "red", self.use_color))
+                self.io.print(f"{ICON_MISSING} 無效的選擇", color="red")
                 continue
             idx = int(choice)
             if not (0 <= idx < len(books)):
-                print(colorize(f"{ICON_MISSING} 無效的選擇", "red", self.use_color))
+                self.io.print(f"{ICON_MISSING} 無效的選擇", color="red")
                 continue
             book = books[idx]
             try:
                 self.book_context = self.load_book_context(book["book_id"])
             except Exception as exc:  # pragma: no cover - interactive path
-                print(colorize(f"{ICON_MISSING} {exc}", "red", self.use_color))
+                self.io.print(f"{ICON_MISSING} {exc}", color="red")
                 continue
-            print()
-            print(colorize(f"{ICON_BOOK} 已切換到「{self.book_context.display_name}」", "green", self.use_color))
+            self.io.print()
+            self.io.print(f"{ICON_BOOK} 已切換到「{self.book_context.display_name}」", color="green")
             return True
 
     # ---------------- Chapter scanning -----------------
@@ -308,19 +310,19 @@ class StorytellingCLI:
 
     def repair_timing_outliers(self, threshold: float = 1.5) -> None:
         if not self.book_context:
-            print(colorize(f"{ICON_MISSING} 尚未選擇書籍", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 尚未選擇書籍", color="red")
             return
 
         outliers = self._timing_outliers(threshold)
         if not outliers:
-            print(colorize(f"{ICON_INFO} 沒有任何字幕需修復 (門檻 {threshold:.1f}s)", "cyan", self.use_color))
+            self.io.print(f"{ICON_INFO} 沒有任何字幕需修復 (門檻 {threshold:.1f}s)", color="cyan")
             return
 
-        print(colorize(f"{ICON_INFO} 將修復以下字幕與音檔差值 > {threshold:.1f}s 的章節：", "cyan", self.use_color))
+        self.io.print(f"{ICON_INFO} 將修復以下字幕與音檔差值 > {threshold:.1f}s 的章節：", color="cyan")
         for status in outliers:
             gap_str = _format_gap_seconds(status.audio_subtitle_gap)
-            print(colorize(f"  • {status.slug} (Δ {gap_str})", "gray", self.use_color))
-        print()
+            self.io.print(f"  • {status.slug} (Δ {gap_str})", color="gray")
+        self.io.print()
 
         successes: List[str] = []
         failures: List[Tuple[str, str]] = []
@@ -333,23 +335,23 @@ class StorytellingCLI:
                 successes.append(slug)
             except Exception as exc:
                 failures.append((slug, str(exc)))
-                print(colorize(f"{ICON_MISSING} 章節 {slug} 修復失敗：{exc}", "red", self.use_color))
+                self.io.print(f"{ICON_MISSING} 章節 {slug} 修復失敗：{exc}", color="red")
 
         if successes:
-            print(colorize(f"{ICON_COMPLETE} 修復完成的章節：{', '.join(successes)}", "green", self.use_color))
+            self.io.print(f"{ICON_COMPLETE} 修復完成的章節：{', '.join(successes)}", color="green")
         if failures:
-            print(colorize(f"{ICON_WARNING} 修復失敗的章節：", "yellow", self.use_color))
+            self.io.print(f"{ICON_WARNING} 修復失敗的章節：", color="yellow")
             for slug, message in failures:
-                print(colorize(f"  • {slug} → {message}", "yellow", self.use_color))
-        print()
+                self.io.print(f"  • {slug} → {message}", color="yellow")
+        self.io.print()
     def display_chapters(self) -> None:
         statuses = self.scan_chapters()
-        print()
-        print(colorize(f"{ICON_BOOK} 書本：{self.book_context.display_name if self.book_context else '—'}", "white", self.use_color))
-        print()
+        self.io.print()
+        self.io.print(f"{ICON_BOOK} 書本：{self.book_context.display_name if self.book_context else '—'}", color="white")
+        self.io.print()
         if not statuses:
-            print(colorize(f"{ICON_WARNING} 尚未找到任何章節或源文件", "yellow", self.use_color))
-            print()
+            self.io.print(f"{ICON_WARNING} 尚未找到任何章節或源文件", color="yellow")
+            self.io.print()
             return
         table_output = build_chapter_table(
             statuses,
@@ -359,8 +361,8 @@ class StorytellingCLI:
             format_gap=_format_gap_seconds,
             format_duration=_format_duration_mmss,
         )
-        print(table_output)
-        print()
+        self.io.print(table_output)
+        self.io.print()
 
     # ---------------- Selection helpers -----------------
 
@@ -448,21 +450,21 @@ class StorytellingCLI:
         statuses = self.scan_chapters()
         filtered = self._filter_chapters(statuses, required, optional)
         if not filtered:
-            print(colorize(f"{ICON_WARNING} 沒有符合條件的章節可供 {purpose}", "yellow", self.use_color))
+            self.io.print(f"{ICON_WARNING} 沒有符合條件的章節可供 {purpose}", color="yellow")
             return []
         sorted_slugs = [status.slug for status in filtered]
-        print(colorize("可處理章節（索引從 0 開始）：", "white", self.use_color))
+        self.io.print("可處理章節（索引從 0 開始）：", color="white")
         for idx, slug in enumerate(sorted_slugs):
-            print(colorize(f"  [{idx}] {slug}", "gray", self.use_color))
-        print()
+            self.io.print(f"  [{idx}] {slug}", color="gray")
+        self.io.print()
         try:
-            selection = input(colorize("請輸入章節範圍（如 0-5,7-9 或 all）：\n> ", "cyan", self.use_color))
+            selection = self.io.prompt("請輸入章節範圍（如 0-5,7-9 或 all）：\n> ", color="cyan")
         except EOFError:
             return []
         try:
             return self._parse_selection(selection, sorted_slugs)
         except ValueError as exc:
-            print(colorize(f"{ICON_MISSING} {exc}", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} {exc}", color="red")
             return []
 
     # ---------------- Deletion helpers -----------------
@@ -473,7 +475,7 @@ class StorytellingCLI:
         try:
             return json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
-            print(colorize(f"{ICON_WARNING} 解析 JSON 失敗：{path}", "yellow", self.use_color))
+            self.io.print(f"{ICON_WARNING} 解析 JSON 失敗：{path}", color="yellow")
             return {}
 
     def _write_json_file(self, path: Path, payload: Dict[str, Any]) -> None:
@@ -488,11 +490,11 @@ class StorytellingCLI:
     def _preview_script(self, chapter: str, lines: int = 40) -> None:
         ctx = self.book_context
         if not ctx:
-            print(colorize(f"{ICON_MISSING} 尚未選擇書籍", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 尚未選擇書籍", color="red")
             return
         script_path = ctx.book_output_dir / chapter / "podcast_script.txt"
         if not script_path.exists():
-            print(colorize(f"{ICON_MISSING} 找不到腳本：{script_path}", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 找不到腳本：{script_path}", color="red")
             return
         try:
             content = script_path.read_text(encoding="utf-8")
@@ -500,14 +502,14 @@ class StorytellingCLI:
             content = script_path.read_text(encoding="utf-8", errors="ignore")
         lines = max(1, lines)
         preview_lines = content.splitlines()[:lines]
-        print()
-        print(colorize(f"{ICON_SCRIPT} 腳本預覽：{chapter}", "green", self.use_color))
+        self.io.print()
+        self.io.print(f"{ICON_SCRIPT} 腳本預覽：{chapter}", color="green")
         for idx, value in enumerate(preview_lines, start=1):
-            print(colorize(f"{idx:>3}: {value}", "gray", self.use_color))
+            self.io.print(f"{idx:>3}: {value}", color="gray")
         remaining = len(content.splitlines()) - len(preview_lines)
         if remaining > 0:
-            print(colorize(f"… 其餘 {remaining} 行未顯示", "gray", self.use_color))
-        print()
+            self.io.print(f"… 其餘 {remaining} 行未顯示", color="gray")
+        self.io.print()
 
     def _available_chapters_for_artifact(self, artifact: str) -> List[ChapterStatus]:
         predicate_map = {
@@ -525,21 +527,21 @@ class StorytellingCLI:
         available = self._available_chapters_for_artifact(artifact)
         label = ARTIFACT_LABELS.get(artifact, artifact)
         if not available:
-            print(colorize(f"{ICON_WARNING} 沒有任何章節包含可刪除的{label}", "yellow", self.use_color))
+            self.io.print(f"{ICON_WARNING} 沒有任何章節包含可刪除的{label}", color="yellow")
             return []
-        print(colorize("可刪除的章節（索引從 0 開始）：", "white", self.use_color))
+        self.io.print("可刪除的章節（索引從 0 開始）：", color="white")
         for idx, status in enumerate(available):
-            print(colorize(f"  [{idx}] {status.slug}", "gray", self.use_color))
-        print()
+            self.io.print(f"  [{idx}] {status.slug}", color="gray")
+        self.io.print()
         try:
-            raw = input(colorize("請輸入章節索引（支援 0,3,5-7 或 all）：\n> ", "cyan", self.use_color))
+            raw = self.io.prompt("請輸入章節索引（支援 0,3,5-7 或 all）：\n> ", color="cyan")
         except EOFError:
             return []
         sorted_slugs = [status.slug for status in available]
         try:
             return self._parse_selection(raw, sorted_slugs)
         except ValueError as exc:
-            print(colorize(f"{ICON_MISSING} {exc}", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} {exc}", color="red")
             return []
 
     def _delete_summary(self, slug: str) -> bool:
@@ -548,10 +550,10 @@ class StorytellingCLI:
             raise RuntimeError("尚未選擇書籍")
         summary_file = ctx.summary_dir / f"{slug}{ctx.summary_suffix}"
         if not summary_file.exists():
-            print(colorize(f"{ICON_MISSING} 找不到摘要：{summary_file}", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 找不到摘要：{summary_file}", color="red")
             return False
         summary_file.unlink()
-        print(colorize(f"{ICON_COMPLETE} 已刪除摘要：{slug}", "green", self.use_color))
+        self.io.print(f"{ICON_COMPLETE} 已刪除摘要：{slug}", color="green")
         return True
 
     def _delete_script(self, slug: str) -> bool:
@@ -563,9 +565,9 @@ class StorytellingCLI:
                 candidate.unlink()
                 removed = True
         if not removed:
-            print(colorize(f"{ICON_MISSING} 找不到腳本：{chapter_dir}", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 找不到腳本：{chapter_dir}", color="red")
             return False
-        print(colorize(f"{ICON_COMPLETE} 已刪除腳本：{slug}", "green", self.use_color))
+        self.io.print(f"{ICON_COMPLETE} 已刪除腳本：{slug}", color="green")
         return True
 
     def _delete_audio(self, slug: str) -> bool:
@@ -586,7 +588,7 @@ class StorytellingCLI:
             audio_meta.unlink()
             removed_files.append(audio_meta)
         if not removed_files:
-            print(colorize(f"{ICON_MISSING} 找不到音頻檔案：{chapter_dir}", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 找不到音頻檔案：{chapter_dir}", color="red")
             return False
 
         metadata_path = chapter_dir / "metadata.json"
@@ -595,7 +597,7 @@ class StorytellingCLI:
             metadata["audio_file"] = None
             self._write_json_file(metadata_path, metadata)
 
-        print(colorize(f"{ICON_COMPLETE} 已刪除音頻：{slug}", "green", self.use_color))
+        self.io.print(f"{ICON_COMPLETE} 已刪除音頻：{slug}", color="green")
         return True
 
     def _delete_subtitle(self, slug: str) -> bool:
@@ -608,7 +610,7 @@ class StorytellingCLI:
                 target.unlink()
                 removed = True
         if not removed:
-            print(colorize(f"{ICON_MISSING} 找不到字幕：{chapter_dir}", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 找不到字幕：{chapter_dir}", color="red")
             return False
 
         metadata_path = chapter_dir / "metadata.json"
@@ -631,7 +633,7 @@ class StorytellingCLI:
         if audio_changed:
             self._write_json_file(audio_meta_path, audio_metadata)
 
-        print(colorize(f"{ICON_COMPLETE} 已刪除字幕：{slug}", "green", self.use_color))
+        self.io.print(f"{ICON_COMPLETE} 已刪除字幕：{slug}", color="green")
         return True
 
     def _delete_artifact(self, artifact: str, slug: str) -> bool:
@@ -643,32 +645,32 @@ class StorytellingCLI:
         }
         handler = handlers.get(artifact)
         if not handler:
-            print(colorize(f"{ICON_MISSING} 未支援的刪除類型：{artifact}", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 未支援的刪除類型：{artifact}", color="red")
             return False
         return handler(slug)
 
     def delete_artifact_menu(self) -> None:
-        print(colorize("選擇刪除項目：", "cyan", self.use_color))
+        self.io.print("選擇刪除項目：", color="cyan")
         options = {"1": "summary", "2": "script", "3": "audio", "4": "subtitle"}
         for key, artifact in options.items():
             label = ARTIFACT_LABELS.get(artifact, artifact)
-            print(colorize(f"  {key}) 刪除{label}", "gray", self.use_color))
-        print()
-        choice = input(colorize("> ", "white", self.use_color)).strip()
+            self.io.print(f"  {key}) 刪除{label}", color="gray")
+        self.io.print()
+        choice = self.io.prompt("> ", color="white").strip()
         artifact = options.get(choice)
         if not artifact:
-            print(colorize(f"{ICON_MISSING} 無效的選擇", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 無效的選擇", color="red")
             return
         slugs = self._prompt_chapter_selection(artifact)
         if not slugs:
             return
         label = ARTIFACT_LABELS.get(artifact, artifact)
         targets_preview = ", ".join(slugs)
-        confirm = input(
-            colorize(f"確認刪除 {label}（{targets_preview}）？ (y/N)：\n> ", "yellow", self.use_color)
+        confirm = self.io.prompt(
+            f"確認刪除 {label}（{targets_preview}）？ (y/N)：\n> ", color="yellow"
         ).strip().lower()
         if confirm not in {"y", "yes"}:
-            print(colorize(f"{ICON_WARNING} 已取消刪除", "yellow", self.use_color))
+            self.io.print(f"{ICON_WARNING} 已取消刪除", color="yellow")
             return
         for slug in slugs:
             self._delete_artifact(artifact, slug)
@@ -677,13 +679,13 @@ class StorytellingCLI:
         artifact = artifact.lower()
         label = ARTIFACT_LABELS.get(artifact, artifact)
         if artifact not in ARTIFACT_LABELS:
-            print(colorize(f"{ICON_MISSING} 未支援的刪除類型：{artifact}", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 未支援的刪除類型：{artifact}", color="red")
             return False
         available_slugs = {status.slug for status in self._available_chapters_for_artifact(artifact)}
         if slug not in available_slugs:
             # 允許直接檢查檔案是否存在（避免狀態表尚未刷新）
             if artifact != "summary" and not (self._resolve_chapter_dir(slug)).exists():
-                print(colorize(f"{ICON_MISSING} 找不到章節：{slug}", "red", self.use_color))
+                self.io.print(f"{ICON_MISSING} 找不到章節：{slug}", color="red")
                 return False
             if artifact == "summary":
                 ctx = self.book_context
@@ -691,12 +693,12 @@ class StorytellingCLI:
                     raise RuntimeError("尚未選擇書籍")
                 summary_file = ctx.summary_dir / f"{slug}{ctx.summary_suffix}"
                 if not summary_file.exists():
-                    print(colorize(f"{ICON_MISSING} 找不到摘要：{slug}", "red", self.use_color))
+                    self.io.print(f"{ICON_MISSING} 找不到摘要：{slug}", color="red")
                     return False
         if not assume_yes:
-            response = input(colorize(f"確認刪除 {label}（{slug}）？ (y/N)：\n> ", "yellow", self.use_color)).strip().lower()
+            response = self.io.prompt(f"確認刪除 {label}（{slug}）？ (y/N)：\n> ", color="yellow").strip().lower()
             if response not in {"y", "yes"}:
-                print(colorize(f"{ICON_WARNING} 已取消刪除", "yellow", self.use_color))
+                self.io.print(f"{ICON_WARNING} 已取消刪除", color="yellow")
                 return False
         return self._delete_artifact(artifact, slug)
 
@@ -713,7 +715,7 @@ class StorytellingCLI:
         ctx = self.book_context
         if not ctx:
             raise RuntimeError("尚未選擇書籍")
-        print(colorize(f"{ICON_SCRIPT} 生成腳本：{chapter}", "green", self.use_color))
+        self.io.print(f"{ICON_SCRIPT} 生成腳本：{chapter}", color="green")
         self._run_subprocess(
             [
                 sys.executable,
@@ -725,7 +727,7 @@ class StorytellingCLI:
                 ctx.book_id,
             ]
         )
-        print(colorize(f"{ICON_COMPLETE} 腳本完成：{chapter}", "green", self.use_color))
+        self.io.print(f"{ICON_COMPLETE} 腳本完成：{chapter}", color="green")
 
     def _generate_audio(self, chapter: str, align: bool = False) -> None:
         ctx = self.book_context
@@ -734,7 +736,7 @@ class StorytellingCLI:
         script_file = ctx.book_output_dir / chapter / "podcast_script.txt"
         if not script_file.exists():
             raise FileNotFoundError(f"{chapter} 尚未生成腳本")
-        print(colorize(f"{ICON_AUDIO} 生成音頻：{chapter}", "green", self.use_color))
+        self.io.print(f"{ICON_AUDIO} 生成音頻：{chapter}", color="green")
         args = [
             sys.executable,
             "generate_audio.py",
@@ -745,7 +747,7 @@ class StorytellingCLI:
         if align:
             args.append("--align")
         self._run_subprocess(args)
-        print(colorize(f"{ICON_COMPLETE} 音頻完成：{chapter}", "green", self.use_color))
+        self.io.print(f"{ICON_COMPLETE} 音頻完成：{chapter}", color="green")
 
     def _generate_subtitles(self, chapter: str) -> None:
         ctx = self.book_context
@@ -759,7 +761,7 @@ class StorytellingCLI:
             raise FileNotFoundError(f"{chapter} 尚未生成腳本")
         if not audio_wav.exists() and not audio_mp3.exists():
             raise FileNotFoundError(f"{chapter} 尚未生成音頻")
-        print(colorize(f"{ICON_SUBTITLE} 生成字幕：{chapter}", "green", self.use_color))
+        self.io.print(f"{ICON_SUBTITLE} 生成字幕：{chapter}", color="green")
         self._run_subprocess(
             [
                 sys.executable,
@@ -769,16 +771,16 @@ class StorytellingCLI:
                 str(self.paths.config_path),
             ]
         )
-        print(colorize(f"{ICON_COMPLETE} 字幕完成：{chapter}", "green", self.use_color))
+        self.io.print(f"{ICON_COMPLETE} 字幕完成：{chapter}", color="green")
 
     def _generate_summaries(self) -> None:
         ctx = self.book_context
         if not ctx:
             return
-        print(colorize(f"{ICON_SUMMARY} 生成摘要", "cyan", self.use_color))
-        start = input(colorize("輸入起始章節（1-based，預設 1）：\n> ", "gray", self.use_color)).strip()
-        end = input(colorize("輸入結束章節（1-based，預設至最後一章，留空代表全部）：\n> ", "gray", self.use_color)).strip()
-        force_choice = input(colorize("是否覆寫已存在摘要？ (y/N)：\n> ", "gray", self.use_color)).strip()
+        self.io.print(f"{ICON_SUMMARY} 生成摘要", color="cyan")
+        start = self.io.prompt("輸入起始章節（1-based，預設 1）：\n> ", color="gray").strip()
+        end = self.io.prompt("輸入結束章節（1-based，預設至最後一章，留空代表全部）：\n> ", color="gray").strip()
+        force_choice = self.io.prompt("是否覆寫已存在摘要？ (y/N)：\n> ", color="gray").strip()
 
         args = [
             sys.executable,
@@ -795,7 +797,7 @@ class StorytellingCLI:
         if force_choice.lower() == "y":
             args.append("--force")
 
-        print(colorize(f"{ICON_INFO} 命令：{' '.join(args)}", "gray", self.use_color))
+        self.io.print(f"{ICON_INFO} 命令：{' '.join(args)}", color="gray")
         self._run_subprocess(args)
 
     def _play_audio(self, chapter: str) -> None:
@@ -809,11 +811,11 @@ class StorytellingCLI:
         elif (chapter_dir / "podcast.mp3").exists():
             audio = chapter_dir / "podcast.mp3"
         if not audio:
-            print(colorize(f"{ICON_MISSING} 找不到音訊檔案：{chapter}", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 找不到音訊檔案：{chapter}", color="red")
             return
         subtitle = chapter_dir / "subtitles.srt"
         player_script = self.paths.repo_root / "play_with_subtitles.py"
-        print(colorize(f"{ICON_PLAY} 播放：{chapter}", "green", self.use_color))
+        self.io.print(f"{ICON_PLAY} 播放：{chapter}", color="green")
         if subtitle.exists() and player_script.exists():
             self._run_subprocess([sys.executable, str(player_script), str(audio), str(subtitle)])
             return
@@ -823,26 +825,26 @@ class StorytellingCLI:
         if shutil.which("ffplay"):
             subprocess.run(["ffplay", "-nodisp", "-autoexit", str(audio)], check=True)
             return
-        print(colorize(f"{ICON_WARNING} 找不到播放器，請手動播放：{audio}", "yellow", self.use_color))
+        self.io.print(f"{ICON_WARNING} 找不到播放器，請手動播放：{audio}", color="yellow")
 
     # ---------------- Batch executors -----------------
 
     def _run_batch(self, chapters: List[str], batch_size: int, delay: int, label: str, worker) -> None:
         total = len(chapters)
         total_batches = (total + batch_size - 1) // batch_size
-        print()
-        print(colorize(f"共 {total} 章節，{label}批次大小 {batch_size}，共 {total_batches} 批。", "white", self.use_color))
+        self.io.print()
+        self.io.print(f"共 {total} 章節，{label}批次大小 {batch_size}，共 {total_batches} 批。", color="white")
         start = 0
         batch_index = 1
         failures: List[str] = []
         while start < total:
             chunk = chapters[start : start + batch_size]
-            print()
-            print(colorize(f"{label}批次 {batch_index}/{total_batches}", "cyan", self.use_color))
+            self.io.print()
+            self.io.print(f"{label}批次 {batch_index}/{total_batches}", color="cyan")
             for slug in chunk:
-                print(colorize(f"  {slug}", "white", self.use_color))
-            print()
-            print(colorize(f"{ICON_ROCKET} 並行執行 {len(chunk)} 個任務...", "gray", self.use_color))
+                self.io.print(f"  {slug}", color="white")
+            self.io.print()
+            self.io.print(f"{ICON_ROCKET} 並行執行 {len(chunk)} 個任務...", color="gray")
             with ThreadPoolExecutor(max_workers=len(chunk)) as executor:
                 future_map = {executor.submit(worker, slug): slug for slug in chunk}
                 for future in as_completed(future_map):
@@ -851,22 +853,22 @@ class StorytellingCLI:
                         future.result()
                     except subprocess.CalledProcessError:
                         failures.append(slug)
-                        print(colorize(f"{ICON_MISSING} 任務失敗：{slug}", "red", self.use_color))
+                        self.io.print(f"{ICON_MISSING} 任務失敗：{slug}", color="red")
                     except Exception as exc:  # pragma: no cover - unexpected path
                         failures.append(slug)
-                        print(colorize(f"{ICON_MISSING} 任務失敗：{slug} ({exc})", "red", self.use_color))
+                        self.io.print(f"{ICON_MISSING} 任務失敗：{slug} ({exc})", color="red")
             start += len(chunk)
             batch_index += 1
             if start < total and delay > 0:
-                print()
-                print(colorize(f"{ICON_HOURGLASS} 等待 {delay} 秒後處理下一批{label}...", "gray", self.use_color))
+                self.io.print()
+                self.io.print(f"{ICON_HOURGLASS} 等待 {delay} 秒後處理下一批{label}...", color="gray")
                 time.sleep(delay)
         if failures:
-            print()
-            print(colorize(f"{ICON_WARNING} 部分 {label} 批次失敗：{', '.join(failures)}", "yellow", self.use_color))
+            self.io.print()
+            self.io.print(f"{ICON_WARNING} 部分 {label} 批次失敗：{', '.join(failures)}", color="yellow")
         else:
-            print()
-            print(colorize(f"{ICON_COMPLETE} 全部 {label} 任務完成", "green", self.use_color))
+            self.io.print()
+            self.io.print(f"{ICON_COMPLETE} 全部 {label} 任務完成", color="green")
 
     # ---------------- Menu actions -----------------
 
@@ -890,36 +892,36 @@ class StorytellingCLI:
             try:
                 self._generate_subtitles(chapter)
             except Exception as exc:  # pragma: no cover - interactive path
-                print(colorize(f"{ICON_MISSING} 字幕生成失敗：{chapter} ({exc})", "red", self.use_color))
+                self.io.print(f"{ICON_MISSING} 字幕生成失敗：{chapter} ({exc})", color="red")
 
     def play_audio_menu(self) -> None:
         statuses = self.scan_chapters()
         if not statuses:
-            print(colorize(f"{ICON_WARNING} 尚未找到章節", "yellow", self.use_color))
+            self.io.print(f"{ICON_WARNING} 尚未找到章節", color="yellow")
             return
         selectable = [status for status in statuses if status.has_audio]
         if not selectable:
-            print(colorize(f"{ICON_WARNING} 尚未生成任何音頻", "yellow", self.use_color))
+            self.io.print(f"{ICON_WARNING} 尚未生成任何音頻", color="yellow")
             return
         for idx, status in enumerate(selectable):
-            print(colorize(f"  [{idx}] {status.slug}", "gray", self.use_color))
-        print()
-        choice = input(colorize("請輸入章節索引：\n> ", "white", self.use_color)).strip()
+            self.io.print(f"  [{idx}] {status.slug}", color="gray")
+        self.io.print()
+        choice = self.io.prompt("請輸入章節索引：\n> ", color="white").strip()
         if not choice.isdigit():
-            print(colorize(f"{ICON_MISSING} 無效的選擇", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 無效的選擇", color="red")
             return
         idx = int(choice)
         if not (0 <= idx < len(selectable)):
-            print(colorize(f"{ICON_MISSING} 無效的選擇", "red", self.use_color))
+            self.io.print(f"{ICON_MISSING} 無效的選擇", color="red")
             return
         chapter = selectable[idx].slug
         while True:
-            print()
-            print(colorize(f"選擇操作（{chapter}）：", "cyan", self.use_color))
-            print("  1) 查看腳本")
-            print("  2) 播放音頻")
-            print("  b) 返回")
-            action = input(colorize("> ", "white", self.use_color)).strip().lower()
+            self.io.print()
+            self.io.print(f"選擇操作（{chapter}）：", color="cyan")
+            self.io.print("  1) 查看腳本")
+            self.io.print("  2) 播放音頻")
+            self.io.print("  b) 返回")
+            action = self.io.prompt("> ", color="white").strip().lower()
             if action in {"1", "script"}:
                 self._preview_script(chapter)
                 continue
@@ -928,30 +930,26 @@ class StorytellingCLI:
                 break
             if action in {"b", "back", "q"}:
                 break
-            print(colorize(f"{ICON_WARNING} 無效選項", "yellow", self.use_color))
+            self.io.print(f"{ICON_WARNING} 無效選項", color="yellow")
 
     # ---------------- Main loop -----------------
 
     def main_menu(self) -> None:
         while True:
             self.display_chapters()
-            print(colorize("操作選單：", "cyan", self.use_color))
-            print("  1) 生成腳本")
-            print("  2) 生成音頻")
-            print("  3) 生成字幕")
-            print("  4) 生成摘要")
-            print("  5) 播放音頻")
-            print("  6) 刪除輸出")
-            print("  7) 切換書籍")
-            print("  8) 修復字幕時間差")
-            print("  r) 重新整理")
-            print("  q) 離開")
-            print()
-            choice = input(
-                colorize(
-                    "> ", "white", self.use_color
-                )
-            ).strip()
+            self.io.print("操作選單：", color="cyan")
+            self.io.print("  1) 生成腳本")
+            self.io.print("  2) 生成音頻")
+            self.io.print("  3) 生成字幕")
+            self.io.print("  4) 生成摘要")
+            self.io.print("  5) 播放音頻")
+            self.io.print("  6) 刪除輸出")
+            self.io.print("  7) 切換書籍")
+            self.io.print("  8) 修復字幕時間差")
+            self.io.print("  r) 重新整理")
+            self.io.print("  q) 離開")
+            self.io.print()
+            choice = self.io.prompt("> ", color="white").strip()
             if choice == "1":
                 self.batch_generate_scripts()
             elif choice == "2":
@@ -972,10 +970,10 @@ class StorytellingCLI:
             elif choice.lower() == "r":
                 continue
             elif choice.lower() == "q":
-                print(colorize("再見！", "cyan", self.use_color))
+                self.io.print("再見！", color="cyan")
                 sys.exit(0)
             else:
-                print(colorize(f"{ICON_WARNING} 無效選項", "yellow", self.use_color))
+                self.io.print(f"{ICON_WARNING} 無效選項", color="yellow")
 
 def parse_cli_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Storytelling CLI")
@@ -1000,13 +998,13 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             try:
                 cli.set_book_context(book_id)
             except Exception as exc:  # pragma: no cover - interactive path
-                print(colorize(f"{ICON_MISSING} {exc}", "red", cli.use_color))
+                cli.io.print(f"{ICON_MISSING} {exc}", color="red")
                 sys.exit(1)
         else:
             if not cli.choose_book(initial=True):
                 return
         if not cli.book_context:
-            print(colorize(f"{ICON_MISSING} 尚未選擇書籍", "red", cli.use_color))
+            cli.io.print(f"{ICON_MISSING} 尚未選擇書籍", color="red")
             sys.exit(1)
         success = cli.delete_artifact_cli(args.artifact, args.chapter, assume_yes=getattr(args, "assume_yes", False))
         if not success:

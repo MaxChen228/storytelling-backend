@@ -108,8 +108,7 @@ Python 3.12+
 ├── 音頻生成: Gemini Multi-Speaker TTS
 ├── 字幕對齊: Montreal Forced Aligner
 ├── API 框架: FastAPI
-├── 翻譯服務: Google Cloud Translation API
-└── 任務管理: Celery (可選)
+└── 翻譯服務: Google Cloud Translation API
 ```
 
 ## 項目結構
@@ -202,7 +201,6 @@ A: 修改 `podcast_config.yaml` 中的聲線配置；支援固定值、候選清
 - ✅ MFA 詞級字幕對齊
 - ✅ FastAPI REST API
 - ✅ Google 翻譯整合
-- 🚧 批次任務隊列（Celery）
 - 📋 音頻質量自動評估
 - 📋 多聲線對話模式
 

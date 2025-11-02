@@ -27,11 +27,6 @@ class ServerSettings:
 
     project_root: Path = field(default_factory=lambda: _resolve_path("."))
     data_root: Path = field(default_factory=lambda: _resolve_path("output"))
-    task_store_root: Path = field(default_factory=lambda: _resolve_path("output/task_runs"))
-    task_log_root: Path = field(default_factory=lambda: _resolve_path("output/task_runs/logs"))
-    celery_broker_url: str = "redis://localhost:6379/0"
-    celery_result_backend: str = "redis://localhost:6379/0"
-    api_token: Optional[str] = None
     cors_origins: List[str] = field(default_factory=list)
     gzip_min_size: int = 512
     google_translate_project_id: Optional[str] = None
@@ -45,11 +40,6 @@ class ServerSettings:
 
         project_root = _resolve_path(".")
         data_root = _resolve_path(os.getenv("DATA_ROOT", "output"))
-        task_store_root = _resolve_path(os.getenv("TASK_STORE_ROOT", "output/task_runs"))
-        task_log_root = _resolve_path(os.getenv("TASK_LOG_ROOT", "output/task_runs/logs"))
-        celery_broker_url = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
-        celery_result_backend = os.getenv("CELERY_RESULT_BACKEND", celery_broker_url)
-        api_token = os.getenv("API_TOKEN")
         cors_raw = os.getenv("CORS_ORIGINS", "")
         cors_origins = [origin.strip() for origin in cors_raw.split(",") if origin.strip()]
         gzip_min_size = int(os.getenv("GZIP_MIN_SIZE", "512"))
@@ -61,11 +51,6 @@ class ServerSettings:
         return cls(
             project_root=project_root,
             data_root=data_root,
-            task_store_root=task_store_root,
-            task_log_root=task_log_root,
-            celery_broker_url=celery_broker_url,
-            celery_result_backend=celery_result_backend,
-            api_token=api_token,
             cors_origins=cors_origins,
             gzip_min_size=gzip_min_size,
             google_translate_project_id=google_translate_project_id,
