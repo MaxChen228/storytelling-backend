@@ -17,6 +17,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import yaml
 from storytelling_cli.status import ChapterStatus, natural_key, scan_chapters as status_scan_chapters
+from storytelling_cli.table import build_chapter_table
 
 # ---------------------------------------------------------------------------
 # Constants & helpers
@@ -350,55 +351,15 @@ class StorytellingCLI:
             print(colorize(f"{ICON_WARNING} 尚未找到任何章節或源文件", "yellow", self.use_color))
             print()
             return
-        header = ("Idx", "Chapter", "Source", "Summary", "Script", "Audio", "Audio(s)", "Subtitle", "ΔAudio-Sub")
-        widths = [len(h) for h in header]
-        rows: List[Tuple[str, ...]] = []
-        for idx, status in enumerate(statuses):
-            gap_label = _format_gap_seconds(status.audio_subtitle_gap)
-            audio_duration_label = _format_duration_mmss(status.audio_duration) if status.audio_duration is not None else "—"
-            row = (
-                str(idx),
-                status.slug,
-                "✓" if status.has_source else "✗",
-                "✓" if status.has_summary else "✗",
-                "✓" if status.has_script else "✗",
-                "✓" if status.has_audio else "✗",
-                audio_duration_label,
-                "✓" if status.has_subtitle else "✗",
-                gap_label,
-            )
-            rows.append(row)
-            widths = [max(widths[i], len(row[i])) for i in range(len(header))]
-
-        def draw_border(left: str, mid: str, right: str) -> str:
-            parts = ["═" * (w + 2) for w in widths]
-            return f"{left}{mid.join(parts)}{right}"
-
-        def draw_row(values: Sequence[str]) -> str:
-            cells: List[str] = []
-            gap_value: Optional[float] = None
-            if len(values) >= len(header) and values[0].isdigit():
-                index = int(values[0])
-                if 0 <= index < len(statuses):
-                    gap_value = statuses[index].audio_subtitle_gap
-            for i, value in enumerate(values):
-                padded = value.ljust(widths[i])
-                if self.use_color and i >= 2:
-                    if value == "✓":
-                        padded = colorize(padded, "green", True)
-                    elif value == "✗":
-                        padded = colorize(padded, "red", True)
-                if self.use_color and header[i] == "ΔAudio-Sub" and gap_value is not None and gap_value > 1.5:
-                    padded = colorize(padded, "red", True)
-                cells.append(f" {padded} ")
-            return f"│{'│'.join(cells)}│"
-
-        print(draw_border("┌", "┬", "┐"))
-        print(draw_row(header))
-        print(draw_border("├", "┼", "┤"))
-        for row in rows:
-            print(draw_row(row))
-        print(draw_border("└", "┴", "┘"))
+        table_output = build_chapter_table(
+            statuses,
+            use_color=self.use_color,
+            gap_threshold=1.5,
+            colorize=colorize,
+            format_gap=_format_gap_seconds,
+            format_duration=_format_duration_mmss,
+        )
+        print(table_output)
         print()
 
     # ---------------- Selection helpers -----------------

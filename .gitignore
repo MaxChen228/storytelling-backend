@@ -27,6 +27,7 @@ secrets/
 output/
 data/*_processed_scripts/
 data/*_summaries/
+data/transcripts/transcript_*.txt
 archived_outputs/
 
 # Audio/Video Files
