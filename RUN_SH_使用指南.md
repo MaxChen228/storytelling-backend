@@ -7,6 +7,23 @@ cd "/Users/chenliangyu/Desktop/story telling podcast"
 ./run.sh
 ```
 
+首次執行會出現新的主選單，將常用維運功能集中在一起：
+
+```
+====== Storytelling 工具 ======
+1) 啟動互動式 CLI
+2) 書籍改名（rename_book）
+3) 手動同步 output → GCS
+4) 列出可用書籍
+5) 離開
+```
+
+- 選擇 `1` 會進入原本的 Storytelling CLI 主畫面（流程不變）。
+- 選擇 `2` 會呼叫 `scripts/rename_book.py`，依提示輸入舊/新書籍 ID 後自動搬移 `data/`、`output/` 並更新相關 JSON。
+- 選擇 `3` 可以在不重新進 CLI 的情況下手動觸發一次 GCS 同步（排除 `.wav` 與隱藏檔）。
+- 選擇 `4` 會輸出目前偵測到的書籍列表，方便確認改名成果。
+- `run.sh` 接受原本的參數模式：如果帶入 `delete` 或其他 CLI 參數，會直接執行 Storytelling CLI 而不顯示選單。
+
 ---
 
 ## 界面說明
