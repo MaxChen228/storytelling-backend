@@ -61,3 +61,28 @@ class TranslationResponse(BaseModel):
     detected_source_language: Optional[str] = None
     cached: bool = False
 
+
+class SentenceExplanationVocabulary(BaseModel):
+    """句子重點的詞彙解釋。"""
+
+    word: str
+    meaning: str
+    note: Optional[str] = None
+
+
+class SentenceExplanationRequest(BaseModel):
+    """句子解釋請求。"""
+
+    sentence: str = Field(..., min_length=1, max_length=2000)
+    previous_sentence: Optional[str] = Field(default="", max_length=2000)
+    next_sentence: Optional[str] = Field(default="", max_length=2000)
+    language: Optional[str] = Field(default="zh-TW", min_length=2, max_length=16)
+
+
+class SentenceExplanationResponse(BaseModel):
+    """句子解釋回應。"""
+
+    overview: str
+    key_points: list[str] = Field(default_factory=list)
+    vocabulary: list[SentenceExplanationVocabulary] = Field(default_factory=list)
+    cached: bool = False

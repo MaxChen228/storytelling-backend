@@ -34,6 +34,9 @@ class ServerSettings:
     google_translate_location: str = "global"
     translation_default_target_language: str = "zh-TW"
     translation_cache_size: int = 256
+    sentence_explainer_model: str = "gemini-2.5-flash-lite"
+    sentence_explainer_timeout: float = 30.0
+    sentence_explainer_cache_size: int = 128
 
     @classmethod
     def load(cls) -> "ServerSettings":
@@ -53,6 +56,9 @@ class ServerSettings:
         google_translate_location = os.getenv("GOOGLE_TRANSLATE_LOCATION", "global")
         translation_default_target_language = os.getenv("TRANSLATION_DEFAULT_TARGET_LANGUAGE", "zh-TW")
         translation_cache_size = int(os.getenv("TRANSLATION_CACHE_SIZE", "256"))
+        sentence_explainer_model = os.getenv("SENTENCE_EXPLAINER_MODEL", "gemini-2.5-flash-lite")
+        sentence_explainer_timeout = float(os.getenv("SENTENCE_EXPLAINER_TIMEOUT", "30"))
+        sentence_explainer_cache_size = int(os.getenv("SENTENCE_EXPLAINER_CACHE_SIZE", "128"))
 
         return cls(
             project_root=project_root,
@@ -64,4 +70,7 @@ class ServerSettings:
             google_translate_location=google_translate_location,
             translation_default_target_language=translation_default_target_language,
             translation_cache_size=translation_cache_size,
+            sentence_explainer_model=sentence_explainer_model,
+            sentence_explainer_timeout=sentence_explainer_timeout,
+            sentence_explainer_cache_size=sentence_explainer_cache_size,
         )

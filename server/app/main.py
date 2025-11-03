@@ -20,6 +20,9 @@ from .schemas import (
     BookItem,
     ChapterItem,
     ChapterPlayback,
+    SentenceExplanationRequest,
+    SentenceExplanationResponse,
+    SentenceExplanationVocabulary,
     TranslationRequest,
     TranslationResponse,
 )
@@ -27,6 +30,9 @@ from .services import (
     BookData,
     ChapterData,
     OutputDataCache,
+    SentenceExplanationError,
+    SentenceExplanationResult,
+    SentenceExplanationService,
     SubtitleData,
     TranslationService,
     TranslationServiceError,
@@ -56,6 +62,12 @@ def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
         logger.warning("Translation service disabled: %s", exc)
         translation_service = None
 
+    try:
+        explanation_service = SentenceExplanationService.from_settings(settings)
+    except SentenceExplanationError as exc:
+        logger.warning("Sentence explanation disabled: %s", exc)
+        explanation_service = None
+
     app = FastAPI(
         title="Storytelling Output API",
         version="0.1.0",
@@ -65,6 +77,7 @@ def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
     app.state.settings = settings
     app.state.cache = cache
     app.state.translation_service = translation_service
+    app.state.sentence_explainer = explanation_service
     app.state.gcs_mirror = mirror
 
     if settings.cors_origins:
@@ -92,6 +105,10 @@ def get_cache(request: Request) -> OutputDataCache:
 
 def get_translation_service(request: Request) -> Optional[TranslationService]:
     return getattr(request.app.state, "translation_service", None)
+
+
+def get_sentence_explainer(request: Request) -> Optional[SentenceExplanationService]:
+    return getattr(request.app.state, "sentence_explainer", None)
 
 
 def _register_routes(app: FastAPI) -> None:
@@ -223,6 +240,52 @@ def _register_routes(app: FastAPI) -> None:
 
         content = subtitles.srt_path.read_text(encoding="utf-8")
         return PlainTextResponse(content, media_type="text/plain; charset=utf-8", headers=headers)
+
+    @app.post(
+        "/books/{book_id}/chapters/{chapter_id}/sentences/{sentence_id}/explain",
+        response_model=SentenceExplanationResponse,
+    )
+    async def explain_sentence(
+        book_id: str,
+        chapter_id: str,
+        sentence_id: str,
+        payload: SentenceExplanationRequest,
+        cache: OutputDataCache = Depends(get_cache),
+        explanation_service: Optional[SentenceExplanationService] = Depends(get_sentence_explainer),
+    ) -> SentenceExplanationResponse:
+        if not explanation_service:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Sentence explanation unavailable")
+
+        chapter = cache.get_chapter(book_id, chapter_id)
+        if not chapter:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
+
+        def _generate() -> SentenceExplanationResult:
+            return explanation_service.explain_sentence(
+                sentence=payload.sentence,
+                previous_sentence=payload.previous_sentence or "",
+                next_sentence=payload.next_sentence or "",
+                language=payload.language or "zh-TW",
+            )
+
+        try:
+            result = await run_in_threadpool(_generate)
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+        except SentenceExplanationError as exc:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+        vocabulary = [
+            SentenceExplanationVocabulary(word=entry.word, meaning=entry.meaning, note=entry.note)
+            for entry in result.vocabulary
+        ]
+
+        return SentenceExplanationResponse(
+            overview=result.overview,
+            key_points=list(result.key_points),
+            vocabulary=vocabulary,
+            cached=result.cached,
+        )
 
     @app.post("/translations", response_model=TranslationResponse)
     async def translate_text(

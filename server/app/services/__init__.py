@@ -6,6 +6,12 @@ from .filesystem import (
     OutputDataCache,
     SubtitleData,
 )
+from .explanation import (
+    SentenceExplanationError,
+    SentenceExplanationResult,
+    SentenceExplanationService,
+    VocabularyEntry,
+)
 from .translation import TranslationResult, TranslationService, TranslationServiceError
 
 __all__ = [
@@ -13,6 +19,10 @@ __all__ = [
     "ChapterData",
     "OutputDataCache",
     "SubtitleData",
+    "SentenceExplanationError",
+    "SentenceExplanationResult",
+    "SentenceExplanationService",
+    "VocabularyEntry",
     "TranslationResult",
     "TranslationService",
     "TranslationServiceError",

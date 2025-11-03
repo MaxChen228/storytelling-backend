@@ -12,3 +12,6 @@ python-multipart>=0.0.9
 # Translation
 google-cloud-translate>=3.15.0
 google-cloud-storage>=2.16.0
+
+# Gemini APIs for sentence explanations
+google-genai>=1.2.0

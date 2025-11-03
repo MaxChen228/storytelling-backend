@@ -13,7 +13,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 
 from server.app import ServerSettings, create_app
-from server.app.services import TranslationResult
+from server.app.services import (
+    SentenceExplanationResult,
+    TranslationResult,
+    VocabularyEntry,
+)
 
 
 class DummyTranslationService:
@@ -25,6 +29,28 @@ class DummyTranslationService:
         return TranslationResult(
             translated_text=f"{text}-{target_language}",
             detected_source_language=source_language or "en",
+            cached=False,
+        )
+
+
+class DummyExplanationService:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def explain_sentence(
+        self,
+        sentence: str,
+        previous_sentence: str = "",
+        next_sentence: str = "",
+        language: str = "zh-TW",
+    ) -> SentenceExplanationResult:
+        self.calls.append((sentence, previous_sentence, next_sentence, language))
+        return SentenceExplanationResult(
+            overview=f"{sentence}-overview",
+            key_points=("重點 A", "重點 B"),
+            vocabulary=(
+                VocabularyEntry(word="sample", meaning="範例", note=None),
+            ),
             cached=False,
         )
 
@@ -134,6 +160,7 @@ def test_client(sample_data: Path) -> TestClient:
     )
     app = create_app(settings)
     app.state.translation_service = DummyTranslationService()
+    app.state.sentence_explainer = DummyExplanationService()
     return TestClient(app)
 
 
@@ -202,6 +229,23 @@ def test_translate_text_success(test_client: TestClient) -> None:
     assert payload["translated_text"] == "Hello world-zh-TW"
     assert payload["detected_source_language"] == "en"
     assert payload["cached"] is False
+
+
+def test_sentence_explanation_endpoint(test_client: TestClient) -> None:
+    response = test_client.post(
+        "/books/demo_book/chapters/chapter0/sentences/1/explain",
+        json={
+            "sentence": "Hello world",
+            "previous_sentence": "Good morning everyone.",
+            "next_sentence": "Let's begin our story.",
+            "language": "zh-TW",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["overview"] == "Hello world-overview"
+    assert payload["key_points"] == ["重點 A", "重點 B"]
+    assert payload["vocabulary"][0]["word"] == "sample"
 
 
 def test_translate_text_service_unavailable(test_client: TestClient) -> None:
