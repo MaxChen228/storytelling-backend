@@ -31,13 +31,25 @@ from .services import (
     TranslationService,
     TranslationServiceError,
 )
+from .services.gcs_mirror import GCSMirror, is_gcs_uri
 
 logger = logging.getLogger(__name__)
 
 
 def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
     settings = settings or ServerSettings.load()
-    cache = OutputDataCache(settings.data_root)
+    mirror: Optional[GCSMirror] = None
+    if is_gcs_uri(settings.data_root_raw):
+        mirror = GCSMirror(
+            settings.data_root_raw,
+            settings.data_root,
+        )
+        try:
+            mirror.sync()
+        except Exception:
+            logger.exception("Initial GCS sync failed")
+
+    cache = OutputDataCache(settings.data_root, sync_hook=mirror.sync if mirror else None)
     try:
         translation_service = TranslationService.from_settings(settings)
     except TranslationServiceError as exc:
@@ -53,6 +65,7 @@ def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
     app.state.settings = settings
     app.state.cache = cache
     app.state.translation_service = translation_service
+    app.state.gcs_mirror = mirror
 
     if settings.cors_origins:
         logger.info("Configuring CORS for origins: %s", settings.cors_origins)

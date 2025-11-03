@@ -27,6 +27,7 @@ class ServerSettings:
 
     project_root: Path = field(default_factory=lambda: _resolve_path("."))
     data_root: Path = field(default_factory=lambda: _resolve_path("output"))
+    data_root_raw: str = "output"
     cors_origins: List[str] = field(default_factory=list)
     gzip_min_size: int = 512
     google_translate_project_id: Optional[str] = None
@@ -39,7 +40,12 @@ class ServerSettings:
         load_dotenv()
 
         project_root = _resolve_path(".")
-        data_root = _resolve_path(os.getenv("DATA_ROOT", "output"))
+        data_root_raw = os.getenv("DATA_ROOT", "output")
+        if data_root_raw.startswith("gs://"):
+            cache_root = os.getenv("STORYTELLING_GCS_CACHE_DIR", "/tmp/storytelling-output")
+            data_root = Path(cache_root).expanduser().resolve()
+        else:
+            data_root = _resolve_path(data_root_raw)
         cors_raw = os.getenv("CORS_ORIGINS", "")
         cors_origins = [origin.strip() for origin in cors_raw.split(",") if origin.strip()]
         gzip_min_size = int(os.getenv("GZIP_MIN_SIZE", "512"))
@@ -51,6 +57,7 @@ class ServerSettings:
         return cls(
             project_root=project_root,
             data_root=data_root,
+            data_root_raw=data_root_raw,
             cors_origins=cors_origins,
             gzip_min_size=gzip_min_size,
             google_translate_project_id=google_translate_project_id,

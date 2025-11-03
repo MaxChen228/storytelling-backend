@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 from threading import RLock
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -53,15 +53,21 @@ class BookData:
 class OutputDataCache:
     """Caches parsed data from the output directory to serve API requests efficiently."""
 
-    def __init__(self, data_root: Path):
+    def __init__(self, data_root: Path, sync_hook: Optional[Callable[[], None]] = None):
         self.data_root = Path(data_root)
         self._lock = RLock()
         self._books: Dict[str, BookData] = {}
         self._signature: Optional[str] = None
+        self._sync_hook = sync_hook
 
     def refresh(self, force: bool = False) -> None:
         """Refreshes the cache if the underlying data changed or when forced."""
         with self._lock:
+            if self._sync_hook:
+                try:
+                    self._sync_hook()
+                except Exception:  # pragma: no cover - network errors logged
+                    logger.exception("Failed to sync data root before refresh")
             signature = self._compute_signature()
             if not force and signature == self._signature:
                 return
@@ -208,6 +214,9 @@ class OutputDataCache:
         mp3_path = chapter_dir / "podcast.mp3"
         if mp3_path.exists():
             return mp3_path, "audio/mpeg"
+        wav_path = chapter_dir / "podcast.wav"
+        if wav_path.exists():
+            return wav_path, "audio/wav"
         return None, None
 
     def _load_subtitles(self, chapter_dir: Path) -> Optional[SubtitleData]:

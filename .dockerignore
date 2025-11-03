@@ -1,0 +1,35 @@
+# 忽略本地生成品與環境
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.swp
+.DS_Store
+
+# CLI 工作輸出
+output/
+data/
+voice_samples/
+voice_utils.pyc
+
+# 測試與文件生成產物
+.coverage
+htmlcov/
+pytest.ini
+
+# 大型資料或實驗
+alignment/
+mfa_lab/
+whisperx_alignment_test/
+audio-earning-ios/
+
+# IDE / 編輯器設定
+.vscode/
+.idea/
+
+# 其他暫存檔
+*.log
+*.tmp
