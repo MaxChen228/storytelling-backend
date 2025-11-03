@@ -42,13 +42,34 @@ class DatasetStats:
 
 def dataset_stats(chapters: Sequence[Path]) -> DatasetStats:
     import statistics
-    import numpy as np
+
+    try:
+        import numpy as np  # type: ignore
+    except ImportError:  # pragma: no cover - fallback when numpy missing
+        np = None
 
     lengths = [count_words(path.read_text(encoding="utf-8")) for path in chapters]
     if not lengths:
         raise ValueError("No chapter files found")
     lengths.sort()
     total = sum(lengths)
+
+    def percentile(sorted_lengths: Sequence[int], fraction: float) -> float:
+        if np is not None:
+            return float(np.quantile(sorted_lengths, fraction))
+        if not sorted_lengths:
+            raise ValueError("Cannot compute percentile of empty data")
+        if len(sorted_lengths) == 1:
+            return float(sorted_lengths[0])
+        idx = (len(sorted_lengths) - 1) * fraction
+        lower = math.floor(idx)
+        upper = math.ceil(idx)
+        if lower == upper:
+            return float(sorted_lengths[int(idx)])
+        lower_val = sorted_lengths[lower]
+        upper_val = sorted_lengths[upper]
+        return float(lower_val + (upper_val - lower_val) * (idx - lower))
+
     return DatasetStats(
         count=len(lengths),
         total_words=total,
@@ -56,8 +77,8 @@ def dataset_stats(chapters: Sequence[Path]) -> DatasetStats:
         max_words=lengths[-1],
         mean_words=statistics.mean(lengths),
         median_words=statistics.median(lengths),
-        p10_words=float(np.quantile(lengths, 0.10)),
-        p90_words=float(np.quantile(lengths, 0.90)),
+        p10_words=percentile(lengths, 0.10),
+        p90_words=percentile(lengths, 0.90),
     )
 
 

@@ -4,7 +4,7 @@
 # ╚══════════════════════════════════════════════════════════════════════════╝
 
 basic:
-  english_level: "intermediate"            # beginner / intermediate / advanced
+  english_level: "beginner"            # beginner / intermediate / advanced
   episode_length: "medium"             # short / medium / long
   narrator_voice: "random"               # 預設旁白聲線，可改成 ["Aoede", "Puck"] 或 "random" 啟用隨機
   narrator_voice_candidates:
