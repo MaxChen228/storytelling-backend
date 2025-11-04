@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import timezone
 from pathlib import Path
 import os
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Set, Tuple
 
 from google.cloud import storage
 
@@ -47,6 +47,7 @@ class GCSMirror:
     local_dir: Path
     client: Optional[storage.Client] = None
     manifest_path: Optional[Path] = None
+    download_suffixes: Optional[Set[str]] = None
 
     def __post_init__(self) -> None:
         self.bucket_name, self.prefix = parse_gcs_uri(self.gcs_uri)
@@ -56,6 +57,8 @@ class GCSMirror:
         if self.client is None:
             self.client = storage.Client()
         self._manifest: Dict[str, Dict[str, str]] = _load_manifest(self.manifest_path)
+        if self.download_suffixes:
+            self.download_suffixes = {suffix.lower() for suffix in self.download_suffixes}
 
     def sync(self) -> None:
         """Download/update blobs so local folder mirrors the remote prefix."""
@@ -86,6 +89,10 @@ class GCSMirror:
             remote_entries[rel_path] = metadata
 
             local_path = self.local_dir / rel_path
+            if self.download_suffixes and Path(rel_path).suffix.lower() not in self.download_suffixes:
+                # Skip downloading large files but keep manifest entry up to date.
+                continue
+
             if not self._should_download(rel_path, metadata, local_path):
                 continue
 
@@ -111,6 +118,22 @@ class GCSMirror:
 
         self._manifest = remote_entries
         self._write_manifest()
+
+    def get_manifest_entry(self, rel_path: str) -> Optional[Dict[str, str]]:
+        key = rel_path.replace("\\", "/")
+        return self._manifest.get(key)
+
+    def get_gcs_uri(self, rel_path: str) -> Optional[str]:
+        key = rel_path.replace("\\", "/")
+        if key not in self._manifest:
+            return None
+        if self.prefix:
+            full_path = f"{self.prefix}/{key}" if key else self.prefix
+        else:
+            full_path = key
+        if full_path:
+            return f"gs://{self.bucket_name}/{full_path}"
+        return f"gs://{self.bucket_name}"
 
     # ------------------------------------------------------------------
 

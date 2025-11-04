@@ -176,13 +176,16 @@ uvicorn server.app.main:app --reload --host 0.0.0.0 --port 8000
 - ReDoc: http://localhost:8000/redoc
 
 **主要端點：**
-- `GET /api/books` - 書籍列表
-- `GET /api/books/{book_id}/chapters` - 章節列表
-- `GET /api/books/{book_id}/chapters/{chapter_id}` - 章節詳情
-- `GET /api/audio/{book_id}/{chapter_id}` - 音頻下載
-- `POST /api/translate` - 文本翻譯
+- `GET /books` - 書籍列表
+- `GET /books/{book_id}/chapters` - 章節列表
+- `GET /books/{book_id}/chapters/{chapter_id}` - 章節詳情
+- `GET /books/{book_id}/chapters/{chapter_id}/audio` - 音頻串流或簽名 URL
+- `GET /books/{book_id}/chapters/{chapter_id}/subtitles` - 字幕下載或簽名 URL
+- `POST /translations` - 文本翻譯
 
 👉 **[查看完整 API 文檔](docs/api/reference.md)**
+
+> 🔐 若將後端部署到 Cloud Run，建議設定 `MEDIA_DELIVERY_MODE=gcs-signed`，並搭配 `GCS_MIRROR_INCLUDE_SUFFIXES=.json` 與 `SIGNED_URL_TTL_SECONDS`，音檔/字幕會透過簽名 URL 直接由 GCS 下載，冷啟動更快也能節省記憶體。
 
 ## 常見問題
 

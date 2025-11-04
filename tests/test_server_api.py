@@ -14,7 +14,9 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from server.app import ServerSettings, create_app
 from server.app.services import (
+    ChapterData,
     SentenceExplanationResult,
+    SubtitleData,
     TranslationResult,
     VocabularyEntry,
 )
@@ -377,3 +379,123 @@ def test_phrase_explanation_service_unavailable(test_client: TestClient) -> None
         assert "unavailable" in response.json()["detail"].lower()
     finally:
         app.state.sentence_explainer = original
+
+
+def test_stream_audio_signed_mode_redirect(monkeypatch: pytest.MonkeyPatch, test_client: TestClient) -> None:
+    app = test_client.app
+    original_cache = app.state.cache
+    original_mode = app.state.settings.media_delivery_mode
+    original_ttl = app.state.settings.signed_url_ttl_seconds
+    app.state.settings.media_delivery_mode = "gcs-signed"
+    app.state.settings.signed_url_ttl_seconds = 90
+
+    chapter = ChapterData(
+        id="chapter0",
+        title="Remote chapter",
+        number=1,
+        path=Path("/tmp/remote"),
+        metadata={},
+        audio_file=None,
+        audio_mime_type="audio/mpeg",
+        subtitles=None,
+        word_count=None,
+        audio_duration_sec=None,
+        words_per_minute=None,
+        audio_remote_uri="gs://demo-bucket/demo.mp3",
+        subtitles_remote_uri=None,
+    )
+
+    class DummyCache:
+        def __init__(self, stored: ChapterData) -> None:
+            self.stored = stored
+
+        def get_chapter(self, book_id: str, chapter_id: str) -> ChapterData:
+            assert book_id == "demo_book"
+            assert chapter_id == "chapter0"
+            return self.stored
+
+    app.state.cache = DummyCache(chapter)
+
+    captured: dict[str, object] = {}
+
+    def fake_signed(url: str, ttl: int, *, response_content_type: str | None = None, response_disposition: str | None = None, method: str = "GET") -> str:
+        captured["url"] = url
+        captured["ttl"] = ttl
+        captured["content_type"] = response_content_type
+        return "https://signed.example/audio"
+
+    monkeypatch.setattr("server.app.main.generate_signed_url", fake_signed)
+
+    try:
+        response = test_client.get(
+            "/books/demo_book/chapters/chapter0/audio",
+            follow_redirects=False,
+        )
+        assert response.status_code == 307, response.text
+        assert response.headers["Location"] == "https://signed.example/audio"
+        assert captured["url"] == "gs://demo-bucket/demo.mp3"
+        assert captured["ttl"] == 90
+        assert captured["content_type"] == "audio/mpeg"
+    finally:
+        app.state.cache = original_cache
+        app.state.settings.media_delivery_mode = original_mode
+        app.state.settings.signed_url_ttl_seconds = original_ttl
+
+
+def test_get_subtitles_signed_mode_redirect(monkeypatch: pytest.MonkeyPatch, test_client: TestClient) -> None:
+    app = test_client.app
+    original_cache = app.state.cache
+    original_mode = app.state.settings.media_delivery_mode
+    original_ttl = app.state.settings.signed_url_ttl_seconds
+    app.state.settings.media_delivery_mode = "gcs-signed"
+    app.state.settings.signed_url_ttl_seconds = 120
+
+    subtitle = SubtitleData(srt_path=None, remote_uri="gs://demo-bucket/demo.srt")
+    chapter = ChapterData(
+        id="chapter0",
+        title="Remote chapter",
+        number=1,
+        path=Path("/tmp/remote"),
+        metadata={},
+        audio_file=None,
+        audio_mime_type=None,
+        subtitles=subtitle,
+        word_count=None,
+        audio_duration_sec=None,
+        words_per_minute=None,
+        audio_remote_uri=None,
+        subtitles_remote_uri="gs://demo-bucket/demo.srt",
+    )
+
+    class DummyCache:
+        def __init__(self, stored: ChapterData) -> None:
+            self.stored = stored
+
+        def get_chapter(self, book_id: str, chapter_id: str) -> ChapterData:
+            return self.stored
+
+    app.state.cache = DummyCache(chapter)
+
+    captured: dict[str, object] = {}
+
+    def fake_signed(url: str, ttl: int, *, response_content_type: str | None = None, response_disposition: str | None = None, method: str = "GET") -> str:
+        captured["url"] = url
+        captured["ttl"] = ttl
+        captured["content_type"] = response_content_type
+        return "https://signed.example/subtitles"
+
+    monkeypatch.setattr("server.app.main.generate_signed_url", fake_signed)
+
+    try:
+        response = test_client.get(
+            "/books/demo_book/chapters/chapter0/subtitles",
+            follow_redirects=False,
+        )
+        assert response.status_code == 307, response.text
+        assert response.headers["Location"] == "https://signed.example/subtitles"
+        assert captured["url"] == "gs://demo-bucket/demo.srt"
+        assert captured["content_type"] == "text/plain; charset=utf-8"
+    finally:
+        app.state.cache = original_cache
+        app.state.settings.media_delivery_mode = original_mode
+        app.state.settings.signed_url_ttl_seconds = original_ttl

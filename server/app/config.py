@@ -37,6 +37,9 @@ class ServerSettings:
     sentence_explainer_model: str = "gemini-2.5-flash-lite"
     sentence_explainer_timeout: float = 30.0
     sentence_explainer_cache_size: int = 128
+    media_delivery_mode: str = "local"
+    gcs_mirror_include_suffixes: Optional[List[str]] = None
+    signed_url_ttl_seconds: int = 600
 
     @classmethod
     def load(cls) -> "ServerSettings":
@@ -59,6 +62,23 @@ class ServerSettings:
         sentence_explainer_model = os.getenv("SENTENCE_EXPLAINER_MODEL", "gemini-2.5-flash-lite")
         sentence_explainer_timeout = float(os.getenv("SENTENCE_EXPLAINER_TIMEOUT", "30"))
         sentence_explainer_cache_size = int(os.getenv("SENTENCE_EXPLAINER_CACHE_SIZE", "128"))
+        media_delivery_mode = (os.getenv("MEDIA_DELIVERY_MODE", "local") or "local").strip().lower()
+        include_suffixes_raw = os.getenv("GCS_MIRROR_INCLUDE_SUFFIXES", "").strip()
+        include_suffixes: Optional[List[str]]
+        if include_suffixes_raw:
+            include_suffixes = []
+            for item in include_suffixes_raw.split(","):
+                normalized = item.strip()
+                if not normalized:
+                    continue
+                if not normalized.startswith("."):
+                    normalized = f".{normalized}"
+                include_suffixes.append(normalized.lower())
+            if not include_suffixes:
+                include_suffixes = None
+        else:
+            include_suffixes = None
+        signed_url_ttl_seconds = max(60, int(os.getenv("SIGNED_URL_TTL_SECONDS", "600")))
 
         return cls(
             project_root=project_root,
@@ -73,4 +93,7 @@ class ServerSettings:
             sentence_explainer_model=sentence_explainer_model,
             sentence_explainer_timeout=sentence_explainer_timeout,
             sentence_explainer_cache_size=sentence_explainer_cache_size,
+            media_delivery_mode=media_delivery_mode,
+            gcs_mirror_include_suffixes=include_suffixes,
+            signed_url_ttl_seconds=signed_url_ttl_seconds,
         )

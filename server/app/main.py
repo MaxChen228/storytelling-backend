@@ -39,6 +39,7 @@ from .services import (
     TranslationServiceError,
 )
 from .services.gcs_mirror import GCSMirror, is_gcs_uri
+from .services.storage_signer import generate_signed_url
 
 logger = logging.getLogger(__name__)
 
@@ -46,17 +47,32 @@ logger = logging.getLogger(__name__)
 def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
     settings = settings or ServerSettings.load()
     mirror: Optional[GCSMirror] = None
+    download_suffixes: Optional[set[str]] = None
+    cache_relevant_suffixes: Optional[set[str]] = None
+
     if is_gcs_uri(settings.data_root_raw):
+        if settings.gcs_mirror_include_suffixes:
+            download_suffixes = set(settings.gcs_mirror_include_suffixes)
+        elif settings.media_delivery_mode == "gcs-signed":
+            download_suffixes = {".json"}
+        if download_suffixes:
+            cache_relevant_suffixes = set(download_suffixes)
         mirror = GCSMirror(
             settings.data_root_raw,
             settings.data_root,
+            download_suffixes=download_suffixes,
         )
         try:
             mirror.sync()
         except Exception:
             logger.exception("Initial GCS sync failed")
 
-    cache = OutputDataCache(settings.data_root, sync_hook=mirror.sync if mirror else None)
+    cache = OutputDataCache(
+        settings.data_root,
+        sync_hook=mirror.sync if mirror else None,
+        mirror=mirror,
+        relevant_suffixes=cache_relevant_suffixes,
+    )
     try:
         translation_service = TranslationService.from_settings(settings)
     except TranslationServiceError as exc:
@@ -173,9 +189,27 @@ def _register_routes(app: FastAPI) -> None:
         chapter_id: str,
         request: Request,
         cache: OutputDataCache = Depends(get_cache),
-    ) -> StreamingResponse:
+        settings: ServerSettings = Depends(get_settings),
+    ) -> Response:
         chapter = cache.get_chapter(book_id, chapter_id)
-        if not chapter or not chapter.audio_file:
+        if not chapter:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
+
+        if settings.media_delivery_mode == "gcs-signed":
+            if not chapter.audio_remote_uri:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audio not available")
+            try:
+                signed_url = generate_signed_url(
+                    chapter.audio_remote_uri,
+                    settings.signed_url_ttl_seconds,
+                    response_content_type=chapter.audio_mime_type or "application/octet-stream",
+                )
+            except Exception as exc:  # pragma: no cover - depends on cloud IAM
+                logger.exception("Failed to generate signed URL for audio")
+                raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to sign audio URL") from exc
+            return Response(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": signed_url})
+
+        if not chapter.audio_file:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audio not available")
 
         path = chapter.audio_file
@@ -223,10 +257,29 @@ def _register_routes(app: FastAPI) -> None:
         book_id: str,
         chapter_id: str,
         cache: OutputDataCache = Depends(get_cache),
+        settings: ServerSettings = Depends(get_settings),
     ):
         chapter = cache.get_chapter(book_id, chapter_id)
         if not chapter or not chapter.subtitles:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subtitles not available")
+
+        if settings.media_delivery_mode == "gcs-signed":
+            if not chapter.subtitles_remote_uri:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subtitles not available")
+            try:
+                signed_url = generate_signed_url(
+                    chapter.subtitles_remote_uri,
+                    settings.signed_url_ttl_seconds,
+                    response_content_type="text/plain; charset=utf-8",
+                )
+            except Exception as exc:  # pragma: no cover - depends on cloud IAM
+                logger.exception("Failed to generate signed URL for subtitles")
+                raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to sign subtitles URL") from exc
+            return PlainTextResponse(
+                "",
+                status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+                headers={"Location": signed_url},
+            )
 
         subtitles = chapter.subtitles
         if not subtitles.srt_path or not subtitles.srt_path.exists():
@@ -355,8 +408,11 @@ def _to_chapter_item(chapter: ChapterData) -> ChapterItem:
         id=chapter.id,
         title=chapter.title,
         chapter_number=chapter.number,
-        audio_available=chapter.audio_file is not None,
-        subtitles_available=chapter.subtitles is not None and chapter.subtitles.srt_path is not None,
+        audio_available=(chapter.audio_file is not None) or (chapter.audio_remote_uri is not None),
+        subtitles_available=(
+            chapter.subtitles is not None
+            and (chapter.subtitles.srt_path is not None or chapter.subtitles.remote_uri is not None)
+        ),
         word_count=chapter.word_count,
         audio_duration_sec=chapter.audio_duration_sec,
         words_per_minute=chapter.words_per_minute,
@@ -365,11 +421,11 @@ def _to_chapter_item(chapter: ChapterData) -> ChapterItem:
 
 def _to_chapter_playback(request: Request, book_id: str, chapter: ChapterData) -> ChapterPlayback:
     audio_url: Optional[str] = None
-    if chapter.audio_file:
+    if chapter.audio_file or chapter.audio_remote_uri:
         audio_url = str(request.url_for("stream_audio", book_id=book_id, chapter_id=chapter.id))
 
     subtitles_url: Optional[str] = None
-    if chapter.subtitles and chapter.subtitles.srt_path:
+    if chapter.subtitles and (chapter.subtitles.srt_path or chapter.subtitles.remote_uri):
         subtitles_url = str(request.url_for("get_subtitles", book_id=book_id, chapter_id=chapter.id))
 
     return ChapterPlayback(

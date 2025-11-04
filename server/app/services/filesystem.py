@@ -10,7 +10,9 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 from threading import RLock
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Set
+
+from .gcs_mirror import GCSMirror
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class SubtitleData:
     srt_path: Optional[Path] = None
+    remote_uri: Optional[str] = None
 
 
 @dataclass
@@ -33,6 +36,8 @@ class ChapterData:
     word_count: Optional[int]
     audio_duration_sec: Optional[float]
     words_per_minute: Optional[float]
+    audio_remote_uri: Optional[str] = None
+    subtitles_remote_uri: Optional[str] = None
 
 
 @dataclass
@@ -53,12 +58,24 @@ class BookData:
 class OutputDataCache:
     """Caches parsed data from the output directory to serve API requests efficiently."""
 
-    def __init__(self, data_root: Path, sync_hook: Optional[Callable[[], None]] = None):
+    def __init__(
+        self,
+        data_root: Path,
+        sync_hook: Optional[Callable[[], None]] = None,
+        *,
+        mirror: Optional[GCSMirror] = None,
+        relevant_suffixes: Optional[Set[str]] = None,
+    ):
         self.data_root = Path(data_root)
         self._lock = RLock()
         self._books: Dict[str, BookData] = {}
         self._signature: Optional[str] = None
         self._sync_hook = sync_hook
+        self._mirror = mirror
+        if relevant_suffixes:
+            self._relevant_suffixes = {suffix.lower() for suffix in relevant_suffixes}
+        else:
+            self._relevant_suffixes = {".json", ".srt", ".wav", ".mp3", ".m4a"}
 
     def refresh(self, force: bool = False) -> None:
         """Refreshes the cache if the underlying data changed or when forced."""
@@ -102,7 +119,7 @@ class OutputDataCache:
         if not self.data_root.exists():
             return hasher.hexdigest()
 
-        relevant_suffixes = {".json", ".srt", ".wav", ".mp3", ".m4a"}
+        relevant_suffixes = self._relevant_suffixes
         for path in sorted(self.data_root.rglob("*")):
             if not path.is_file():
                 continue
@@ -171,7 +188,15 @@ class OutputDataCache:
         chapter_title = str(metadata_obj.get("chapter_title") or chapter_id)
 
         audio_file, audio_mime = self._locate_audio_file(chapter_dir)
+        audio_remote_uri = self._resolve_remote_media_uri(chapter_dir, audio_file)
         subtitles = self._load_subtitles(chapter_dir)
+        subtitles_remote_uri = None
+        if subtitles:
+            subtitles_remote_uri = subtitles.remote_uri
+        else:
+            subtitles_remote_uri = self._lookup_remote_uri(chapter_dir, "subtitles.srt")
+            if subtitles_remote_uri:
+                subtitles = SubtitleData(srt_path=None, remote_uri=subtitles_remote_uri)
 
         word_count = self._coerce_int(metadata_obj.get("actual_words") or metadata_obj.get("word_count"))
         audio_duration_sec = self._coerce_float(metadata_obj.get("audio_duration_sec") or metadata_obj.get("duration_seconds"))
@@ -207,6 +232,8 @@ class OutputDataCache:
             word_count=word_count,
             audio_duration_sec=audio_duration_sec,
             words_per_minute=words_per_minute,
+            audio_remote_uri=audio_remote_uri,
+            subtitles_remote_uri=subtitles_remote_uri,
         )
 
     def _locate_audio_file(self, chapter_dir: Path) -> tuple[Optional[Path], Optional[str]]:
@@ -221,9 +248,10 @@ class OutputDataCache:
 
     def _load_subtitles(self, chapter_dir: Path) -> Optional[SubtitleData]:
         srt_path = chapter_dir / "subtitles.srt"
-        if not srt_path.exists():
+        remote_uri = self._lookup_remote_uri(chapter_dir, "subtitles.srt")
+        if not srt_path.exists() and not remote_uri:
             return None
-        return SubtitleData(srt_path=srt_path)
+        return SubtitleData(srt_path=srt_path if srt_path.exists() else None, remote_uri=remote_uri)
 
     def _calculate_subtitle_metrics(self, srt_path: Path) -> Optional[SubtitleMetrics]:
         try:
@@ -371,3 +399,25 @@ class OutputDataCache:
         except json.JSONDecodeError:
             logger.exception("Failed to parse JSON file %s", path)
             return None
+
+    def _lookup_remote_uri(self, chapter_dir: Path, filename: str) -> Optional[str]:
+        if not self._mirror:
+            return None
+        try:
+            rel_dir = chapter_dir.relative_to(self.data_root)
+        except ValueError:
+            return None
+        rel_path = rel_dir / filename
+        return self._mirror.get_gcs_uri(str(rel_path))
+
+    def _resolve_remote_media_uri(self, chapter_dir: Path, audio_file: Optional[Path]) -> Optional[str]:
+        if audio_file is not None:
+            uri = self._lookup_remote_uri(chapter_dir, audio_file.name)
+            if uri:
+                return uri
+        # Fallback to well-known filenames even when local file missing
+        for candidate in ("podcast.mp3", "podcast.wav"):
+            uri = self._lookup_remote_uri(chapter_dir, candidate)
+            if uri:
+                return uri
+        return None

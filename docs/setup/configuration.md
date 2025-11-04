@@ -486,16 +486,20 @@ which micromamba
 
 ## 環境變量配置
 
-除了 YAML 配置，還可以使用環境變量覆寫某些設置：
+除了 YAML 配置，也可透過環境變量覆寫後端行為：
 
 ```bash
-# .env 文件
-GEMINI_API_KEY=your_api_key
-STORY_BOOK_ID=foundation           # 默認書籍 ID
-PODCAST_SCRIPT_BATCH_SIZE=10       # 腳本批次大小
-PODCAST_AUDIO_BATCH_SIZE=5         # 音頻批次大小
-PODCAST_ENV_PATH=/custom/path/.venv  # 自定義虛擬環境路徑
+# .env / 部署環境常見變量
+GEMINI_API_KEY=your_api_key              # Gemini 服務金鑰
+DATA_ROOT=./output                        # 輸出資料來源，可改為 gs://bucket/prefix
+MEDIA_DELIVERY_MODE=local                 # local（預設）或 gcs-signed
+GCS_MIRROR_INCLUDE_SUFFIXES=.json         # 限制同步副檔名，雲端建議只保留 metadata
+SIGNED_URL_TTL_SECONDS=900                # 簽名 URL 有效時間（秒）
+STORYTELLING_GCS_CACHE_DIR=/tmp/storytelling-output  # GCS 鏡射暫存路徑
+GOOGLE_TRANSLATE_PROJECT_ID=my-project    # 若啟用翻譯服務
 ```
+
+其他腳本相關變量仍可沿用，例如 `PODCAST_SCRIPT_BATCH_SIZE`、`PODCAST_AUDIO_BATCH_SIZE` 等。Cloud Run 等雲端環境建議將敏感資訊（如 `GEMINI_API_KEY`）存於 Secret Manager，再透過 `--set-secrets` 匯入。
 
 ## 下一步
 
