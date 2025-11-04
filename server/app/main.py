@@ -38,10 +38,23 @@ from .services import (
     TranslationService,
     TranslationServiceError,
 )
-from .services.gcs_mirror import GCSMirror, is_gcs_uri
+from .services.gcs_mirror import GCSMirror, is_gcs_uri, parse_gcs_uri
 from .services.storage_signer import generate_signed_url
 
 logger = logging.getLogger(__name__)
+
+
+def _as_public_gcs_url(uri: str) -> Optional[str]:
+    if not uri:
+        return None
+    if uri.startswith("http://") or uri.startswith("https://"):
+        return uri
+    if uri.startswith("gs://"):
+        bucket, object_path = parse_gcs_uri(uri)
+        if not object_path:
+            return f"https://storage.googleapis.com/{bucket}"
+        return f"https://storage.googleapis.com/{bucket}/{object_path}"
+    return None
 
 
 def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
@@ -53,7 +66,7 @@ def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
     if is_gcs_uri(settings.data_root_raw):
         if settings.gcs_mirror_include_suffixes:
             download_suffixes = set(settings.gcs_mirror_include_suffixes)
-        elif settings.media_delivery_mode == "gcs-signed":
+        elif settings.media_delivery_mode in {"gcs-signed", "gcs-public"}:
             download_suffixes = {".json"}
         if download_suffixes:
             cache_relevant_suffixes = set(download_suffixes)
@@ -209,6 +222,15 @@ def _register_routes(app: FastAPI) -> None:
                 raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to sign audio URL") from exc
             return Response(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": signed_url})
 
+        if settings.media_delivery_mode == "gcs-public":
+            if not chapter.audio_remote_uri:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audio not available")
+            public_url = _as_public_gcs_url(chapter.audio_remote_uri)
+            if not public_url:
+                logger.error("Unsupported audio URI for gcs-public: %s", chapter.audio_remote_uri)
+                raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Invalid audio URI")
+            return Response(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": public_url})
+
         if not chapter.audio_file:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audio not available")
 
@@ -279,6 +301,19 @@ def _register_routes(app: FastAPI) -> None:
                 "",
                 status_code=status.HTTP_307_TEMPORARY_REDIRECT,
                 headers={"Location": signed_url},
+            )
+
+        if settings.media_delivery_mode == "gcs-public":
+            if not chapter.subtitles_remote_uri:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subtitles not available")
+            public_url = _as_public_gcs_url(chapter.subtitles_remote_uri)
+            if not public_url:
+                logger.error("Unsupported subtitles URI for gcs-public: %s", chapter.subtitles_remote_uri)
+                raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Invalid subtitles URI")
+            return PlainTextResponse(
+                "",
+                status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+                headers={"Location": public_url},
             )
 
         subtitles = chapter.subtitles

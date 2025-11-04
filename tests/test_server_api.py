@@ -499,3 +499,115 @@ def test_get_subtitles_signed_mode_redirect(monkeypatch: pytest.MonkeyPatch, tes
         app.state.cache = original_cache
         app.state.settings.media_delivery_mode = original_mode
         app.state.settings.signed_url_ttl_seconds = original_ttl
+
+
+def test_stream_audio_public_mode_redirect(test_client: TestClient) -> None:
+    app = test_client.app
+    original_cache = app.state.cache
+    original_mode = app.state.settings.media_delivery_mode
+    app.state.settings.media_delivery_mode = "gcs-public"
+
+    chapter = ChapterData(
+        id="chapter0",
+        title="Remote chapter",
+        number=1,
+        path=Path("/tmp/remote"),
+        metadata={},
+        audio_file=None,
+        audio_mime_type="audio/mpeg",
+        subtitles=None,
+        word_count=None,
+        audio_duration_sec=None,
+        words_per_minute=None,
+        audio_remote_uri="gs://demo-bucket/path/podcast.mp3",
+        subtitles_remote_uri=None,
+    )
+
+    class DummyCache:
+        def __init__(self, stored: ChapterData) -> None:
+            self.stored = stored
+
+        def get_chapter(self, book_id: str, chapter_id: str) -> ChapterData:
+            return self.stored
+
+    app.state.cache = DummyCache(chapter)
+
+    try:
+        response = test_client.get(
+            "/books/demo_book/chapters/chapter0/audio",
+            follow_redirects=False,
+        )
+        assert response.status_code == 307
+        assert response.headers["Location"] == "https://storage.googleapis.com/demo-bucket/path/podcast.mp3"
+    finally:
+        app.state.cache = original_cache
+        app.state.settings.media_delivery_mode = original_mode
+
+
+def test_get_subtitles_public_mode_redirect(test_client: TestClient) -> None:
+    app = test_client.app
+    original_cache = app.state.cache
+    original_mode = app.state.settings.media_delivery_mode
+    app.state.settings.media_delivery_mode = "gcs-public"
+
+    subtitle = SubtitleData(srt_path=None, remote_uri="gs://demo-bucket/path/subtitles.srt")
+    chapter = ChapterData(
+        id="chapter0",
+        title="Remote chapter",
+        number=1,
+        path=Path("/tmp/remote"),
+        metadata={},
+        audio_file=None,
+        audio_mime_type=None,
+        subtitles=subtitle,
+        word_count=None,
+        audio_duration_sec=None,
+        words_per_minute=None,
+        audio_remote_uri=None,
+        subtitles_remote_uri="gs://demo-bucket/path/subtitles.srt",
+    )
+
+    class DummyCache:
+        def __init__(self, stored: ChapterData) -> None:
+            self.stored = stored
+
+        def get_chapter(self, book_id: str, chapter_id: str) -> ChapterData:
+            return self.stored
+
+    app.state.cache = DummyCache(chapter)
+
+    try:
+        response = test_client.get(
+            "/books/demo_book/chapters/chapter0/subtitles",
+            follow_redirects=False,
+        )
+        assert response.status_code == 307
+        assert response.headers["Location"] == "https://storage.googleapis.com/demo-bucket/path/subtitles.srt"
+    finally:
+        app.state.cache = original_cache
+        app.state.settings.media_delivery_mode = original_mode
+
+
+def test_sentence_explanation_without_output_files(tmp_path: Path) -> None:
+    settings = ServerSettings(
+        data_root=tmp_path,
+        cors_origins=[],
+        gzip_min_size=32,
+    )
+    app = create_app(settings)
+    app.state.translation_service = DummyTranslationService()
+    app.state.sentence_explainer = DummyExplanationService()
+    client = TestClient(app)
+
+    response = client.post(
+        "/explain/sentence",
+        json={
+            "sentence": "Testing",
+            "previous_sentence": "",
+            "next_sentence": "",
+            "language": "zh-TW",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["overview"] == "Testing-overview"
