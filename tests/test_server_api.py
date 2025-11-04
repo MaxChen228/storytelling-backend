@@ -35,7 +35,8 @@ class DummyTranslationService:
 
 class DummyExplanationService:
     def __init__(self) -> None:
-        self.calls = []
+        self.sentence_calls = []
+        self.phrase_calls = []
 
     def explain_sentence(
         self,
@@ -44,7 +45,7 @@ class DummyExplanationService:
         next_sentence: str = "",
         language: str = "zh-TW",
     ) -> SentenceExplanationResult:
-        self.calls.append((sentence, previous_sentence, next_sentence, language))
+        self.sentence_calls.append((sentence, previous_sentence, next_sentence, language))
         return SentenceExplanationResult(
             overview=f"{sentence}-overview",
             key_points=("重點 A", "重點 B"),
@@ -52,6 +53,26 @@ class DummyExplanationService:
                 VocabularyEntry(word="sample", meaning="範例", note=None),
             ),
             cached=False,
+        )
+
+    def explain_phrase(
+        self,
+        phrase: str,
+        sentence: str,
+        previous_sentence: str = "",
+        next_sentence: str = "",
+        language: str = "zh-TW",
+    ) -> SentenceExplanationResult:
+        self.phrase_calls.append((phrase, sentence, previous_sentence, next_sentence, language))
+        # 模擬快取:第二次相同請求回傳 cached=True
+        is_cached = len([c for c in self.phrase_calls if c == (phrase, sentence, previous_sentence, next_sentence, language)]) > 1
+        return SentenceExplanationResult(
+            overview=f"「{phrase}」在句子中的用法解釋",
+            key_points=(f"{phrase} 的搭配規則", f"{phrase} 的語法作用"),
+            vocabulary=(
+                VocabularyEntry(word=phrase.split()[0] if phrase else "word", meaning="詞義", note="補充說明"),
+            ),
+            cached=is_cached,
         )
 
 
@@ -233,7 +254,7 @@ def test_translate_text_success(test_client: TestClient) -> None:
 
 def test_sentence_explanation_endpoint(test_client: TestClient) -> None:
     response = test_client.post(
-        "/books/demo_book/chapters/chapter0/sentences/1/explain",
+        "/explain/sentence",
         json={
             "sentence": "Hello world",
             "previous_sentence": "Good morning everyone.",
@@ -260,3 +281,99 @@ def test_translate_text_service_unavailable(test_client: TestClient) -> None:
         assert response.status_code == 503
     finally:
         app.state.translation_service = original
+
+
+def test_phrase_explanation_success(test_client: TestClient) -> None:
+    """測試正常詞組解釋請求。"""
+    response = test_client.post(
+        "/explain/phrase",
+        json={
+            "phrase": "so glad",
+            "sentence": "I am so glad you are here with me today.",
+            "previous_sentence": "Good morning everyone.",
+            "next_sentence": "Let's begin our story.",
+            "language": "zh-TW",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert "so glad" in payload["overview"]
+    assert len(payload["key_points"]) == 2
+    assert payload["key_points"][0] == "so glad 的搭配規則"
+    assert payload["vocabulary"][0]["word"] == "so"
+    assert payload["cached"] is False
+
+
+def test_phrase_explanation_cached(test_client: TestClient) -> None:
+    """測試詞組解釋的快取功能。"""
+    request_data = {
+        "phrase": "so happy",
+        "sentence": "I am so happy to see you.",
+        "previous_sentence": "",
+        "next_sentence": "",
+        "language": "zh-TW",
+    }
+
+    # 第一次請求
+    response1 = test_client.post(
+        "/explain/phrase",
+        json=request_data,
+    )
+    assert response1.status_code == 200
+    assert response1.json()["cached"] is False
+
+    # 第二次相同請求應該命中快取
+    response2 = test_client.post(
+        "/explain/phrase",
+        json=request_data,
+    )
+    assert response2.status_code == 200
+    assert response2.json()["cached"] is True
+
+
+def test_phrase_explanation_with_punctuation(test_client: TestClient) -> None:
+    """測試包含標點符號的詞組(前端可能傳來帶標點的詞組)。"""
+    response = test_client.post(
+        "/explain/phrase",
+        json={
+            "phrase": "I'm",
+            "sentence": "I'm glad to meet you.",
+            "language": "zh-TW",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert "I'm" in payload["overview"]
+
+
+def test_phrase_explanation_empty_phrase(test_client: TestClient) -> None:
+    """測試空詞組應該回傳 400 錯誤。"""
+    response = test_client.post(
+        "/explain/phrase",
+        json={
+            "phrase": "",
+            "sentence": "Hello world",
+            "language": "zh-TW",
+        },
+    )
+    assert response.status_code == 422  # Pydantic validation error
+
+
+def test_phrase_explanation_service_unavailable(test_client: TestClient) -> None:
+    """測試服務不可用應該回傳 503 錯誤。"""
+    app = test_client.app
+    original = app.state.sentence_explainer
+    app.state.sentence_explainer = None
+    try:
+        response = test_client.post(
+            "/explain/phrase",
+            json={
+                "phrase": "hello",
+                "sentence": "Hello world",
+                "language": "zh-TW",
+            },
+        )
+        assert response.status_code == 503
+        assert "unavailable" in response.json()["detail"].lower()
+    finally:
+        app.state.sentence_explainer = original

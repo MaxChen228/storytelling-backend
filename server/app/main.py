@@ -20,6 +20,7 @@ from .schemas import (
     BookItem,
     ChapterItem,
     ChapterPlayback,
+    PhraseExplanationRequest,
     SentenceExplanationRequest,
     SentenceExplanationResponse,
     SentenceExplanationVocabulary,
@@ -241,27 +242,53 @@ def _register_routes(app: FastAPI) -> None:
         content = subtitles.srt_path.read_text(encoding="utf-8")
         return PlainTextResponse(content, media_type="text/plain; charset=utf-8", headers=headers)
 
-    @app.post(
-        "/books/{book_id}/chapters/{chapter_id}/sentences/{sentence_id}/explain",
-        response_model=SentenceExplanationResponse,
-    )
+    @app.post("/explain/sentence", response_model=SentenceExplanationResponse)
     async def explain_sentence(
-        book_id: str,
-        chapter_id: str,
-        sentence_id: str,
         payload: SentenceExplanationRequest,
-        cache: OutputDataCache = Depends(get_cache),
         explanation_service: Optional[SentenceExplanationService] = Depends(get_sentence_explainer),
     ) -> SentenceExplanationResponse:
         if not explanation_service:
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Sentence explanation unavailable")
 
-        chapter = cache.get_chapter(book_id, chapter_id)
-        if not chapter:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
-
         def _generate() -> SentenceExplanationResult:
             return explanation_service.explain_sentence(
+                sentence=payload.sentence,
+                previous_sentence=payload.previous_sentence or "",
+                next_sentence=payload.next_sentence or "",
+                language=payload.language or "zh-TW",
+            )
+
+        try:
+            result = await run_in_threadpool(_generate)
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+        except SentenceExplanationError as exc:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+        vocabulary = [
+            SentenceExplanationVocabulary(word=entry.word, meaning=entry.meaning, note=entry.note)
+            for entry in result.vocabulary
+        ]
+
+        return SentenceExplanationResponse(
+            overview=result.overview,
+            key_points=list(result.key_points),
+            vocabulary=vocabulary,
+            cached=result.cached,
+        )
+
+    @app.post("/explain/phrase", response_model=SentenceExplanationResponse)
+    async def explain_phrase(
+        payload: PhraseExplanationRequest,
+        explanation_service: Optional[SentenceExplanationService] = Depends(get_sentence_explainer),
+    ) -> SentenceExplanationResponse:
+        """解釋用戶在句子中選中的詞組用法。"""
+        if not explanation_service:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Phrase explanation unavailable")
+
+        def _generate() -> SentenceExplanationResult:
+            return explanation_service.explain_phrase(
+                phrase=payload.phrase,
                 sentence=payload.sentence,
                 previous_sentence=payload.previous_sentence or "",
                 next_sentence=payload.next_sentence or "",

@@ -79,6 +79,16 @@ class SentenceExplanationRequest(BaseModel):
     language: Optional[str] = Field(default="zh-TW", min_length=2, max_length=16)
 
 
+class PhraseExplanationRequest(BaseModel):
+    """詞組解釋請求。"""
+
+    phrase: str = Field(..., min_length=1, max_length=200, description="用戶選中的詞組")
+    sentence: str = Field(..., min_length=1, max_length=2000, description="完整句子")
+    previous_sentence: Optional[str] = Field(default="", max_length=2000)
+    next_sentence: Optional[str] = Field(default="", max_length=2000)
+    language: Optional[str] = Field(default="zh-TW", min_length=2, max_length=16)
+
+
 class SentenceExplanationResponse(BaseModel):
     """句子解釋回應。"""
 
