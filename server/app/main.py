@@ -8,6 +8,7 @@ import logging
 from hashlib import sha256
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
+from urllib.parse import quote
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.concurrency import run_in_threadpool
@@ -17,6 +18,7 @@ from fastapi.responses import PlainTextResponse, StreamingResponse
 
 from .config import ServerSettings
 from .schemas import (
+    AssetList,
     BookItem,
     ChapterItem,
     ChapterPlayback,
@@ -55,6 +57,31 @@ def _as_public_gcs_url(uri: str) -> Optional[str]:
             return f"https://storage.googleapis.com/{bucket}"
         return f"https://storage.googleapis.com/{bucket}/{object_path}"
     return None
+
+
+def _guess_content_type(path: Path) -> str:
+    """Guess content type based on file extension."""
+    suffix = path.suffix.lower()
+    content_types = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".gif": "image/gif",
+        ".webp": "image/webp",
+        ".svg": "image/svg+xml",
+        ".pdf": "application/pdf",
+        ".md": "text/markdown",
+        ".txt": "text/plain",
+        ".json": "application/json",
+        ".html": "text/html",
+        ".css": "text/css",
+        ".js": "application/javascript",
+        ".mp4": "video/mp4",
+        ".webm": "video/webm",
+        ".mp3": "audio/mpeg",
+        ".wav": "audio/wav",
+    }
+    return content_types.get(suffix, "application/octet-stream")
 
 
 def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
@@ -146,17 +173,19 @@ def _register_routes(app: FastAPI) -> None:
     async def health_check() -> dict[str, str]:
         return {"status": "ok"}
 
-    @app.get("/books", response_model=List[BookItem])
+    @app.get("/books", response_model=List[BookItem], response_model_exclude_none=True)
     async def list_books(
+        request: Request,
         cache: OutputDataCache = Depends(get_cache),
     ) -> List[BookItem]:
         books = cache.get_books()
-        return [_to_book_item(book) for book in books.values()]
+        return [_to_book_item(book, request) for book in books.values()]
 
-    @app.get("/books/{book_id}", response_model=BookItem)
+    @app.get("/books/{book_id}", response_model=BookItem, response_model_exclude_none=True)
     async def get_book(
         book_id: str,
         response: Response,
+        request: Request,
         cache: OutputDataCache = Depends(get_cache),
     ) -> BookItem:
         book = cache.get_book(book_id)
@@ -166,7 +195,71 @@ def _register_routes(app: FastAPI) -> None:
         etag = _build_book_etag(book)
         if etag:
             response.headers["ETag"] = etag
-        return _to_book_item(book)
+        return _to_book_item(book, request)
+
+    @app.get("/books/{book_id}/assets", response_model=AssetList)
+    async def list_book_assets(
+        book_id: str,
+        cache: OutputDataCache = Depends(get_cache),
+    ) -> AssetList:
+        """List all available assets for a book."""
+        book = cache.get_book(book_id)
+        if not book:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+
+        asset_names: set[str] = set()
+        asset_names.update(book.assets.keys())
+        asset_names.update(book.assets_remote_uris.keys())
+
+        return AssetList(assets=sorted(asset_names))
+
+    @app.get("/books/{book_id}/assets/{asset_name}")
+    async def get_book_asset(
+        book_id: str,
+        asset_name: str,
+        cache: OutputDataCache = Depends(get_cache),
+        settings: ServerSettings = Depends(get_settings),
+    ) -> Response:
+        """Get a specific asset file for a book."""
+        book = cache.get_book(book_id)
+        if not book:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+
+        has_local = asset_name in book.assets
+        has_remote = asset_name in book.assets_remote_uris
+
+        if not has_local and not has_remote:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset not found")
+
+        # Handle gcs-public mode
+        if settings.media_delivery_mode == "gcs-public":
+            if has_remote:
+                remote_uri = book.assets_remote_uris[asset_name]
+                public_url = _as_public_gcs_url(remote_uri)
+                if not public_url:
+                    logger.error("Unsupported asset URI for gcs-public: %s", remote_uri)
+                    raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Invalid asset URI")
+                return Response(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": public_url})
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset not available remotely")
+
+        # Serve local file
+        if not has_local:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset file missing")
+
+        asset_path = book.assets[asset_name]
+        if not asset_path.exists():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset file missing")
+
+        # Determine content type based on extension
+        content_type = _guess_content_type(asset_path)
+
+        try:
+            content = asset_path.read_bytes()
+        except OSError:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to read asset")
+
+        return Response(content=content, media_type=content_type)
 
     @app.get("/books/{book_id}/chapters", response_model=List[ChapterItem])
     async def list_chapters(
@@ -195,6 +288,72 @@ def _register_routes(app: FastAPI) -> None:
             response.headers["ETag"] = etag
 
         return _to_chapter_playback(request, book_id, chapter)
+
+    @app.get("/books/{book_id}/chapters/{chapter_id}/assets", response_model=AssetList)
+    async def list_chapter_assets(
+        book_id: str,
+        chapter_id: str,
+        cache: OutputDataCache = Depends(get_cache),
+    ) -> AssetList:
+        """List all available assets for a chapter."""
+        chapter = cache.get_chapter(book_id, chapter_id)
+        if not chapter:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
+
+        asset_names: set[str] = set()
+        asset_names.update(chapter.assets.keys())
+        asset_names.update(chapter.assets_remote_uris.keys())
+
+        return AssetList(assets=sorted(asset_names))
+
+    @app.get("/books/{book_id}/chapters/{chapter_id}/assets/{asset_name}")
+    async def get_chapter_asset(
+        book_id: str,
+        chapter_id: str,
+        asset_name: str,
+        cache: OutputDataCache = Depends(get_cache),
+        settings: ServerSettings = Depends(get_settings),
+    ) -> Response:
+        """Get a specific asset file for a chapter."""
+        chapter = cache.get_chapter(book_id, chapter_id)
+        if not chapter:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
+
+        has_local = asset_name in chapter.assets
+        has_remote = asset_name in chapter.assets_remote_uris
+
+        if not has_local and not has_remote:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset not found")
+
+        # Handle gcs-public mode
+        if settings.media_delivery_mode == "gcs-public":
+            if has_remote:
+                remote_uri = chapter.assets_remote_uris[asset_name]
+                public_url = _as_public_gcs_url(remote_uri)
+                if not public_url:
+                    logger.error("Unsupported asset URI for gcs-public: %s", remote_uri)
+                    raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Invalid asset URI")
+                return Response(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": public_url})
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset not available remotely")
+
+        # Serve local file
+        if not has_local:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset file missing")
+
+        asset_path = chapter.assets[asset_name]
+        if not asset_path.exists():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset file missing")
+
+        # Determine content type based on extension
+        content_type = _guess_content_type(asset_path)
+
+        try:
+            content = asset_path.read_bytes()
+        except OSError:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to read asset")
+
+        return Response(content=content, media_type=content_type)
 
     @app.get("/books/{book_id}/chapters/{chapter_id}/audio")
     async def stream_audio(
@@ -433,8 +592,23 @@ def _register_routes(app: FastAPI) -> None:
 
 
 
-def _to_book_item(book: BookData) -> BookItem:
+def _to_book_item(book: BookData, request: Optional[Request] = None) -> BookItem:
     title = str(book.metadata.get("book_name") or book.id)
+    cover_url = book.cover_url
+
+    if cover_url:
+        return BookItem(id=book.id, title=title, cover_url=cover_url)
+
+    # Fall back to local asset URL when running in local mode.
+    if request and (book.assets or book.assets_remote_uris):
+        for candidate in ("cover.jpg", "cover.png", "cover.webp"):
+            if candidate in book.assets or candidate in book.assets_remote_uris:
+                base = str(request.base_url).rstrip("/")
+                encoded_book = quote(book.id, safe="")
+                encoded_asset = quote(candidate, safe="")
+                asset_url = f"{base}/books/{encoded_book}/assets/{encoded_asset}"
+                return BookItem(id=book.id, title=title, cover_url=asset_url)
+
     return BookItem(id=book.id, title=title)
 
 

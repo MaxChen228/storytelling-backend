@@ -6,7 +6,7 @@ import json
 import logging
 import math
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import sha256
 from pathlib import Path
 from threading import RLock
@@ -38,6 +38,8 @@ class ChapterData:
     words_per_minute: Optional[float]
     audio_remote_uri: Optional[str] = None
     subtitles_remote_uri: Optional[str] = None
+    assets: Dict[str, Path] = field(default_factory=dict)  # Local assets: {"diagram.png": Path, ...}
+    assets_remote_uris: Dict[str, str] = field(default_factory=dict)  # GCS URIs: {"diagram.png": "gs://...", ...}
 
 
 @dataclass
@@ -53,6 +55,9 @@ class BookData:
     root: Path
     metadata: Dict[str, object]
     chapters: Dict[str, ChapterData]
+    assets: Dict[str, Path] = field(default_factory=dict)  # Local assets: {"cover.jpg": Path, ...}
+    assets_remote_uris: Dict[str, str] = field(default_factory=dict)  # GCS URIs: {"cover.jpg": "gs://...", ...}
+    cover_url: Optional[str] = None  # Direct cover URL for convenience
 
 
 class OutputDataCache:
@@ -154,12 +159,23 @@ class OutputDataCache:
             metadata_obj = {}
 
         chapters = self._load_chapters(book_dir)
+        assets, assets_remote = self._load_assets(book_dir, book_id)
+
+        # Determine cover URL (prefer remote, fallback to local if serving locally)
+        cover_url = None
+        if assets_remote and "cover.jpg" in assets_remote:
+            cover_url = assets_remote["cover.jpg"]
+        elif assets_remote and "cover.png" in assets_remote:
+            cover_url = assets_remote["cover.png"]
 
         return BookData(
             id=book_id,
             root=book_dir,
             metadata=metadata_obj,
             chapters=chapters,
+            assets=assets,
+            assets_remote_uris=assets_remote,
+            cover_url=cover_url,
         )
 
     def _load_chapters(self, book_dir: Path) -> Dict[str, ChapterData]:
@@ -220,6 +236,10 @@ class OutputDataCache:
                 if metrics.words_per_minute is not None:
                     metadata_obj.setdefault("words_per_minute", metrics.words_per_minute)
 
+        # Load chapter assets
+        book_id = chapter_dir.parent.name
+        assets, assets_remote = self._load_assets(chapter_dir, book_id, chapter_id)
+
         return ChapterData(
             id=chapter_id,
             title=chapter_title,
@@ -234,7 +254,41 @@ class OutputDataCache:
             words_per_minute=words_per_minute,
             audio_remote_uri=audio_remote_uri,
             subtitles_remote_uri=subtitles_remote_uri,
+            assets=assets,
+            assets_remote_uris=assets_remote,
         )
+
+    def _load_assets(
+        self, base_dir: Path, book_id: str, chapter_id: Optional[str] = None
+    ) -> tuple[Dict[str, Path], Dict[str, str]]:
+        """Load assets from base_dir/assets/ directory.
+
+        Returns:
+            (local_assets, remote_uris) where keys are filenames like "cover.jpg"
+        """
+        assets_dir = base_dir / "assets"
+        local_assets: Dict[str, Path] = {}
+        remote_uris: Dict[str, str] = {}
+
+        remote_uris.update(self._list_remote_assets(book_id, chapter_id))
+
+        if not assets_dir.exists() or not assets_dir.is_dir():
+            return local_assets, remote_uris
+
+        # Scan all files in assets directory
+        for asset_file in sorted(assets_dir.iterdir()):
+            if not asset_file.is_file():
+                continue
+
+            filename = asset_file.name
+            local_assets[filename] = asset_file
+
+            if filename not in remote_uris and self._mirror:
+                remote_uri = self._lookup_remote_uri_for_asset(book_id, chapter_id, filename)
+                if remote_uri:
+                    remote_uris[filename] = remote_uri
+
+        return local_assets, remote_uris
 
     def _locate_audio_file(self, chapter_dir: Path) -> tuple[Optional[Path], Optional[str]]:
         """Frontend expects MP3; only surface audio when podcast.mp3 exists."""
@@ -421,3 +475,35 @@ class OutputDataCache:
             if uri:
                 return uri
         return None
+
+    def _lookup_remote_uri_for_asset(self, book_id: str, chapter_id: Optional[str], filename: str) -> Optional[str]:
+        if not self._mirror:
+            return None
+        parts = [book_id]
+        if chapter_id:
+            parts.append(chapter_id)
+        parts.extend(["assets", filename])
+        rel_path = Path(*parts)
+        return self._mirror.get_gcs_uri(str(rel_path))
+
+    def _list_remote_assets(self, book_id: str, chapter_id: Optional[str]) -> Dict[str, str]:
+        if not self._mirror:
+            return {}
+
+        parts = [book_id]
+        if chapter_id:
+            parts.append(chapter_id)
+        parts.append("assets")
+        prefix = Path(*parts).as_posix().strip("/")
+        if not prefix:
+            return {}
+
+        remote_files = {}
+        for key in self._mirror.iter_relative_paths(prefix):
+            remainder = key[len(prefix) :].lstrip("/")
+            if not remainder or "/" in remainder:
+                continue
+            uri = self._mirror.get_gcs_uri(key)
+            if uri:
+                remote_files[remainder] = uri
+        return remote_files

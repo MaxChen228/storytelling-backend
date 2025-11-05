@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class BookItem(BaseModel):
@@ -12,6 +12,8 @@ class BookItem(BaseModel):
 
     id: str
     title: str
+    cover_url: Optional[str] = None
+    model_config = ConfigDict(exclude_none=True)
 
 
 class ChapterItem(BaseModel):
@@ -96,3 +98,9 @@ class SentenceExplanationResponse(BaseModel):
     key_points: list[str] = Field(default_factory=list)
     vocabulary: list[SentenceExplanationVocabulary] = Field(default_factory=list)
     cached: bool = False
+
+
+class AssetList(BaseModel):
+    """資源清單回應。"""
+
+    assets: list[str] = Field(default_factory=list, description="Available asset filenames")

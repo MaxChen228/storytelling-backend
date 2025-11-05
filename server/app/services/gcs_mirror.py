@@ -135,6 +135,31 @@ class GCSMirror:
             return f"gs://{self.bucket_name}/{full_path}"
         return f"gs://{self.bucket_name}"
 
+    def iter_relative_paths(self, prefix: Optional[str] = None) -> Tuple[str, ...]:
+        """
+        Return cached manifest keys filtered by a relative prefix.
+
+        Args:
+            prefix: Relative directory within the mirrored bucket
+                (e.g. "book/assets" 或 "book/chapter/assets").
+        """
+        if not self._manifest:
+            return tuple()
+
+        if not prefix:
+            return tuple(sorted(self._manifest.keys()))
+
+        normalized = prefix.replace("\\", "/").strip("/")
+        if not normalized:
+            return tuple(sorted(self._manifest.keys()))
+
+        needle = normalized + "/"
+        matched = []
+        for key in self._manifest.keys():
+            if key == normalized or key.startswith(needle):
+                matched.append(key)
+        return tuple(sorted(matched))
+
     # ------------------------------------------------------------------
 
     def _relative_path(self, blob_name: str) -> Optional[str]:

@@ -1,0 +1,127 @@
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="p9780575105843" version="2.0">
+<metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+			<dc:creator>Brandon Sanderson</dc:creator>
+			<dc:source>URN:ISBN:978-0-57510-584-3</dc:source>
+			<dc:identifier id="p9780575105843">URN:ISBN:978-0-57510-584-3</dc:identifier>
+			<dc:publisher>Orion Publishing Group</dc:publisher>
+			<dc:language>en</dc:language>
+			<dc:type>Image</dc:type>
+			<dc:title>The Alloy of Law</dc:title>
+			<dc:format>332 pages</dc:format>
+			<dc:rights>All rights reserved</dc:rights>
+			<meta content="coverimagestandard" name="cover"/>
+			<description xmlns="http://purl.org/dc/elements/1.1/">&lt;p&gt;The Mistborn trilogy has become a firm favourite with fantasy fans the world over. The imagination that Sanderson brought to the series and his skill at marshalling epic storylines and dramatic action, his ability to create vivid characters made him a natural choice to complete Robert Jordan's epic wheel of time sequence. But with Mistborn, his standalone fantasies and his new series, The Stormlight Archive, Sanderson has shown his bountiful talents in his own fiction. Now he returns to the series that made his name with a new story set years after the events of Hero of Ages. In a world recovering only slowly from evil, a world where allomancers weild immense power through their ability to unleash the magic bound up in common metals someone who can burn metals that no-one has burned before can tip the balance... Sanderson has the knack of giving the epic fantasy reader exactly what they want. This ability has thrown him to the forefront of the genre and the dramatic story...</description>
+</metadata>
+			<manifest>
+	<item href="toc.ncx" id="ncx" media-type="application/x-dtbncx+xml"/>
+	<item href="9780575105843_oeb_cover_r1.html" id="my-html-cover" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_ded_r1.html" id="ded" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_tp_r1.html" id="tp" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_toc_r1.html" id="toc" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_maps_r1.html" id="maps" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_ack_r1.html" id="ack" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_pro_r1.html" id="pro" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c001_r1.html" id="c001" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c002_r1.html" id="c002" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c003_r1.html" id="c003" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c004_r1.html" id="c004" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c005_r1.html" id="c005" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c006_r1.html" id="c006" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c007_r1.html" id="c007" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c008_r1.html" id="c008" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c009_r1.html" id="c009" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c010_r1.html" id="c010" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c011_r1.html" id="c011" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c012_r1.html" id="c012" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c013_r1.html" id="c013" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c014_r1.html" id="c014" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c015_r1.html" id="c015" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c016_r1.html" id="c016" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c017_r1.html" id="c017" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c018_r1.html" id="c018" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c019_r1.html" id="c019" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_c020_r1.html" id="c020" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_epi_r1.html" id="epi" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_ars_arcanum_r1.html" id="ars_arcanum" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_otherbooks_r1.html" id="otherbooks" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_cop_r1.html" id="cop" media-type="application/xhtml+xml"/>
+	<item href="9780575105843_oeb_css_r1.css" id="css" media-type="text/css"/>
+	<item href="page-template.xpgt" id="pt" media-type="application/vnd.adobe-page-template+xml"/>
+	<item href="9780575105843_oeb_001_r1.jpg" id="image1" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_002_r1.jpg" id="image2" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_003_r1.jpg" id="image3" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_004_r1.jpg" id="image4" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_005_r1.jpg" id="image5" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_006_r1.jpg" id="image6" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_007_r1.jpg" id="image7" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_008_r1.jpg" id="image8" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_009_r1.jpg" id="image9" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_010_r1.jpg" id="image10" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_011_r1.jpg" id="image11" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_012_r1.jpg" id="image12" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_013_r1.jpg" id="image13" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_014_r1.jpg" id="image14" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_015_r1.jpg" id="image15" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_016_r1.jpg" id="image16" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_017_r1.jpg" id="image17" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_018_r1.jpg" id="image18" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_019_r1.jpg" id="image19" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_020_r1.jpg" id="image20" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_021_r1.jpg" id="image21" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_022_r1.jpg" id="image22" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_023_r1.jpg" id="image23" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_024_r1.jpg" id="image24" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_025_r1.jpg" id="image25" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_026_r1.jpg" id="image26" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_027_r1.jpg" id="image27" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_028_r1.jpg" id="image28" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_029_r1.jpg" id="image29" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_030_r1.jpg" id="image30" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_031_r1.jpg" id="image31" media-type="image/jpeg"/>
+	<item href="9780575105843_oeb_032_r1.jpg" id="image32" media-type="image/jpeg"/>
+	<item href="9780575105843_msr_cvi_r1.jpg" id="coverimagestandard" media-type="image/jpeg"/>
+	<item href="9780575105843_msr_cvt_r1.jpg" id="thumbimagestandard" media-type="image/jpeg"/>
+	<item href="9780575105843_msr_ppl_r1.jpg" id="PPCthumbnailimage" media-type="image/jpeg"/>
+	</manifest>
+	<spine toc="ncx">
+	<itemref idref="my-html-cover" linear="no"/>
+	<itemref idref="ded"/>
+	<itemref idref="tp"/>
+	<itemref idref="toc"/>
+	<itemref idref="maps"/>
+	<itemref idref="ack"/>
+	<itemref idref="pro"/>
+	<itemref idref="c001"/>
+	<itemref idref="c002"/>
+	<itemref idref="c003"/>
+	<itemref idref="c004"/>
+	<itemref idref="c005"/>
+	<itemref idref="c006"/>
+	<itemref idref="c007"/>
+	<itemref idref="c008"/>
+	<itemref idref="c009"/>
+	<itemref idref="c010"/>
+	<itemref idref="c011"/>
+	<itemref idref="c012"/>
+	<itemref idref="c013"/>
+	<itemref idref="c014"/>
+	<itemref idref="c015"/>
+	<itemref idref="c016"/>
+	<itemref idref="c017"/>
+	<itemref idref="c018"/>
+	<itemref idref="c019"/>
+	<itemref idref="c020"/>
+	<itemref idref="epi"/>
+	<itemref idref="ars_arcanum"/>
+	<itemref idref="otherbooks"/>
+	<itemref idref="cop"/>
+	</spine>
+	<guide>
+		<reference href="9780575105843_oeb_toc_r1.html" title="Title page" type="text"/>
+		<reference href="9780575105843_oeb_toc_r1.html" title="Table of Contents" type="toc"/>
+		<reference href="9780575105843_msr_cvi_r1.jpg" title="Cover" type="other.ms-coverimage-standard"/>
+		<reference href="9780575105843_msr_cvt_r1.jpg" title="ThumbImageStandard" type="other.ms-thumbimage-standard"/>
+		<reference href="9780575105843_msr_ppl_r1.jpg" title="PPCThumbnailImage" type="other.ms-thumbimage"/>
+		<reference href="9780575105843_oeb_cop_r1.html" title="Copyright" type="copyright"/>
+	</guide>
+	</package>

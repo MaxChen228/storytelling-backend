@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE ncx PUBLIC "-//NISO//DTD ncx 2005-1//EN" "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd">
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="en">
+<head>
+<meta name="dtb:uid" content="p9780575105843"/>
+<meta name="dtb:depth" content="1"/>
+<meta name="dtb:totalPageCount" content="332"/>
+<meta name="dtb:maxPageNumber" content="332"/>
+</head>
+<docTitle>
+<text>The Alloy of Law</text>
+</docTitle>
+<navMap>
+<navPoint id="1" playOrder="1"><navLabel><text>Cover</text></navLabel><content src="9780575105843_oeb_cover_r1.html"/></navPoint>
+<navPoint id="2" playOrder="2"><navLabel><text>Dedication</text></navLabel><content src="9780575105843_oeb_ded_r1.html"/></navPoint>
+<navPoint id="3" playOrder="3"><navLabel><text>Title Page</text></navLabel><content src="9780575105843_oeb_tp_r1.html"/></navPoint>
+<navPoint id="4" playOrder="4"><navLabel><text>Contents</text></navLabel><content src="9780575105843_oeb_toc_r1.html"/></navPoint>
+<navPoint id="5" playOrder="5"><navLabel><text>Maps</text></navLabel><content src="9780575105843_oeb_maps_r1.html"/></navPoint>
+<navPoint id="6" playOrder="6"><navLabel><text>Acknowledgments</text></navLabel><content src="9780575105843_oeb_ack_r1.html"/></navPoint>
+<navPoint id="7" playOrder="7"><navLabel><text>Prologue</text></navLabel><content src="9780575105843_oeb_pro_r1.html"/></navPoint>
+<navPoint id="8" playOrder="8"><navLabel><text>Chapter 1</text></navLabel><content src="9780575105843_oeb_c001_r1.html"/></navPoint>
+<navPoint id="9" playOrder="9"><navLabel><text>Chapter 2</text></navLabel><content src="9780575105843_oeb_c002_r1.html"/></navPoint>
+<navPoint id="10" playOrder="10"><navLabel><text>Chapter 3</text></navLabel><content src="9780575105843_oeb_c003_r1.html"/></navPoint>
+<navPoint id="11" playOrder="11"><navLabel><text>Chapter 4</text></navLabel><content src="9780575105843_oeb_c004_r1.html"/></navPoint>
+<navPoint id="12" playOrder="12"><navLabel><text>Chapter 5</text></navLabel><content src="9780575105843_oeb_c005_r1.html"/></navPoint>
+<navPoint id="13" playOrder="13"><navLabel><text>Chapter 6</text></navLabel><content src="9780575105843_oeb_c006_r1.html"/></navPoint>
+<navPoint id="14" playOrder="14"><navLabel><text>Chapter 7</text></navLabel><content src="9780575105843_oeb_c007_r1.html"/></navPoint>
+<navPoint id="15" playOrder="15"><navLabel><text>Chapter 8</text></navLabel><content src="9780575105843_oeb_c008_r1.html"/></navPoint>
+<navPoint id="16" playOrder="16"><navLabel><text>Chapter 9</text></navLabel><content src="9780575105843_oeb_c009_r1.html"/></navPoint>
+<navPoint id="17" playOrder="17"><navLabel><text>Chapter 10</text></navLabel><content src="9780575105843_oeb_c010_r1.html"/></navPoint>
+<navPoint id="18" playOrder="18"><navLabel><text>Chapter 11</text></navLabel><content src="9780575105843_oeb_c011_r1.html"/></navPoint>
+<navPoint id="19" playOrder="19"><navLabel><text>Chapter 12</text></navLabel><content src="9780575105843_oeb_c012_r1.html"/></navPoint>
+<navPoint id="20" playOrder="20"><navLabel><text>Chapter 13</text></navLabel><content src="9780575105843_oeb_c013_r1.html"/></navPoint>
+<navPoint id="21" playOrder="21"><navLabel><text>Chapter 14</text></navLabel><content src="9780575105843_oeb_c014_r1.html"/></navPoint>
+<navPoint id="22" playOrder="22"><navLabel><text>Chapter 15</text></navLabel><content src="9780575105843_oeb_c015_r1.html"/></navPoint>
+<navPoint id="23" playOrder="23"><navLabel><text>Chapter 16</text></navLabel><content src="9780575105843_oeb_c016_r1.html"/></navPoint>
+<navPoint id="24" playOrder="24"><navLabel><text>Chapter 17</text></navLabel><content src="9780575105843_oeb_c017_r1.html"/></navPoint>
+<navPoint id="25" playOrder="25"><navLabel><text>Chapter 18</text></navLabel><content src="9780575105843_oeb_c018_r1.html"/></navPoint>
+<navPoint id="26" playOrder="26"><navLabel><text>Chapter 19</text></navLabel><content src="9780575105843_oeb_c019_r1.html"/></navPoint>
+<navPoint id="27" playOrder="27"><navLabel><text>Chapter 20</text></navLabel><content src="9780575105843_oeb_c020_r1.html"/></navPoint>
+<navPoint id="28" playOrder="28"><navLabel><text>Epilogue</text></navLabel><content src="9780575105843_oeb_epi_r1.html"/></navPoint>
+<navPoint id="29" playOrder="29"><navLabel><text>Ars Arcanum</text></navLabel><content src="9780575105843_oeb_ars_arcanum_r1.html"/></navPoint>
+<navPoint id="30" playOrder="30"><navLabel><text>Also by Brandon Sanderson</text></navLabel><content src="9780575105843_oeb_otherbooks_r1.html"/></navPoint>
+<navPoint id="31" playOrder="31"><navLabel><text>Copyright</text></navLabel><content src="9780575105843_oeb_cop_r1.html"/></navPoint>
+</navMap>
+</ncx>
