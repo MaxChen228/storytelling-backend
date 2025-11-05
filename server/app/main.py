@@ -597,6 +597,10 @@ def _to_book_item(book: BookData, request: Optional[Request] = None) -> BookItem
     cover_url = book.cover_url
 
     if cover_url:
+        if cover_url.startswith("gs://"):
+            http_url = _as_public_gcs_url(cover_url)
+            if http_url:
+                return BookItem(id=book.id, title=title, cover_url=http_url)
         return BookItem(id=book.id, title=title, cover_url=cover_url)
 
     # Fall back to local asset URL when running in local mode.
