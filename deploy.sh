@@ -25,7 +25,7 @@ echo -e "${BLUE}========================================${NC}"
 echo ""
 
 # 步驟 1: 檢查環境
-echo -e "${YELLOW}[1/5] 檢查環境配置...${NC}"
+echo -e "${YELLOW}[1/6] 檢查環境配置...${NC}"
 CURRENT_PROJECT=$(gcloud config get-value project 2>/dev/null)
 if [ "$CURRENT_PROJECT" != "$PROJECT_ID" ]; then
     echo -e "${RED}錯誤: 當前 GCP 專案 ($CURRENT_PROJECT) 與預期不符 ($PROJECT_ID)${NC}"
@@ -35,8 +35,28 @@ echo -e "${GREEN}✓ GCP 專案: $PROJECT_ID${NC}"
 echo -e "${GREEN}✓ 區域: $REGION${NC}"
 echo ""
 
-# 步驟 2: 建置 Docker 映像
-echo -e "${YELLOW}[2/5] 建置 Docker 映像 (linux/amd64)...${NC}"
+# 步驟 2: 同步本地輸出到 GCS（可選）
+if [ -n "${SKIP_OUTPUT_SYNC:-}" ]; then
+    echo -e "${YELLOW}[2/6] 跳過輸出資料同步 (SKIP_OUTPUT_SYNC 已設置)${NC}"
+else
+    if command -v gsutil >/dev/null 2>&1; then
+        if [ -d "output" ]; then
+            EXCLUDE_REGEX="${SYNC_OUTPUT_EXCLUDE:-'.*\\.DS_Store$|^.*/sessions/.*|.*\\.wav$|.*\\.textgrid$'}"
+            echo -e "${YELLOW}[2/6] 同步 output/ → gs://${BUCKET}/output...${NC}"
+            echo -e "${YELLOW}    排除規則: ${EXCLUDE_REGEX}${NC}"
+            gsutil -m rsync -r -x "${EXCLUDE_REGEX}" output "gs://${BUCKET}/output"
+            echo -e "${GREEN}✓ 輸出資料同步完成${NC}"
+        else
+            echo -e "${YELLOW}⚠ output/ 目錄不存在，略過同步${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠ 找不到 gsutil，略過輸出資料同步${NC}"
+    fi
+fi
+echo ""
+
+# 步驟 3: 建置 Docker 映像
+echo -e "${YELLOW}[3/6] 建置 Docker 映像 (linux/amd64)...${NC}"
 docker buildx build \
     --platform linux/amd64 \
     -t "${IMAGE_URI}" \
@@ -51,8 +71,8 @@ else
 fi
 echo ""
 
-# 步驟 3: 驗證映像
-echo -e "${YELLOW}[3/5] 驗證映像已推送...${NC}"
+# 步驟 4: 驗證映像
+echo -e "${YELLOW}[4/6] 驗證映像已推送...${NC}"
 gcloud artifacts docker images describe "${IMAGE_URI}" --quiet > /dev/null 2>&1
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ 映像存在於 Artifact Registry${NC}"
@@ -62,8 +82,8 @@ else
 fi
 echo ""
 
-# 步驟 4: 部署到 Cloud Run
-echo -e "${YELLOW}[4/5] 部署到 Cloud Run...${NC}"
+# 步驟 5: 部署到 Cloud Run
+echo -e "${YELLOW}[5/6] 部署到 Cloud Run...${NC}"
 gcloud run deploy ${SERVICE_NAME} \
     --image "${IMAGE_URI}" \
     --platform managed \
@@ -89,8 +109,8 @@ else
 fi
 echo ""
 
-# 步驟 5: 驗證部署
-echo -e "${YELLOW}[5/5] 驗證服務健康狀態...${NC}"
+# 步驟 6: 驗證部署
+echo -e "${YELLOW}[6/6] 驗證服務健康狀態...${NC}"
 
 # 獲取 Service URL
 SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} \

@@ -150,6 +150,17 @@ mkdir -p output/Foundation/chapter0/assets
 cp path/to/diagram.png output/Foundation/chapter0/assets/diagram.png
 ```
 
+### 資源同步
+
+部署或共享之前，建議將 `output/` 內容同步到 GCS。同步時會排除 `.DS_Store`、`sessions/`、`.wav`、`.textgrid` 等非必要檔案（可透過環境變數調整）。專案提供了腳本協助：
+
+```bash
+./scripts/sync_output.sh            # 預設同步到 storytelling-output bucket
+./scripts/sync_output.sh my-bucket  # 指定其他 bucket
+```
+
+執行 `deploy.sh` 時，若偵測到 `gsutil` 並存在本地 `output/` 目錄，也會自動呼叫 `gsutil -m rsync -r -x "$SYNC_OUTPUT_EXCLUDE" output gs://${BUCKET}/output`，預設排除 `.DS_Store`、`sessions/`、`.wav`、`.textgrid` 等檔案。若想略過同步，可在執行前設定 `SKIP_OUTPUT_SYNC=1`。
+
 ### 前端使用範例
 
 **獲取書籍封面 (方法1 - 推薦):**
@@ -175,13 +186,19 @@ const { assets } = await response.json();  // ["diagram.png", "illustration.jpg"
 const diagramUrl = `${API_BASE}/books/Foundation/chapters/chapter0/assets/diagram.png`;
 ```
 
+## 本地與雲端的 URL 行為
+
+- 不論是本地 (`MEDIA_DELIVERY_MODE=local`) 或雲端 (`gcs-public`/`gcs-signed`)，API 一律回傳 HTTP URL。前端只需存取 URL，無需關心檔案實際位置。
+- 本地模式：URL 指向後端自身的路徑（例如 `http://localhost:8000/books/Foundation/assets/cover.jpg`），FastAPI 會直接讀取 `output/` 目錄中的檔案並串流回應。
+- 雲端模式：URL 會 307 轉址到 GCS 公開/簽名連結，Cloud Run 無需下載大型媒體檔。
+
 ## GCS 公開模式
 
 當部署到 Cloud Run 並使用 `MEDIA_DELIVERY_MODE=gcs-public` 時：
 
-1. **自動同步**:
-   - `deploy.sh` 會自動將 assets 目錄同步到 GCS
-   - 無需手動上傳
+1. **資料同步**:
+   - 建議在部署前先執行 `./scripts/sync_output.sh`
+   - `deploy.sh` 會在偵測到 `gsutil` 與 `output/` 目錄時自動同步（可透過 `SKIP_OUTPUT_SYNC=1` 跳過）
 
 2. **公開存取**:
    - Bucket 必須設為公開：`gsutil iam ch allUsers:objectViewer gs://storytelling-output`

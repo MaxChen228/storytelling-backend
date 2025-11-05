@@ -20,7 +20,18 @@
    - **設定 bucket 為公開讀取**（gcs-public 模式必要）：`gsutil iam ch allUsers:objectViewer gs://storytelling-output`
    - 以 Secret Manager 或環境變數提供 `GEMINI_API_KEY`、`GOOGLE_TRANSLATE_PROJECT_ID`（若啟用翻譯）。
    - 確認 Cloud Run 服務帳號具備 `roles/storage.objectViewer` 權限以讀取物件。
-4. 本機可成功執行 `./run.sh` 並將產出上傳至 bucket。
+4. 本機可成功執行 `./run.sh`，並透過 `./scripts/sync_output.sh` 將 `output/` 內容同步到 GCS bucket。
+
+### 同步輸出資料
+
+部署前建議先同步本地 `output/` 至雲端。同步指令預設會排除 `.DS_Store`、`sessions/`、`.wav`、`.textgrid` 等非必要檔案（可用 `SYNC_OUTPUT_EXCLUDE` 自訂）：
+
+```bash
+./scripts/sync_output.sh            # 預設同步到 storytelling-output
+./scripts/sync_output.sh my-bucket  # 指定其他 bucket
+```
+
+`deploy.sh` 會在偵測到 `gsutil` 與 `output/` 目錄時自動執行相同的 `gsutil rsync`（含預設排除規則）；若要略過，可於執行前設定 `SKIP_OUTPUT_SYNC=1`。
 
 ## 本機建置與驗證容器
 
@@ -121,6 +132,8 @@ curl -I ${SERVICE_URL}/books/demo_book/chapters/chapter0/audio  # gcs-public 模
 ```
 
 確認以上結果後，即可通知前端將 `SERVICE_URL` 作為 API base URL。若 `MEDIA_DELIVERY_MODE=gcs-public`，音檔端點會回傳 307 並提供公開 GCS URL，代表設定成功。
+
+> ✅ 無論本地 (`MEDIA_DELIVERY_MODE=local`) 或雲端 (`gcs-public`/`gcs-signed`)，前端皆透過同樣的 URL 取得封面、圖片、音訊與字幕；差別僅在於本地由後端讀取 `output/`，雲端則轉址到 GCS。
 
 ## 服務帳號與權限
 
