@@ -17,8 +17,9 @@
 
 3. 準備輸入資料來源：
    - GCS bucket，例如 `gs://storytelling-output/output`，建議僅保留必要章節與 metadata。
+   - **設定 bucket 為公開讀取**（gcs-public 模式必要）：`gsutil iam ch allUsers:objectViewer gs://storytelling-output`
    - 以 Secret Manager 或環境變數提供 `GEMINI_API_KEY`、`GOOGLE_TRANSLATE_PROJECT_ID`（若啟用翻譯）。
-   - 確認 Cloud Run 服務帳號具備 `roles/storage.objectViewer` 與 `roles/iam.serviceAccountTokenCreator` 權限，以讀取物件並簽署 URL。
+   - 確認 Cloud Run 服務帳號具備 `roles/storage.objectViewer` 權限以讀取物件。
 4. 本機可成功執行 `./run.sh` 並將產出上傳至 bucket。
 
 ## 本機建置與驗證容器
@@ -37,7 +38,7 @@ curl http://localhost:8080/health
 
 若要測試 GCS 鏡射，可另建本機暫存資料夾並將 `DATA_ROOT` 指向該資料。
 
-> 💡 建議：雲端部署時可將 `MEDIA_DELIVERY_MODE` 設為 `gcs-signed`，僅同步 `.json` metadata，音檔與字幕會於請求時回傳簽名 URL，可縮短冷啟動並降低記憶體消耗。
+> 💡 建議：雲端部署時可將 `MEDIA_DELIVERY_MODE` 設為 `gcs-public`，僅同步 `.json` metadata，音檔與字幕會透過公開 GCS URL 提供，可縮短冷啟動並降低記憶體消耗。
 
 ## 推送映像到 Artifact Registry
 
@@ -98,16 +99,15 @@ gcloud run deploy ${SERVICE_NAME} \
   --timeout=900 \
   --set-env-vars DATA_ROOT=gs://storytelling-output/output \
   --set-env-vars STORYTELLING_GCS_CACHE_DIR=/tmp/storytelling-output \
-  --set-env-vars MEDIA_DELIVERY_MODE=gcs-signed \
+  --set-env-vars MEDIA_DELIVERY_MODE=gcs-public \
   --set-env-vars GCS_MIRROR_INCLUDE_SUFFIXES=.json \
-  --set-env-vars SIGNED_URL_TTL_SECONDS=900 \
   --set-env-vars GOOGLE_TRANSLATE_PROJECT_ID=new-pro-463006 \
   --set-env-vars GOOGLE_TRANSLATE_LOCATION=global \
   --set-secrets GEMINI_API_KEY=gemini-api-key:latest
 ```
 
 - 若暫不啟用翻譯，可移除 `GOOGLE_TRANSLATE_*` 兩行。
-- 建議保留 `MEDIA_DELIVERY_MODE=gcs-signed` 與 `GCS_MIRROR_INCLUDE_SUFFIXES=.json`，僅同步 metadata；若改回 `local` 模式，請確保 Cloud Run 記憶體 ≥4GiB（避免 `Memory limit exceeded`）。
+- 建議保留 `MEDIA_DELIVERY_MODE=gcs-public` 與 `GCS_MIRROR_INCLUDE_SUFFIXES=.json`，僅同步 metadata；若改回 `local` 模式，請確保 Cloud Run 記憶體 ≥4GiB（避免 `Memory limit exceeded`）。
 
 部署成功後會得到 Service URL，例如 `https://storytelling-backend-service-1034996974388.asia-east1.run.app`。
 
@@ -117,23 +117,26 @@ gcloud run deploy ${SERVICE_NAME} \
 SERVICE_URL=https://storytelling-backend-service-1034996974388.asia-east1.run.app
 curl -s ${SERVICE_URL}/health          # 應回傳 {"status":"ok"}
 curl -s ${SERVICE_URL}/books | head    # 應列出 GCS 中的書籍
-curl -I ${SERVICE_URL}/books/demo_book/chapters/chapter0/audio  # gcs-signed 模式下會回 307
+curl -I ${SERVICE_URL}/books/demo_book/chapters/chapter0/audio  # gcs-public 模式下會回 307
 ```
 
-確認以上結果後，即可通知前端將 `SERVICE_URL` 作為 API base URL。若 `MEDIA_DELIVERY_MODE=gcs-signed`，音檔端點會回傳 307 並提供簽名 URL，代表設定成功。
+確認以上結果後，即可通知前端將 `SERVICE_URL` 作為 API base URL。若 `MEDIA_DELIVERY_MODE=gcs-public`，音檔端點會回傳 307 並提供公開 GCS URL，代表設定成功。
 
 ## 服務帳號與權限
 
 - Cloud Run 預設使用 `<PROJECT_NUMBER>-compute@developer.gserviceaccount.com`。
 - 必要角色：
-  - `roles/storage.objectViewer`（讀取 GCS bucket）。
-  - `roles/iam.serviceAccountTokenCreator`（簽署 GCS 簽名 URL）。
+  - `roles/storage.objectViewer`（讀取 GCS bucket metadata）。
   - `roles/cloudtranslate.user`（若啟用翻譯）。
-- 可在 bucket 層級授權：
-
-  ```bash
-  gsutil iam ch serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com:objectViewer gs://storytelling-output
-  ```
+- GCS bucket 權限：
+  - **bucket 必須設為公開讀取**（gcs-public 模式）：
+    ```bash
+    gsutil iam ch allUsers:objectViewer gs://storytelling-output
+    ```
+  - 或在 bucket 層級授權服務帳號：
+    ```bash
+    gsutil iam ch serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com:objectViewer gs://storytelling-output
+    ```
 
 ## 日誌、監控與常見問題
 
@@ -147,18 +150,33 @@ curl -I ${SERVICE_URL}/books/demo_book/chapters/chapter0/audio  # gcs-signed 模
 
 - 常見錯誤排查：
   - **映像架構錯誤**：部署訊息提到 `manifest must support amd64/linux` → 使用 `docker buildx --platform linux/amd64`。
-  - **記憶體不足**：日誌出現 `Memory limit exceeded` → 啟用 `MEDIA_DELIVERY_MODE=gcs-signed` 或提高 `--memory`、裁剪同步資料量。
-  - **403 權限不足**：`GCSMirror` 報錯 → 確認服務帳號已授予 `storage.objectViewer` 且 IAM 變更已生效。
+  - **記憶體不足**：日誌出現 `Memory limit exceeded` → 啟用 `MEDIA_DELIVERY_MODE=gcs-public` 或提高 `--memory`、裁剪同步資料量。
+  - **403 權限不足**：音檔/字幕無法下載 → 確認 bucket 已設為公開讀取：`gsutil iam get gs://storytelling-output`。
+  - **GCSMirror 報錯**：確認服務帳號已授予 `storage.objectViewer` 且 IAM 變更已生效。
 
 - 建議在 Cloud Console → Cloud Run 啟用 Metrics 與 Alert，監控錯誤率、延遲、記憶體。
 
 ## 維運流程
 
-### 更新映像與回滾
+### 一鍵部署（推薦）
+
+專案已提供 `deploy.sh` 腳本，可自動完成建置、推送、部署與驗證：
+
+```bash
+./deploy.sh
+```
+
+腳本會自動執行：
+1. 檢查 GCP 環境配置
+2. 建置 linux/amd64 Docker 映像並推送
+3. 部署到 Cloud Run
+4. 驗證服務健康狀態（/health 和 /books 端點）
+
+### 手動更新映像與回滾
 
 ```bash
 docker buildx build --platform linux/amd64 -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/storytelling-backend/storytelling-backend:latest --push .
-gcloud run deploy ${SERVICE_NAME} --image ${REGION}-docker.pkg.dev/${PROJECT_ID}/storytelling-backend/storytelling-backend:latest --region=${REGION} --allow-unauthenticated --memory=4Gi --cpu=2 --timeout=900 --set-env-vars DATA_ROOT=gs://storytelling-output/output,STORYTELLING_GCS_CACHE_DIR=/tmp/storytelling-output,MEDIA_DELIVERY_MODE=gcs-signed,GCS_MIRROR_INCLUDE_SUFFIXES=.json,SIGNED_URL_TTL_SECONDS=900,GOOGLE_TRANSLATE_PROJECT_ID=new-pro-463006,GOOGLE_TRANSLATE_LOCATION=global --set-secrets GEMINI_API_KEY=gemini-api-key:latest
+gcloud run deploy ${SERVICE_NAME} --image ${REGION}-docker.pkg.dev/${PROJECT_ID}/storytelling-backend/storytelling-backend:latest --region=${REGION} --allow-unauthenticated --memory=4Gi --cpu=2 --timeout=900 --set-env-vars DATA_ROOT=gs://storytelling-output/output,STORYTELLING_GCS_CACHE_DIR=/tmp/storytelling-output,MEDIA_DELIVERY_MODE=gcs-public,GCS_MIRROR_INCLUDE_SUFFIXES=.json,GOOGLE_TRANSLATE_PROJECT_ID=new-pro-463006,GOOGLE_TRANSLATE_LOCATION=global --set-secrets GEMINI_API_KEY=gemini-api-key:latest
 ```
 
 - 查詢 revision：`gcloud run revisions list --service=${SERVICE_NAME} --region=${REGION}`

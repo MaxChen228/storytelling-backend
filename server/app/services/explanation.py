@@ -424,9 +424,15 @@ class SentenceExplanationService:
             {{
               "overview": "詞組意思（1 句話）",
               "key_points": ["用法重點，每點 10-15 字"],
-              "vocabulary": [{{"word": "單字", "meaning": "中文", "note": "補充（可選）"}}]
+              "vocabulary": [
+                {{"word": "近義詞的原形或片語原型", "meaning": "簡短中文說明，描述何時與原詞互換", "note": "可選補充：語氣、搭配、限制"}}
+              ]
             }}
 
-            要求：精簡、直接、只講詞組用法。
+            規則：
+            - vocabulary 最多 3 筆，至少 0 筆；只列出與「{phrase}」意義最接近的 2-3 個近義詞（lemma/root form 或片語）。
+            - 如無合適近義詞就傳空陣列。
+            - 回傳的近義詞需能在相似語境中取代原詞，若有使用限制請在 note 說明。
+            - 僅輸出 JSON，不要額外解說。
             """
         ).strip()
