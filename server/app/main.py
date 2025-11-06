@@ -173,6 +173,79 @@ def _register_routes(app: FastAPI) -> None:
     async def health_check() -> dict[str, str]:
         return {"status": "ok"}
 
+    @app.get("/debug/gcs")
+    async def debug_gcs(
+        settings: ServerSettings = Depends(get_settings),
+    ) -> dict:
+        """診斷端點：檢查 GCS 連線和認證狀態"""
+        import os
+        from google.cloud import storage
+
+        result = {
+            "env_vars": {},
+            "secret_file": {},
+            "gcs_connection": {},
+            "settings": {},
+        }
+
+        # 檢查環境變數
+        result["env_vars"]["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        result["env_vars"]["DATA_ROOT"] = os.getenv("DATA_ROOT")
+        result["env_vars"]["STORYTELLING_GCS_CACHE_DIR"] = os.getenv("STORYTELLING_GCS_CACHE_DIR")
+        result["env_vars"]["MEDIA_DELIVERY_MODE"] = os.getenv("MEDIA_DELIVERY_MODE")
+        result["env_vars"]["GCS_MIRROR_INCLUDE_SUFFIXES"] = os.getenv("GCS_MIRROR_INCLUDE_SUFFIXES")
+
+        # 檢查 secret file
+        creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        if creds_path:
+            result["secret_file"]["path"] = creds_path
+            result["secret_file"]["exists"] = os.path.exists(creds_path)
+            if os.path.exists(creds_path):
+                try:
+                    import json
+                    with open(creds_path, 'r') as f:
+                        creds_data = json.load(f)
+                    result["secret_file"]["valid_json"] = True
+                    result["secret_file"]["project_id"] = creds_data.get("project_id")
+                    result["secret_file"]["client_email"] = creds_data.get("client_email")
+                    result["secret_file"]["type"] = creds_data.get("type")
+                except Exception as e:
+                    result["secret_file"]["error"] = str(e)
+
+        # 檢查 settings
+        result["settings"]["data_root_raw"] = settings.data_root_raw
+        result["settings"]["data_root"] = str(settings.data_root)
+        result["settings"]["is_gcs_uri"] = is_gcs_uri(settings.data_root_raw)
+        result["settings"]["media_delivery_mode"] = settings.media_delivery_mode
+        result["settings"]["gcs_mirror_include_suffixes"] = settings.gcs_mirror_include_suffixes
+
+        # 測試 GCS 連線
+        if is_gcs_uri(settings.data_root_raw):
+            try:
+                bucket_name, prefix = parse_gcs_uri(settings.data_root_raw)
+                result["gcs_connection"]["bucket"] = bucket_name
+                result["gcs_connection"]["prefix"] = prefix
+
+                # 嘗試建立 client
+                client = storage.Client()
+                result["gcs_connection"]["client_created"] = True
+                result["gcs_connection"]["client_project"] = client.project
+
+                # 嘗試列出 bucket
+                bucket = client.bucket(bucket_name)
+                result["gcs_connection"]["bucket_exists"] = bucket.exists()
+
+                # 嘗試列出前 5 個 blob
+                blobs = list(client.list_blobs(bucket, prefix=prefix + "/", max_results=5))
+                result["gcs_connection"]["blob_count_sample"] = len(blobs)
+                result["gcs_connection"]["sample_blobs"] = [blob.name for blob in blobs]
+
+            except Exception as e:
+                result["gcs_connection"]["error"] = str(e)
+                result["gcs_connection"]["error_type"] = type(e).__name__
+
+        return result
+
     @app.get("/books", response_model=List[BookItem], response_model_exclude_none=True)
     async def list_books(
         request: Request,
