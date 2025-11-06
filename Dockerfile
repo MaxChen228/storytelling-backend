@@ -33,8 +33,8 @@ COPY podcast_config.yaml ./podcast_config.yaml
 # ARG GIT_SHA=unknown
 # ENV GIT_SHA=${GIT_SHA}
 
-# Cloud Run 預設使用 8080 port
-ENV PORT=8080
+# 支援動態 PORT（Render 使用 10000，Cloud Run 使用 8080）
+ENV PORT=10000
 
-# 啟動指令使用 uvicorn 服務 FastAPI 應用
-CMD ["uvicorn", "server.app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+# 啟動指令使用 uvicorn 服務 FastAPI 應用，使用環境變數 PORT
+CMD sh -c "uvicorn server.app.main:app --host 0.0.0.0 --port ${PORT}"

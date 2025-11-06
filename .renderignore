@@ -1,0 +1,71 @@
+# ==========================================
+# Render 部署時忽略的檔案
+# ==========================================
+
+# 輸出目錄（已在 GCS）
+output/
+
+# 原始資料
+data/
+
+# Python 虛擬環境
+.venv/
+venv/
+env/
+
+# Python 編譯檔案
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 測試相關
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 文檔（只需要在開發環境）
+docs/
+
+# MFA 對齊工具（伺服器不需要）
+alignment/
+
+# CLI 工具（伺服器不需要）
+storytelling_cli/
+
+# Git
+.git/
+.gitignore
+
+# 環境變數
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日誌
+*.log
+
+# 臨時檔案
+*.tmp
+*.bak
+
+# Markdown 文件（可選，保留 README.md）
+*.md
+!README.md
+
+# 其他資源檔案
+character_profiles.yaml
+podcast_config.yaml
+
+# Cloud Run 專用
+deploy.sh
+deploy-cloudrun.sh

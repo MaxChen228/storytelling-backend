@@ -1,0 +1,46 @@
+name: Keep Render Service Warm
+
+on:
+  schedule:
+    # 每 10 分鐘執行一次（避免 Render 15 分鐘後 sleep）
+    # 使用 UTC 時間，涵蓋全天候
+    - cron: '*/10 * * * *'
+
+  # 允許手動觸發（用於測試）
+  workflow_dispatch:
+
+jobs:
+  ping-service:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Health Endpoint
+        run: |
+          echo "=================================="
+          echo "Pinging Render service at $(date)"
+          echo "=================================="
+
+          # Ping health endpoint
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" https://storytelling-backend.onrender.com/health)
+
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "✅ Service is alive (HTTP $RESPONSE)"
+          else
+            echo "⚠️ Service returned HTTP $RESPONSE"
+            # 不要失敗整個 workflow，讓它繼續嘗試
+          fi
+
+          echo "=================================="
+          echo "Ping completed at $(date)"
+          echo "=================================="
+
+      - name: Optional - Check Books Endpoint
+        run: |
+          # 額外測試 books endpoint（確保 GCS 連線正常）
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" https://storytelling-backend.onrender.com/books)
+
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "✅ Books API is working (HTTP $RESPONSE)"
+          else
+            echo "⚠️ Books API returned HTTP $RESPONSE"
+          fi

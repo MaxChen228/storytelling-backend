@@ -1,0 +1,64 @@
+services:
+  - type: web
+    name: storytelling-backend
+    env: docker
+    plan: free
+    region: singapore  # 最近的區域（新加坡，延遲約 60ms）
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+
+    # 健康檢查設定
+    healthCheckPath: /health
+
+    # 自動部署設定
+    autoDeploy: true
+
+    # 環境變數
+    envVars:
+      # ==========================================
+      # GCS 配置
+      # ==========================================
+      - key: DATA_ROOT
+        value: gs://storytelling-output/output
+
+      - key: STORYTELLING_GCS_CACHE_DIR
+        value: /tmp/storytelling-output
+
+      - key: MEDIA_DELIVERY_MODE
+        value: gcs-public
+
+      - key: GCS_MIRROR_INCLUDE_SUFFIXES
+        value: .json
+
+      # ==========================================
+      # Google Translate 配置
+      # ==========================================
+      - key: GOOGLE_TRANSLATE_PROJECT_ID
+        value: new-pro-463006
+
+      - key: GOOGLE_TRANSLATE_LOCATION
+        value: global
+
+      - key: TRANSLATION_DEFAULT_TARGET_LANGUAGE
+        value: zh-TW
+
+      - key: TRANSLATION_CACHE_SIZE
+        value: 256
+
+      # ==========================================
+      # Gemini API 配置
+      # ==========================================
+      - key: SENTENCE_EXPLAINER_MODEL
+        value: gemini-2.5-flash-lite
+
+      - key: SENTENCE_EXPLAINER_TIMEOUT
+        value: 30
+
+      - key: SENTENCE_EXPLAINER_CACHE_SIZE
+        value: 128
+
+      # ==========================================
+      # 敏感資訊（需在 Render Dashboard 手動設定）
+      # ==========================================
+      # GEMINI_API_KEY - 在 Dashboard Environment 頁面手動加入
+      # GOOGLE_APPLICATION_CREDENTIALS - 在 Dashboard Secret Files 上傳 JSON 後設為 /etc/secrets/gcs-service-account.json
