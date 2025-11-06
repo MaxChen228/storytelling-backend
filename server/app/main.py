@@ -91,21 +91,63 @@ def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
     cache_relevant_suffixes: Optional[set[str]] = None
 
     if is_gcs_uri(settings.data_root_raw):
+        # 診斷日誌：檢查 GCS 配置
+        import os
+        logger.info("=== GCS Configuration Diagnostics ===")
+        logger.info(f"DATA_ROOT: {settings.data_root_raw}")
+        logger.info(f"Local cache: {settings.data_root}")
+        logger.info(f"Media delivery mode: {settings.media_delivery_mode}")
+        logger.info(f"GCS_MIRROR_INCLUDE_SUFFIXES: {settings.gcs_mirror_include_suffixes}")
+        logger.info(f"GOOGLE_APPLICATION_CREDENTIALS: {os.getenv('GOOGLE_APPLICATION_CREDENTIALS')}")
+
+        # 檢查 credentials 檔案
+        creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        if creds_path:
+            if os.path.exists(creds_path):
+                logger.info(f"✅ Credentials file exists at {creds_path}")
+                try:
+                    import json
+                    with open(creds_path, 'r') as f:
+                        creds_data = json.load(f)
+                    logger.info(f"✅ Credentials file is valid JSON")
+                    logger.info(f"   Project ID: {creds_data.get('project_id')}")
+                    logger.info(f"   Client email: {creds_data.get('client_email')}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to parse credentials file: {e}")
+            else:
+                logger.error(f"❌ Credentials file NOT found at {creds_path}")
+        else:
+            logger.warning("⚠️ GOOGLE_APPLICATION_CREDENTIALS not set")
+
+        logger.info("=== End Diagnostics ===")
+
         if settings.gcs_mirror_include_suffixes:
             download_suffixes = set(settings.gcs_mirror_include_suffixes)
         elif settings.media_delivery_mode in {"gcs-signed", "gcs-public"}:
             download_suffixes = {".json"}
         if download_suffixes:
             cache_relevant_suffixes = set(download_suffixes)
-        mirror = GCSMirror(
-            settings.data_root_raw,
-            settings.data_root,
-            download_suffixes=download_suffixes,
-        )
+
+        logger.info(f"Creating GCSMirror with download_suffixes: {download_suffixes}")
+
         try:
+            mirror = GCSMirror(
+                settings.data_root_raw,
+                settings.data_root,
+                download_suffixes=download_suffixes,
+            )
+            logger.info("✅ GCSMirror instance created")
+        except Exception as e:
+            logger.exception(f"❌ Failed to create GCSMirror: {e}")
+            raise
+
+        try:
+            logger.info("Starting GCS sync...")
             mirror.sync()
-        except Exception:
-            logger.exception("Initial GCS sync failed")
+            logger.info("✅ GCS sync completed successfully")
+        except Exception as e:
+            logger.exception("❌ Initial GCS sync failed")
+            raise
 
     cache = OutputDataCache(
         settings.data_root,
