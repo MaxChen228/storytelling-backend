@@ -213,7 +213,7 @@ def _register_routes(app: FastAPI) -> None:
 
         return AssetList(assets=sorted(asset_names))
 
-    @app.get("/books/{book_id}/assets/{asset_name}")
+    @app.api_route("/books/{book_id}/assets/{asset_name}", methods=["GET", "HEAD"])
     async def get_book_asset(
         book_id: str,
         asset_name: str,
@@ -306,7 +306,7 @@ def _register_routes(app: FastAPI) -> None:
 
         return AssetList(assets=sorted(asset_names))
 
-    @app.get("/books/{book_id}/chapters/{chapter_id}/assets/{asset_name}")
+    @app.api_route("/books/{book_id}/chapters/{chapter_id}/assets/{asset_name}", methods=["GET", "HEAD"])
     async def get_chapter_asset(
         book_id: str,
         chapter_id: str,
@@ -355,7 +355,7 @@ def _register_routes(app: FastAPI) -> None:
 
         return Response(content=content, media_type=content_type)
 
-    @app.get("/books/{book_id}/chapters/{chapter_id}/audio")
+    @app.api_route("/books/{book_id}/chapters/{chapter_id}/audio", methods=["GET", "HEAD"])
     async def stream_audio(
         book_id: str,
         chapter_id: str,
@@ -433,7 +433,7 @@ def _register_routes(app: FastAPI) -> None:
             headers=headers,
         )
 
-    @app.get("/books/{book_id}/chapters/{chapter_id}/subtitles", response_class=PlainTextResponse)
+    @app.api_route("/books/{book_id}/chapters/{chapter_id}/subtitles", methods=["GET", "HEAD"], response_class=PlainTextResponse)
     async def get_subtitles(
         book_id: str,
         chapter_id: str,
