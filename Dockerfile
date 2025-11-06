@@ -33,6 +33,14 @@ COPY podcast_config.yaml ./podcast_config.yaml
 # ARG GIT_SHA=unknown
 # ENV GIT_SHA=${GIT_SHA}
 
+# 建立應用程式用戶並加入 group 1000 (Render Secret Files 需要)
+RUN groupadd -g 1000 secrets || true && \
+    useradd -m -u 1001 -g 1000 appuser && \
+    chown -R appuser:1000 /app
+
+# 切換到應用程式用戶
+USER appuser
+
 # 支援動態 PORT（Render 使用 10000，Cloud Run 使用 8080）
 ENV PORT=10000
 
