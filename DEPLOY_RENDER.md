@@ -22,8 +22,10 @@ secrets/google-translate-service-account.json
 
 從你的 `.env` 檔案取得：
 ```bash
-GEMINI_API_KEY=AIzaSyABuGRuQxZ1LOOIRJ4pCu0t5fdmZ6qkW2g
+GEMINI_API_KEY=your_actual_api_key_here
 ```
+
+⚠️ **重要**：請勿將真實 API Key 提交到 Git！
 
 ---
 
@@ -73,7 +75,7 @@ git push origin main
 
    | Key | Value |
    |-----|-------|
-   | `GEMINI_API_KEY` | `AIzaSyABuGRuQxZ1LOOIRJ4pCu0t5fdmZ6qkW2g` |
+   | `GEMINI_API_KEY` | `your_actual_gemini_api_key` |
 
 4. 點選 **"Save Changes"**
 
