@@ -16,7 +16,6 @@ graph TB
     SubGen --> MFA[Montreal Forced Aligner]
     API --> Cache[OutputDataCache]
     Cache --> FileSystem[File System]
-    API --> Translation[Google Translation API]
     API --> Frontend[iOS Frontend]
 ```
 
@@ -113,7 +112,6 @@ subtitles.srt
 - `schemas.py`: 數據模型
 - `services/`: 業務邏輯
   - `OutputDataCache`: 文件系統緩存
-  - `TranslationService`: Google 翻譯集成
 
 **特性**:
 - ETag 緩存驗證
@@ -166,7 +164,6 @@ subtitles.srt
 
 2. 環境變量 (.env)
    - GEMINI_API_KEY (必需)
-   - GOOGLE_TRANSLATE_* (可選)
    - 批次處理參數
 
 3. 命令行參數
@@ -238,17 +235,6 @@ class OutputDataCache:
 - 懶加載
 - 按需刷新
 
-### 翻譯緩存
-
-**實現**: LRU Cache
-
-```python
-@lru_cache(maxsize=256)
-def translate(text, target_lang, source_lang):
-    # 調用 Google Translation API
-    return result
-```
-
 ## 依賴管理
 
 ### 核心依賴
@@ -268,7 +254,6 @@ python-dotenv (環境變量)
 ```
 fastapi (Web 框架)
 uvicorn (ASGI 服務器)
-google-cloud-translate (翻譯)
 ```
 
 ### 系統依賴

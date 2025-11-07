@@ -18,7 +18,7 @@
 3. 準備輸入資料來源：
    - GCS bucket，例如 `gs://storytelling-output/output`，建議僅保留必要章節與 metadata。
    - **設定 bucket 為公開讀取**（gcs-public 模式必要）：`gsutil iam ch allUsers:objectViewer gs://storytelling-output`
-   - 以 Secret Manager 或環境變數提供 `GEMINI_API_KEY`、`GOOGLE_TRANSLATE_PROJECT_ID`（若啟用翻譯）。
+   - 以 Secret Manager 或環境變數提供 `GEMINI_API_KEY`。
    - 確認 Cloud Run 服務帳號具備 `roles/storage.objectViewer` 權限以讀取物件。
 4. 本機可成功執行 `./run.sh`，並透過 `./scripts/sync_output.sh` 將 `output/` 內容同步到 GCS bucket。
 
@@ -112,12 +112,9 @@ gcloud run deploy ${SERVICE_NAME} \
   --set-env-vars STORYTELLING_GCS_CACHE_DIR=/tmp/storytelling-output \
   --set-env-vars MEDIA_DELIVERY_MODE=gcs-public \
   --set-env-vars GCS_MIRROR_INCLUDE_SUFFIXES=.json \
-  --set-env-vars GOOGLE_TRANSLATE_PROJECT_ID=new-pro-463006 \
-  --set-env-vars GOOGLE_TRANSLATE_LOCATION=global \
   --set-secrets GEMINI_API_KEY=gemini-api-key:latest
 ```
 
-- 若暫不啟用翻譯，可移除 `GOOGLE_TRANSLATE_*` 兩行。
 - 建議保留 `MEDIA_DELIVERY_MODE=gcs-public` 與 `GCS_MIRROR_INCLUDE_SUFFIXES=.json`，僅同步 metadata；若改回 `local` 模式，請確保 Cloud Run 記憶體 ≥4GiB（避免 `Memory limit exceeded`）。
 
 部署成功後會得到 Service URL，例如 `https://storytelling-backend-service-1034996974388.asia-east1.run.app`。
@@ -140,7 +137,7 @@ curl -I ${SERVICE_URL}/books/demo_book/chapters/chapter0/audio  # gcs-public 模
 - Cloud Run 預設使用 `<PROJECT_NUMBER>-compute@developer.gserviceaccount.com`。
 - 必要角色：
   - `roles/storage.objectViewer`（讀取 GCS bucket metadata）。
-  - `roles/cloudtranslate.user`（若啟用翻譯）。
+  - （如需）其他業務相關角色。
 - GCS bucket 權限：
   - **bucket 必須設為公開讀取**（gcs-public 模式）：
     ```bash
@@ -189,7 +186,7 @@ curl -I ${SERVICE_URL}/books/demo_book/chapters/chapter0/audio  # gcs-public 模
 
 ```bash
 docker buildx build --platform linux/amd64 -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/storytelling-backend/storytelling-backend:latest --push .
-gcloud run deploy ${SERVICE_NAME} --image ${REGION}-docker.pkg.dev/${PROJECT_ID}/storytelling-backend/storytelling-backend:latest --region=${REGION} --allow-unauthenticated --memory=4Gi --cpu=2 --timeout=900 --set-env-vars DATA_ROOT=gs://storytelling-output/output,STORYTELLING_GCS_CACHE_DIR=/tmp/storytelling-output,MEDIA_DELIVERY_MODE=gcs-public,GCS_MIRROR_INCLUDE_SUFFIXES=.json,GOOGLE_TRANSLATE_PROJECT_ID=new-pro-463006,GOOGLE_TRANSLATE_LOCATION=global --set-secrets GEMINI_API_KEY=gemini-api-key:latest
+gcloud run deploy ${SERVICE_NAME} --image ${REGION}-docker.pkg.dev/${PROJECT_ID}/storytelling-backend/storytelling-backend:latest --region=${REGION} --allow-unauthenticated --memory=4Gi --cpu=2 --timeout=900 --set-env-vars DATA_ROOT=gs://storytelling-output/output,STORYTELLING_GCS_CACHE_DIR=/tmp/storytelling-output,MEDIA_DELIVERY_MODE=gcs-public,GCS_MIRROR_INCLUDE_SUFFIXES=.json --set-secrets GEMINI_API_KEY=gemini-api-key:latest
 ```
 
 - 查詢 revision：`gcloud run revisions list --service=${SERVICE_NAME} --region=${REGION}`

@@ -28,17 +28,6 @@ curl -o chapter0.srt \
   http://localhost:8000/books/foundation/chapters/chapter0/subtitles
 ```
 
-### 翻譯請求
-
-```bash
-curl -X POST http://localhost:8000/translations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "In the previous episode, we explored psychohistory.",
-    "target_language": "zh-TW"
-  }'
-```
-
 ## Python 範例
 
 ### 安裝依賴
@@ -98,20 +87,6 @@ class PodcastAPIClient:
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(response.text)
 
-    def translate(self, text, target_language="zh-TW", **kwargs):
-        """翻譯文本"""
-        payload = {
-            "text": text,
-            "target_language": target_language,
-            **kwargs
-        }
-        response = self.session.post(
-            f"{self.base_url}/translations",
-            json=payload
-        )
-        response.raise_for_status()
-        return response.json()
-
 # 使用示例
 client = PodcastAPIClient()
 
@@ -127,12 +102,6 @@ print(f"Foundation 有 {len(chapters)} 個章節")
 client.download_audio("foundation", "chapter0", "chapter0.wav")
 client.download_subtitles("foundation", "chapter0", "chapter0.srt")
 
-# 翻譯文本
-result = client.translate(
-    "In the previous episode",
-    target_language="zh-TW"
-)
-print("翻譯結果:", result["translated_text"])
 ```
 
 ## JavaScript/TypeScript 範例
@@ -167,21 +136,6 @@ class PodcastAPIClient {
         return response.json();
     }
 
-    async translate(text, targetLanguage = 'zh-TW') {
-        const response = await fetch(`${this.baseURL}/translations`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                text,
-                target_language: targetLanguage
-            })
-        });
-        if (!response.ok) throw new Error('Translation failed');
-        return response.json();
-    }
-
     getAudioURL(bookId, chapterId) {
         return `${this.baseURL}/books/${bookId}/chapters/${chapterId}/audio`;
     }
@@ -209,15 +163,6 @@ async function loadChapter() {
     const audioURL = client.getAudioURL('foundation', 'chapter0');
     const audio = new Audio(audioURL);
     audio.play();
-}
-
-// 翻譯
-async function translateText() {
-    const result = await client.translate(
-        'In the previous episode',
-        'zh-TW'
-    );
-    console.log('翻譯結果:', result.translated_text);
 }
 
 loadChapter();

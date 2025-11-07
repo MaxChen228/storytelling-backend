@@ -43,7 +43,6 @@ uvicorn server.app.main:app --host 0.0.0.0 --port 8000 --workers 4
 | `GET` | `/books/{book_id}/chapters/{chapter_id}` | 獲取章節詳情 |
 | `GET` | `/books/{book_id}/chapters/{chapter_id}/audio` | 下載音頻 |
 | `GET` | `/books/{book_id}/chapters/{chapter_id}/subtitles` | 下載字幕 |
-| `POST` | `/translations` | 翻譯文本 |
 
 ### 管理端點（已移除）
 
@@ -344,76 +343,6 @@ we explored the concept of psychohistory
 
 ---
 
-### 翻譯文本
-
-翻譯指定文本（使用 Google Translation API）。
-
-```http
-POST /translations
-```
-
-**請求體:**
-
-```json
-{
-  "text": "In the previous episode, we explored the concept of psychohistory.",
-  "target_language": "zh-TW",
-  "source_language": "en",
-  "book_id": "foundation",
-  "chapter_id": "chapter0",
-  "subtitle_id": 1
-}
-```
-
-**請求字段:**
-
-| 字段 | 類型 | 必需 | 描述 |
-|------|------|------|------|
-| `text` | string | ✅ | 要翻譯的文本（1-5000 字符） |
-| `target_language` | string | - | 目標語言代碼（默認：zh-TW） |
-| `source_language` | string | - | 源語言代碼（自動檢測） |
-| `book_id` | string | - | 書籍 ID（用於緩存鍵） |
-| `chapter_id` | string | - | 章節 ID（用於緩存鍵） |
-| `subtitle_id` | integer | - | 字幕 ID（用於緩存鍵） |
-
-**支持的語言代碼:**
-
-- `en` - 英語
-- `zh-TW` - 繁體中文
-- `zh-CN` - 簡體中文
-- `ja` - 日語
-- `ko` - 韓語
-- `es` - 西班牙語
-- `fr` - 法語
-- `de` - 德語
-- 更多語言見 [Google Cloud Translation 文檔](https://cloud.google.com/translate/docs/languages)
-
-**響應:**
-
-```json
-{
-  "translated_text": "在上一集中，我們探討了心理史學的概念。",
-  "detected_source_language": "en",
-  "cached": false
-}
-```
-
-**響應字段:**
-
-| 字段 | 類型 | 描述 |
-|------|------|------|
-| `translated_text` | string | 翻譯後的文本 |
-| `detected_source_language` | string \| null | 檢測到的源語言 |
-| `cached` | boolean | 是否從緩存返回 |
-
-**錯誤碼:**
-
-- `400 Bad Request` - 請求參數無效
-- `502 Bad Gateway` - 翻譯服務錯誤
-- `503 Service Unavailable` - 翻譯服務未配置
-
----
-
 ## 管理端點
 
 > 注意：原 `/admin` 任務 API 已在 2025-11 移除，後端目前不提供遠端提交/查詢批次任務的能力。
@@ -494,12 +423,6 @@ cors_origins:
 
 ## 限制與配額
 
-### 翻譯 API
-
-- 單次請求最大長度：5000 字符
-- 默認緩存大小：256 條翻譯
-- 緩存過期時間：基於 LRU 策略
-
 ### 音頻流
 
 - 支持範圍請求（HTTP Range）
@@ -521,11 +444,6 @@ curl http://localhost:8000/books/foundation/chapters/chapter0
 
 # 下載音頻
 curl -o chapter0.wav http://localhost:8000/books/foundation/chapters/chapter0/audio
-
-# 翻譯文本
-curl -X POST http://localhost:8000/translations \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Hello world","target_language":"zh-TW"}'
 
 # 管理員 - 獲取任務列表
 curl -H "Authorization: Bearer your_token" \

@@ -496,7 +496,6 @@ MEDIA_DELIVERY_MODE=local                 # local（預設）或 gcs-signed
 GCS_MIRROR_INCLUDE_SUFFIXES=.json         # 限制同步副檔名，雲端建議只保留 metadata
 SIGNED_URL_TTL_SECONDS=900                # 簽名 URL 有效時間（秒）
 STORYTELLING_GCS_CACHE_DIR=/tmp/storytelling-output  # GCS 鏡射暫存路徑
-GOOGLE_TRANSLATE_PROJECT_ID=my-project    # 若啟用翻譯服務
 ```
 
 其他腳本相關變量仍可沿用，例如 `PODCAST_SCRIPT_BATCH_SIZE`、`PODCAST_AUDIO_BATCH_SIZE` 等。Cloud Run 等雲端環境建議將敏感資訊（如 `GEMINI_API_KEY`）存於 Secret Manager，再透過 `--set-secrets` 匯入。

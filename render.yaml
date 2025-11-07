@@ -31,21 +31,6 @@ services:
         value: .json
 
       # ==========================================
-      # Google Translate 配置
-      # ==========================================
-      - key: GOOGLE_TRANSLATE_PROJECT_ID
-        value: new-pro-463006
-
-      - key: GOOGLE_TRANSLATE_LOCATION
-        value: global
-
-      - key: TRANSLATION_DEFAULT_TARGET_LANGUAGE
-        value: zh-TW
-
-      - key: TRANSLATION_CACHE_SIZE
-        value: 256
-
-      # ==========================================
       # Gemini API 配置
       # ==========================================
       - key: SENTENCE_EXPLAINER_MODEL

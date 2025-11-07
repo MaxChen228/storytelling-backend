@@ -16,7 +16,6 @@ secrets/google-translate-service-account.json
 此檔案需要具備以下權限：
 - ✅ `storage.objects.get` - 讀取 GCS 物件
 - ✅ `storage.objects.list` - 列出 GCS 物件
-- ✅ `cloudtranslate.translations.translate` - Google Translate API
 
 ### 2. 確認 GEMINI_API_KEY
 
@@ -123,15 +122,6 @@ curl https://storytelling-backend.onrender.com/books
 # 3. 測試特定書籍
 curl https://storytelling-backend.onrender.com/books/Foundation/chapters
 # 預期輸出：Foundation 章節列表
-
-# 4. 測試翻譯 API
-curl -X POST https://storytelling-backend.onrender.com/translations \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Hello","target_language":"zh-TW"}'
-# 預期輸出：{"translated_text":"你好",...}
-```
-
----
 
 ## 🔥 設定保持溫暖（避免冷啟動）
 

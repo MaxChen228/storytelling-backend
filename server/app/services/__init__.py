@@ -12,7 +12,6 @@ from .explanation import (
     SentenceExplanationService,
     VocabularyEntry,
 )
-from .translation import TranslationResult, TranslationService, TranslationServiceError
 
 __all__ = [
     "BookData",
@@ -23,7 +22,4 @@ __all__ = [
     "SentenceExplanationResult",
     "SentenceExplanationService",
     "VocabularyEntry",
-    "TranslationResult",
-    "TranslationService",
-    "TranslationServiceError",
 ]

@@ -96,8 +96,6 @@ gcloud run deploy ${SERVICE_NAME} \
     --set-env-vars STORYTELLING_GCS_CACHE_DIR=/tmp/storytelling-output \
     --set-env-vars MEDIA_DELIVERY_MODE=gcs-public \
     --set-env-vars GCS_MIRROR_INCLUDE_SUFFIXES=.json \
-    --set-env-vars GOOGLE_TRANSLATE_PROJECT_ID=new-pro-463006 \
-    --set-env-vars GOOGLE_TRANSLATE_LOCATION=global \
     --set-secrets GEMINI_API_KEY=gemini-api-key:latest \
     --quiet
 

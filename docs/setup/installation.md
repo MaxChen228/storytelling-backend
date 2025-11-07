@@ -64,9 +64,7 @@ echo "GEMINI_API_KEY=your_api_key_here" > .env
 # Gemini API（必需）
 GEMINI_API_KEY=your_gemini_api_key
 
-# Google Translation API（可選）
-GOOGLE_TRANSLATE_PROJECT_ID=your_gcp_project_id
-GOOGLE_TRANSLATE_LOCATION=global
+# GCS 認證（必需，用於讀取輸出資料）
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
 ```
 
@@ -175,22 +173,6 @@ which micromamba
 GEMINI_API_KEY=AIzaSy...
 ```
 
-#### Google Translation API（可選）
-
-如果需要逐句翻譯功能：
-
-1. 前往 [Google Cloud Console](https://console.cloud.google.com/)
-2. 創建新項目或選擇現有項目
-3. 啟用 Cloud Translation API
-4. 創建服務帳戶並下載 JSON 金鑰
-5. 配置環境變量：
-
-```env
-GOOGLE_TRANSLATE_PROJECT_ID=your-project-id
-GOOGLE_TRANSLATE_LOCATION=global
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
-```
-
 ## 依賴說明
 
 ### 核心依賴 (requirements/base.txt)
@@ -209,7 +191,6 @@ GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
 |------|------|------|
 | fastapi | ^0.104 | Web 框架 |
 | uvicorn | latest | ASGI 服務器 |
-| google-cloud-translate | latest | 翻譯 API |
 
 ### 可選依賴
 

@@ -11,7 +11,6 @@
 - 📝 **智能腳本生成** - 使用 Gemini 2.5 Pro 將書籍章節轉換為教學風格播客腳本
 - 🎙️ **高質量 TTS** - Gemini Multi-Speaker TTS 生成自然流暢的單人旁白音頻
 - 📊 **詞級精準字幕** - Montreal Forced Aligner 實現毫秒級字幕對齊
-- 🌐 **逐句翻譯** - 整合 Google Translation API 提供多語言支持
 - 🚀 **FastAPI 服務** - RESTful API 供前端應用消費
 - ⚙️ **靈活配置** - 支持多語言等級（A2-C1）、長度模式、語速調整
 
@@ -108,7 +107,6 @@ Python 3.12+
 ├── 音頻生成: Gemini Multi-Speaker TTS
 ├── 字幕對齊: Montreal Forced Aligner
 ├── API 框架: FastAPI
-└── 翻譯服務: Google Cloud Translation API
 ```
 
 ## 項目結構
@@ -181,7 +179,6 @@ uvicorn server.app.main:app --reload --host 0.0.0.0 --port 8000
 - `GET /books/{book_id}/chapters/{chapter_id}` - 章節詳情
 - `GET /books/{book_id}/chapters/{chapter_id}/audio` - 音頻串流或簽名 URL
 - `GET /books/{book_id}/chapters/{chapter_id}/subtitles` - 字幕下載或簽名 URL
-- `POST /translations` - 文本翻譯
 
 👉 **[查看完整 API 文檔](docs/api/reference.md)**
 
@@ -206,7 +203,6 @@ A: 修改 `podcast_config.yaml` 中的聲線配置；支援固定值、候選清
 - ✅ Gemini TTS 音頻生成
 - ✅ MFA 詞級字幕對齊
 - ✅ FastAPI REST API
-- ✅ Google 翻譯整合
 - 📋 音頻質量自動評估
 - 📋 多聲線對話模式
 

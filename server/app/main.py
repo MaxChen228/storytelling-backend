@@ -26,8 +26,6 @@ from .schemas import (
     SentenceExplanationRequest,
     SentenceExplanationResponse,
     SentenceExplanationVocabulary,
-    TranslationRequest,
-    TranslationResponse,
 )
 from .services import (
     BookData,
@@ -37,8 +35,6 @@ from .services import (
     SentenceExplanationResult,
     SentenceExplanationService,
     SubtitleData,
-    TranslationService,
-    TranslationServiceError,
 )
 from .services.gcs_mirror import GCSMirror, is_gcs_uri, parse_gcs_uri
 from .services.storage_signer import generate_signed_url
@@ -156,12 +152,6 @@ def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
         relevant_suffixes=cache_relevant_suffixes,
     )
     try:
-        translation_service = TranslationService.from_settings(settings)
-    except TranslationServiceError as exc:
-        logger.warning("Translation service disabled: %s", exc)
-        translation_service = None
-
-    try:
         explanation_service = SentenceExplanationService.from_settings(settings)
     except SentenceExplanationError as exc:
         logger.warning("Sentence explanation disabled: %s", exc)
@@ -175,7 +165,6 @@ def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
 
     app.state.settings = settings
     app.state.cache = cache
-    app.state.translation_service = translation_service
     app.state.sentence_explainer = explanation_service
     app.state.gcs_mirror = mirror
 
@@ -201,10 +190,6 @@ def get_settings(request: Request) -> ServerSettings:
 
 def get_cache(request: Request) -> OutputDataCache:
     return request.app.state.cache
-
-def get_translation_service(request: Request) -> Optional[TranslationService]:
-    return getattr(request.app.state, "translation_service", None)
-
 
 def get_sentence_explainer(request: Request) -> Optional[SentenceExplanationService]:
     return getattr(request.app.state, "sentence_explainer", None)
@@ -675,37 +660,6 @@ def _register_routes(app: FastAPI) -> None:
             vocabulary=vocabulary,
             cached=result.cached,
         )
-
-    @app.post("/translations", response_model=TranslationResponse)
-    async def translate_text(
-        payload: TranslationRequest,
-        translation_service: Optional[TranslationService] = Depends(get_translation_service),
-        settings: ServerSettings = Depends(get_settings),
-    ) -> TranslationResponse:
-        if not translation_service:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Translation service unavailable")
-
-        target_language = payload.target_language or settings.translation_default_target_language
-
-        try:
-            result = await run_in_threadpool(
-                translation_service.translate,
-                payload.text,
-                target_language,
-                payload.source_language,
-            )
-        except ValueError as exc:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-        except TranslationServiceError as exc:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
-
-        return TranslationResponse(
-            translated_text=result.translated_text,
-            detected_source_language=result.detected_source_language,
-            cached=result.cached,
-        )
-
-
 
 def _to_book_item(book: BookData, request: Optional[Request] = None) -> BookItem:
     title = str(book.metadata.get("book_name") or book.id)
