@@ -621,6 +621,7 @@ def _register_routes(app: FastAPI) -> None:
             overview=result.overview,
             key_points=list(result.key_points),
             vocabulary=vocabulary,
+            chinese_meaning=result.chinese_meaning or None,
             cached=result.cached,
         )
 
@@ -658,6 +659,7 @@ def _register_routes(app: FastAPI) -> None:
             overview=result.overview,
             key_points=list(result.key_points),
             vocabulary=vocabulary,
+            chinese_meaning=result.chinese_meaning or None,
             cached=result.cached,
         )
 

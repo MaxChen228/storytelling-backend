@@ -30,6 +30,8 @@ data/*_summaries/
 data/transcripts/transcript_*.txt
 archived_outputs/
 .mfa_work/
+data/
+books/
 
 # Audio/Video Files
 *.wav

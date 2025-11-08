@@ -148,6 +148,82 @@ class StorytellingCLI:
         self.audio_batch_size = max(1, AUDIO_BATCH_SIZE_DEFAULT)
         self.audio_batch_delay = max(0, AUDIO_BATCH_DELAY_DEFAULT)
 
+    def _prompt_int(
+        self,
+        label: str,
+        current: int,
+        *,
+        allow_zero: bool = False,
+        color: str = "gray",
+    ) -> int:
+        while True:
+            prompt_text = f"{label}（目前 {current}，Enter 保留）:\n> "
+            try:
+                raw = self.io.prompt(prompt_text, color=color).strip()
+            except EOFError:
+                return current
+            if raw == "":
+                return current
+            try:
+                value = int(raw)
+            except ValueError:
+                self.io.print(f"{ICON_WARNING} 請輸入整數。", color="yellow")
+                continue
+            if value < 0 or (value == 0 and not allow_zero):
+                minimum = "0" if allow_zero else "1"
+                self.io.print(f"{ICON_WARNING} 數值需大於等於 {minimum}。", color="yellow")
+                continue
+            return value
+
+    def _prompt_yes_no(
+        self,
+        message: str,
+        *,
+        default: bool = False,
+        color: str = "yellow",
+    ) -> bool:
+        suffix = " (Y/n)" if default else " (y/N)"
+        try:
+            response = self.io.prompt(f"{message}{suffix}\n> ", color=color).strip().lower()
+        except EOFError:
+            return default
+        if not response:
+            return default
+        if response in {"y", "yes"}:
+            return True
+        if response in {"n", "no"}:
+            return False
+        self.io.print(f"{ICON_WARNING} 回覆僅支援 y 或 n。", color="yellow")
+        return self._prompt_yes_no(message, default=default, color=color)
+
+    def _update_env_file(self, updates: Dict[str, int]) -> None:
+        env_path = self.paths.repo_root / ".env"
+        backup_path = env_path.parent / f"{env_path.name}.bak"
+        existing_lines: List[str] = []
+        if env_path.exists():
+            existing_lines = env_path.read_text(encoding="utf-8").splitlines()
+            shutil.copy(env_path, backup_path)
+        seen_keys = set()
+        new_lines: List[str] = []
+        for line in existing_lines:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or "=" not in line:
+                new_lines.append(line)
+                continue
+            key, _, current_value = line.partition("=")
+            normalized_key = key.strip()
+            if normalized_key in updates:
+                new_lines.append(f"{normalized_key}={updates[normalized_key]}")
+                seen_keys.add(normalized_key)
+            else:
+                new_lines.append(line)
+        for key, value in updates.items():
+            if key not in seen_keys:
+                new_lines.append(f"{key}={value}")
+        content = "\n".join(new_lines).rstrip()
+        env_path.write_text(content + ("\n" if content else ""), encoding="utf-8")
+        self.io.print(f"{ICON_INFO} 已更新 .env 並備份至 {backup_path.name}", color="cyan")
+
     # ---------------- Configuration -----------------
 
     def _load_config(self) -> Dict[str, object]:
@@ -351,6 +427,97 @@ class StorytellingCLI:
             for slug, message in failures:
                 self.io.print(f"  • {slug} → {message}", color="yellow")
         self.io.print()
+
+    # ---------------- Settings -----------------
+
+    def configure_settings(self) -> None:
+        while True:
+            self.io.print()
+            self.io.print("設定選單：", color="cyan")
+            self.io.print("  1) 批次設定", color="white")
+            self.io.print("  b) 返回主選單", color="gray")
+            choice = self.io.prompt("> ", color="white").strip().lower()
+            if choice == "1":
+                self.configure_batch_settings()
+                continue
+            if choice in {"b", "back", "q"}:
+                return
+            self.io.print(f"{ICON_WARNING} 無效選項", color="yellow")
+
+    def configure_batch_settings(self) -> None:
+        changed = False
+        while True:
+            self.io.print()
+            self.io.print("批次設定：", color="cyan")
+            self.io.print(f"  1) 腳本批次大小：{self.script_batch_size}", color="white")
+            self.io.print(f"  2) 腳本批次延遲（秒）：{self.script_batch_delay}", color="white")
+            self.io.print(f"  3) 音頻批次大小：{self.audio_batch_size}", color="white")
+            self.io.print(f"  4) 音頻批次延遲（秒）：{self.audio_batch_delay}", color="white")
+            self.io.print("  r) 重設為預設值", color="gray")
+            self.io.print("  s) 保存至 .env", color="gray")
+            self.io.print("  b) 返回設定選單", color="gray")
+            choice = self.io.prompt("> ", color="white").strip().lower()
+
+            if choice == "1":
+                new_value = self._prompt_int("輸入腳本批次大小", self.script_batch_size, allow_zero=False)
+                if new_value != self.script_batch_size:
+                    self.script_batch_size = max(1, new_value)
+                    changed = True
+                    self.io.print(f"{ICON_INFO} 腳本批次大小已更新為 {self.script_batch_size}", color="green")
+                continue
+            if choice == "2":
+                new_value = self._prompt_int("輸入腳本批次延遲（秒）", self.script_batch_delay, allow_zero=True)
+                if new_value != self.script_batch_delay:
+                    self.script_batch_delay = max(0, new_value)
+                    changed = True
+                    self.io.print(f"{ICON_INFO} 腳本批次延遲已更新為 {self.script_batch_delay} 秒", color="green")
+                continue
+            if choice == "3":
+                new_value = self._prompt_int("輸入音頻批次大小", self.audio_batch_size, allow_zero=False)
+                if new_value != self.audio_batch_size:
+                    self.audio_batch_size = max(1, new_value)
+                    changed = True
+                    self.io.print(f"{ICON_INFO} 音頻批次大小已更新為 {self.audio_batch_size}", color="green")
+                continue
+            if choice == "4":
+                new_value = self._prompt_int("輸入音頻批次延遲（秒）", self.audio_batch_delay, allow_zero=True)
+                if new_value != self.audio_batch_delay:
+                    self.audio_batch_delay = max(0, new_value)
+                    changed = True
+                    self.io.print(f"{ICON_INFO} 音頻批次延遲已更新為 {self.audio_batch_delay} 秒", color="green")
+                continue
+            if choice == "r":
+                self.script_batch_size = max(1, SCRIPT_BATCH_SIZE_DEFAULT)
+                self.script_batch_delay = max(0, SCRIPT_BATCH_DELAY_DEFAULT)
+                self.audio_batch_size = max(1, AUDIO_BATCH_SIZE_DEFAULT)
+                self.audio_batch_delay = max(0, AUDIO_BATCH_DELAY_DEFAULT)
+                changed = True
+                self.io.print(f"{ICON_INFO} 已恢復為預設批次設定。", color="green")
+                continue
+            if choice == "s":
+                updates = {
+                    "PODCAST_SCRIPT_BATCH_SIZE": self.script_batch_size,
+                    "PODCAST_SCRIPT_BATCH_DELAY": self.script_batch_delay,
+                    "PODCAST_AUDIO_BATCH_SIZE": self.audio_batch_size,
+                    "PODCAST_AUDIO_BATCH_DELAY": self.audio_batch_delay,
+                }
+                self._update_env_file(updates)
+                continue
+            if choice in {"b", "back", "q"}:
+                if changed:
+                    should_save = self._prompt_yes_no("是否將目前批次設定寫入 .env？")
+                    if should_save:
+                        updates = {
+                            "PODCAST_SCRIPT_BATCH_SIZE": self.script_batch_size,
+                            "PODCAST_SCRIPT_BATCH_DELAY": self.script_batch_delay,
+                            "PODCAST_AUDIO_BATCH_SIZE": self.audio_batch_size,
+                            "PODCAST_AUDIO_BATCH_DELAY": self.audio_batch_delay,
+                        }
+                        self._update_env_file(updates)
+                return
+
+            self.io.print(f"{ICON_WARNING} 無效選項", color="yellow")
+
     def display_chapters(self) -> None:
         statuses = self.scan_chapters()
         self.io.print()
@@ -767,6 +934,7 @@ class StorytellingCLI:
             self.io.print("  6) 刪除輸出")
             self.io.print("  7) 切換書籍")
             self.io.print("  8) 修復字幕時間差")
+            self.io.print("  9) 設定")
             self.io.print("  r) 重新整理")
             self.io.print("  q) 離開")
             self.io.print()
@@ -788,6 +956,8 @@ class StorytellingCLI:
                     continue
             elif choice == "8":
                 self.repair_timing_outliers()
+            elif choice == "9":
+                self.configure_settings()
             elif choice.lower() == "r":
                 continue
             elif choice.lower() == "q":

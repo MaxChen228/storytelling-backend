@@ -17,22 +17,8 @@ from server.app.services import (
     ChapterData,
     SentenceExplanationResult,
     SubtitleData,
-    TranslationResult,
     VocabularyEntry,
 )
-
-
-class DummyTranslationService:
-    def __init__(self) -> None:
-        self.calls = []
-
-    def translate(self, text: str, target_language: str, source_language: str | None = None) -> TranslationResult:
-        self.calls.append((text, target_language, source_language))
-        return TranslationResult(
-            translated_text=f"{text}-{target_language}",
-            detected_source_language=source_language or "en",
-            cached=False,
-        )
 
 
 class DummyExplanationService:
@@ -54,6 +40,7 @@ class DummyExplanationService:
             vocabulary=(
                 VocabularyEntry(word="sample", meaning="範例", note=None),
             ),
+            chinese_meaning=f"{sentence}-中文解釋",
             cached=False,
         )
 
@@ -74,6 +61,7 @@ class DummyExplanationService:
             vocabulary=(
                 VocabularyEntry(word=phrase.split()[0] if phrase else "word", meaning="詞義", note="補充說明"),
             ),
+            chinese_meaning=f"{phrase}-中文解釋",
             cached=is_cached,
         )
 
@@ -182,7 +170,6 @@ def test_client(sample_data: Path) -> TestClient:
         gzip_min_size=32,
     )
     app = create_app(settings)
-    app.state.translation_service = DummyTranslationService()
     app.state.sentence_explainer = DummyExplanationService()
     return TestClient(app)
 
@@ -235,25 +222,6 @@ def test_transcript_endpoint_removed(test_client: TestClient) -> None:
     assert response.status_code == 404
 
 
-def test_translate_text_success(test_client: TestClient) -> None:
-    response = test_client.post(
-        "/translations",
-        json={
-            "text": "Hello world",
-            "target_language_code": "zh-TW",
-            "source_language_code": "en",
-            "book_id": "demo_book",
-            "chapter_id": "chapter0",
-            "subtitle_id": 1,
-        },
-    )
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["translated_text"] == "Hello world-zh-TW"
-    assert payload["detected_source_language"] == "en"
-    assert payload["cached"] is False
-
-
 def test_sentence_explanation_endpoint(test_client: TestClient) -> None:
     response = test_client.post(
         "/explain/sentence",
@@ -267,22 +235,9 @@ def test_sentence_explanation_endpoint(test_client: TestClient) -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["overview"] == "Hello world-overview"
+    assert payload["chinese_meaning"] == "Hello world-中文解釋"
     assert payload["key_points"] == ["重點 A", "重點 B"]
     assert payload["vocabulary"][0]["word"] == "sample"
-
-
-def test_translate_text_service_unavailable(test_client: TestClient) -> None:
-    app = test_client.app
-    original = app.state.translation_service
-    app.state.translation_service = None
-    try:
-        response = test_client.post(
-            "/translations",
-            json={"text": "Hello", "target_language_code": "zh-TW"},
-        )
-        assert response.status_code == 503
-    finally:
-        app.state.translation_service = original
 
 
 def test_phrase_explanation_success(test_client: TestClient) -> None:
@@ -300,6 +255,7 @@ def test_phrase_explanation_success(test_client: TestClient) -> None:
     assert response.status_code == 200
     payload = response.json()
     assert "so glad" in payload["overview"]
+    assert payload["chinese_meaning"] == "so glad-中文解釋"
     assert len(payload["key_points"]) == 2
     assert payload["key_points"][0] == "so glad 的搭配規則"
     assert payload["vocabulary"][0]["word"] == "so"
@@ -595,7 +551,6 @@ def test_sentence_explanation_without_output_files(tmp_path: Path) -> None:
         gzip_min_size=32,
     )
     app = create_app(settings)
-    app.state.translation_service = DummyTranslationService()
     app.state.sentence_explainer = DummyExplanationService()
     client = TestClient(app)
 
@@ -610,4 +565,6 @@ def test_sentence_explanation_without_output_files(tmp_path: Path) -> None:
     )
 
     assert response.status_code == 200
-    assert response.json()["overview"] == "Testing-overview"
+    result = response.json()
+    assert result["overview"] == "Testing-overview"
+    assert result["chinese_meaning"] == "Testing-中文解釋"

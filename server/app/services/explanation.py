@@ -35,6 +35,7 @@ class SentenceExplanationResult:
     overview: str
     key_points: Tuple[str, ...]
     vocabulary: Tuple[VocabularyEntry, ...]
+    chinese_meaning: str
     cached: bool = False
 
 
@@ -153,11 +154,13 @@ class SentenceExplanationService:
         overview = self._ensure_string(data.get("overview", ""), fallback="(無法取得概述)")
         key_points = tuple(self._normalize_list(data.get("key_points", [])))
         vocabulary_entries = tuple(self._parse_vocabulary(data.get("vocabulary", [])))
+        chinese_meaning = self._ensure_string(data.get("chinese_meaning"), fallback="")
 
         result = SentenceExplanationResult(
             overview=overview,
             key_points=key_points,
             vocabulary=vocabulary_entries,
+            chinese_meaning=chinese_meaning,
             cached=False,
         )
 
@@ -266,11 +269,13 @@ class SentenceExplanationService:
         overview = self._ensure_string(data.get("overview", ""), fallback="(無法取得概述)")
         key_points = tuple(self._normalize_list(data.get("key_points", [])))
         vocabulary_entries = tuple(self._parse_vocabulary(data.get("vocabulary", [])))
+        chinese_meaning = self._ensure_string(data.get("chinese_meaning"), fallback="")
 
         result = SentenceExplanationResult(
             overview=overview,
             key_points=key_points,
             vocabulary=vocabulary_entries,
+            chinese_meaning=chinese_meaning,
             cached=False,
         )
 
@@ -391,12 +396,16 @@ class SentenceExplanationService:
 
             以 JSON 格式回答：
             {{
+              "chinese_meaning": "該句的簡短中文翻譯（1 句，15-30 字）",
               "overview": "整句意思（1-2 句話）",
               "key_points": ["語法或用法重點，每點 10-15 字"],
               "vocabulary": [{{"word": "單字", "meaning": "中文", "note": "補充（可選）"}}]
             }}
 
-            要求：精簡、直接、避免教學式冗述。
+            要求：
+            - chinese_meaning 必填且僅包含中文，不要出現英文或符號代碼。
+            - overview 與 key_points 補充語氣、語法或使用情境，避免重複 chinese_meaning。
+            - 精簡、直接、避免教學式冗述，僅輸出 JSON。
             """
         ).strip()
 
@@ -422,6 +431,7 @@ class SentenceExplanationService:
 
             以 JSON 格式回答：
             {{
+              "chinese_meaning": "詞組的中文解釋（1 句，15-30 字）",
               "overview": "詞組意思（1 句話）",
               "key_points": ["用法重點，每點 10-15 字"],
               "vocabulary": [
@@ -430,9 +440,11 @@ class SentenceExplanationService:
             }}
 
             規則：
+            - chinese_meaning 必填且僅包含中文，不得空白。
             - vocabulary 最多 3 筆，至少 0 筆；只列出與「{phrase}」意義最接近的 2-3 個近義詞（lemma/root form 或片語）。
             - 如無合適近義詞就傳空陣列。
             - 回傳的近義詞需能在相似語境中取代原詞，若有使用限制請在 note 說明。
             - 僅輸出 JSON，不要額外解說。
             """
         ).strip()
+

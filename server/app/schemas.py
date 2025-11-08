@@ -75,6 +75,7 @@ class SentenceExplanationResponse(BaseModel):
     overview: str
     key_points: list[str] = Field(default_factory=list)
     vocabulary: list[SentenceExplanationVocabulary] = Field(default_factory=list)
+    chinese_meaning: Optional[str] = None
     cached: bool = False
 
 
