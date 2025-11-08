@@ -15,6 +15,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import PlainTextResponse, StreamingResponse
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from .config import ServerSettings
 from .schemas import (
@@ -179,6 +180,12 @@ def create_app(settings: Optional[ServerSettings] = None) -> FastAPI:
         )
 
     app.add_middleware(GZipMiddleware, minimum_size=settings.gzip_min_size)
+
+    # Trust proxy headers from Render load balancer to generate correct HTTPS URLs
+    app.add_middleware(
+        ProxyHeadersMiddleware,
+        trusted_hosts=["*"],  # Trust all hosts since Render doesn't expose specific IPs
+    )
 
     _register_routes(app)
     return app
