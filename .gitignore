@@ -16,6 +16,7 @@ env/
 .env
 .env.local
 .env.*.local
+.env.bak
 
 # Google Cloud service account credentials
 *.service-account.json
